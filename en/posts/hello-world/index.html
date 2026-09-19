@@ -1,0 +1,205 @@
+<!DOCTYPE html><html lang="en"><head><!-- 主题初始化脚本:必须放在 <head>,在首帧前应用 data-theme,避免主题闪烁。
+     三种状态:light / dark / auto(无 data-theme 属性 = 跟随系统)。
+     与 ThemeToggle.astro 的按钮配合,用事件委托处理点击。 --><script>
+  (function () {
+    var KEY = "nettix-theme";
+    var ORDER = ["light", "dark", "auto"];
+    var ICONS = { light: "☀️", dark: "🌙", auto: "🔄" };
+
+    function current() {
+      var t = document.documentElement.getAttribute("data-theme");
+      return t === "light" || t === "dark" ? t : "auto";
+    }
+    function setState(t) {
+      var root = document.documentElement;
+      if (t === "auto") root.removeAttribute("data-theme");
+      else root.setAttribute("data-theme", t);
+      try {
+        localStorage.setItem(KEY, t);
+      } catch (e) {}
+      root.setAttribute("data-theme-state", t);
+    }
+    function updateButton() {
+      var btn = document.getElementById("theme-toggle");
+      if (!btn) return;
+      var t = current();
+      var icon = btn.querySelector("[data-theme-icon]");
+      var label = btn.querySelector("[data-theme-label]");
+      if (icon) icon.textContent = ICONS[t] || "🔄";
+      if (label) {
+        var key = "label" + t.charAt(0).toUpperCase() + t.slice(1);
+        label.textContent = btn.dataset[key] || t;
+      }
+      btn.setAttribute("data-theme-state", t);
+    }
+
+    var saved = "auto";
+    try {
+      saved = localStorage.getItem(KEY) || "auto";
+    } catch (e) {}
+    setState(saved);
+
+    document.addEventListener("DOMContentLoaded", updateButton);
+    document.addEventListener("click", function (e) {
+      var el = e.target && e.target.closest ? e.target.closest("#theme-toggle") : null;
+      if (!el) return;
+      setState(ORDER[(ORDER.indexOf(current()) + 1) % ORDER.length]);
+      updateButton();
+    });
+  })();
+</script><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="generator" content="Astro v7.3.2"><meta name="description" content="A comprehensive syntax test post covering Markdown / GFM / KaTeX / Mermaid, exercising the rendering pipeline and layout."><link rel="icon" href="/favicon.svg"><title>Markdown Syntax Test</title><link rel="stylesheet" href="/_astro/ThemeScript.BJrWeSlr.css"></head><body class="flex min-h-dvh flex-col bg-surface text-text-primary antialiased"><header class="sticky top-0 z-10 border-b border-border bg-surface/90 backdrop-blur"><div class="mx-auto flex h-14 w-full max-w-6xl items-center justify-between px-4 sm:px-6"><a href="/en" class="text-lg font-semibold tracking-wide">Yuhao&#39;s Blog</a><nav class="flex items-center gap-4 text-sm" aria-label="Main"><a href="/en" class="rounded-full px-3 py-1.5 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">Home</a><!-- 手机端:目录缩进导航条按钮(<640px 显示) --><button id="toc-nav-btn" type="button" class="inline-flex items-center rounded-full px-3 py-1.5 text-sm text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary sm:hidden" aria-expanded="false" aria-controls="mobile-toc-panel">Contents</button><!-- 三态切换:白天 → 黑夜 → 自动,点击循环。逻辑在 ThemeScript.astro(head 内)。 --><button id="theme-toggle" type="button" data-label-light="Light" data-label-dark="Dark" data-label-auto="Auto" class="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary" aria-label="Switch theme" title="Theme: light / dark / auto"><span data-theme-icon aria-hidden="true">🔄</span><span data-theme-label>Auto</span></button></nav></div></header><main id="top" class="flex-1"><!-- 手机端目录下拉面板(导航条按钮展开,固定定位) --><div id="mobile-toc-panel" class="mobile-toc-panel" aria-label="Contents"><nav class="toc" aria-label="Contents"><ul class="mt-2 space-y-1 border-l border-border text-sm"><li><a href="#headings" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">Headings</a><ul class="ml-3 mt-1 space-y-1 border-l border-border"><li><a href="#h3-heading" class="block rounded px-2 py-0.5 text-text-muted transition-colors hover:bg-surface-alt hover:text-text-primary">H3 heading</a></li></ul></li><li><a href="#paragraphs---line-breaks" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">Paragraphs &amp; line breaks</a></li><li><a href="#inline-styles" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">Inline styles</a></li><li><a href="#links" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">Links</a></li><li><a href="#images" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">Images</a></li><li><a href="#lists" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">Lists</a><ul class="ml-3 mt-1 space-y-1 border-l border-border"><li><a href="#unordered" class="block rounded px-2 py-0.5 text-text-muted transition-colors hover:bg-surface-alt hover:text-text-primary">Unordered</a></li><li><a href="#ordered" class="block rounded px-2 py-0.5 text-text-muted transition-colors hover:bg-surface-alt hover:text-text-primary">Ordered</a></li><li><a href="#task-list--gfm" class="block rounded px-2 py-0.5 text-text-muted transition-colors hover:bg-surface-alt hover:text-text-primary">Task list (GFM)</a></li></ul></li><li><a href="#blockquotes" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">Blockquotes</a></li><li><a href="#code" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">Code</a></li><li><a href="#tables" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">Tables</a></li><li><a href="#horizontal-rule" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">Horizontal rule</a></li><li><a href="#math" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">Math</a></li><li><a href="#mermaid-diagrams" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">Mermaid diagrams</a><ul class="ml-3 mt-1 space-y-1 border-l border-border"><li><a href="#flowchart" class="block rounded px-2 py-0.5 text-text-muted transition-colors hover:bg-surface-alt hover:text-text-primary">Flowchart</a></li><li><a href="#sequence" class="block rounded px-2 py-0.5 text-text-muted transition-colors hover:bg-surface-alt hover:text-text-primary">Sequence</a></li></ul></li><li><a href="#raw-html---full-bleed-image" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">Raw HTML &amp; full-bleed image</a></li><li><a href="#emoji---special-characters" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">Emoji &amp; special characters</a></li><li><a href="#closing" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">Closing</a></li></ul></nav></div><div class="post-grid has-hero"><!-- 桌面右栏:sticky TOC(>=1152px 显示,与三栏网格同断点) --><aside class="post-toc hidden min-w-0 px-4 py-10" aria-label="Contents"><nav class="toc" aria-label="Contents"><p class="text-sm font-semibold text-text-secondary">Contents</p><ul class="mt-2 space-y-1 border-l border-border text-sm"><li><a href="#headings" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">Headings</a><ul class="ml-3 mt-1 space-y-1 border-l border-border"><li><a href="#h3-heading" class="block rounded px-2 py-0.5 text-text-muted transition-colors hover:bg-surface-alt hover:text-text-primary">H3 heading</a></li></ul></li><li><a href="#paragraphs---line-breaks" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">Paragraphs &amp; line breaks</a></li><li><a href="#inline-styles" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">Inline styles</a></li><li><a href="#links" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">Links</a></li><li><a href="#images" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">Images</a></li><li><a href="#lists" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">Lists</a><ul class="ml-3 mt-1 space-y-1 border-l border-border"><li><a href="#unordered" class="block rounded px-2 py-0.5 text-text-muted transition-colors hover:bg-surface-alt hover:text-text-primary">Unordered</a></li><li><a href="#ordered" class="block rounded px-2 py-0.5 text-text-muted transition-colors hover:bg-surface-alt hover:text-text-primary">Ordered</a></li><li><a href="#task-list--gfm" class="block rounded px-2 py-0.5 text-text-muted transition-colors hover:bg-surface-alt hover:text-text-primary">Task list (GFM)</a></li></ul></li><li><a href="#blockquotes" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">Blockquotes</a></li><li><a href="#code" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">Code</a></li><li><a href="#tables" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">Tables</a></li><li><a href="#horizontal-rule" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">Horizontal rule</a></li><li><a href="#math" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">Math</a></li><li><a href="#mermaid-diagrams" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">Mermaid diagrams</a><ul class="ml-3 mt-1 space-y-1 border-l border-border"><li><a href="#flowchart" class="block rounded px-2 py-0.5 text-text-muted transition-colors hover:bg-surface-alt hover:text-text-primary">Flowchart</a></li><li><a href="#sequence" class="block rounded px-2 py-0.5 text-text-muted transition-colors hover:bg-surface-alt hover:text-text-primary">Sequence</a></li></ul></li><li><a href="#raw-html---full-bleed-image" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">Raw HTML &amp; full-bleed image</a></li><li><a href="#emoji---special-characters" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">Emoji &amp; special characters</a></li><li><a href="#closing" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">Closing</a></li></ul></nav></aside><!-- 中栏:文章 --><article class="post-article"><div class="post-hero overflow-hidden rounded-lg"><img src="https://picsum.photos/seed/alps/1600/900" alt="Alpine landscape" draggable="false" class="h-56 w-full object-cover [mask-image:linear-gradient(to_bottom,black_85%,transparent_100%)]"></div><h1 id="post-title" class="text-3xl font-bold tracking-tight sm:text-4xl"><a href="#post-title" class="heading-anchor" aria-hidden="true" tabindex="-1"></a>Markdown Syntax Test</h1><div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-text-muted"><time datetime="2026-09-14T00:00:00.000Z">Sep 14, 2026</time><span class="rounded-full bg-surface-alt px-2.5 py-0.5 text-xs text-text-secondary">#markdown</span><span class="rounded-full bg-surface-alt px-2.5 py-0.5 text-xs text-text-secondary">#test</span><span class="rounded-full bg-surface-alt px-2.5 py-0.5 text-xs text-text-secondary">#astro</span></div><!-- 移动/平板:TOC 折叠(题图之后、正文之前;<1152px 显示) --><details class="post-toc-mobile mt-8 rounded-lg border border-border bg-surface-raised"><summary class="cursor-pointer select-none px-4 py-3 text-sm font-semibold text-text-secondary">Contents</summary><div class="border-t border-border px-4 py-3"><nav class="toc" aria-label="Contents"><ul class="mt-2 space-y-1 border-l border-border text-sm"><li><a href="#headings" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">Headings</a><ul class="ml-3 mt-1 space-y-1 border-l border-border"><li><a href="#h3-heading" class="block rounded px-2 py-0.5 text-text-muted transition-colors hover:bg-surface-alt hover:text-text-primary">H3 heading</a></li></ul></li><li><a href="#paragraphs---line-breaks" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">Paragraphs &amp; line breaks</a></li><li><a href="#inline-styles" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">Inline styles</a></li><li><a href="#links" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">Links</a></li><li><a href="#images" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">Images</a></li><li><a href="#lists" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">Lists</a><ul class="ml-3 mt-1 space-y-1 border-l border-border"><li><a href="#unordered" class="block rounded px-2 py-0.5 text-text-muted transition-colors hover:bg-surface-alt hover:text-text-primary">Unordered</a></li><li><a href="#ordered" class="block rounded px-2 py-0.5 text-text-muted transition-colors hover:bg-surface-alt hover:text-text-primary">Ordered</a></li><li><a href="#task-list--gfm" class="block rounded px-2 py-0.5 text-text-muted transition-colors hover:bg-surface-alt hover:text-text-primary">Task list (GFM)</a></li></ul></li><li><a href="#blockquotes" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">Blockquotes</a></li><li><a href="#code" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">Code</a></li><li><a href="#tables" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">Tables</a></li><li><a href="#horizontal-rule" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">Horizontal rule</a></li><li><a href="#math" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">Math</a></li><li><a href="#mermaid-diagrams" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">Mermaid diagrams</a><ul class="ml-3 mt-1 space-y-1 border-l border-border"><li><a href="#flowchart" class="block rounded px-2 py-0.5 text-text-muted transition-colors hover:bg-surface-alt hover:text-text-primary">Flowchart</a></li><li><a href="#sequence" class="block rounded px-2 py-0.5 text-text-muted transition-colors hover:bg-surface-alt hover:text-text-primary">Sequence</a></li></ul></li><li><a href="#raw-html---full-bleed-image" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">Raw HTML &amp; full-bleed image</a></li><li><a href="#emoji---special-characters" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">Emoji &amp; special characters</a></li><li><a href="#closing" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">Closing</a></li></ul></nav></div></details><div class="article-content mt-8"><p>Welcome to the Markdown syntax test page. This post covers common Markdown, GFM (GitHub Flavored Markdown), math formulas and Mermaid diagrams to exercise the rendering pipeline.</p>
+<h2 id="headings"><a href="#headings" class="heading-anchor" aria-hidden="true" tabindex="-1"></a>Headings</h2>
+<h3 id="h3-heading"><a href="#h3-heading" class="heading-anchor" aria-hidden="true" tabindex="-1"></a>H3 heading</h3>
+<p>Body text under an H3. Every H2/H3/H4 heading has an anchor — hover the left edge of the heading to reveal the <code>#</code> link icon.</p>
+<h4 id="h4-heading"><a href="#h4-heading" class="heading-anchor" aria-hidden="true" tabindex="-1"></a>H4 heading</h4>
+<p>H4 is for finer sections. <strong>Bold</strong>, <em>italic</em>, <em><strong>bold italic</strong></em> and <del>strikethrough</del> mix freely here.</p>
+<h2 id="paragraphs---line-breaks"><a href="#paragraphs---line-breaks" class="heading-anchor" aria-hidden="true" tabindex="-1"></a>Paragraphs &#x26; line breaks</h2>
+<p>This is a paragraph. Paragraphs are separated by blank lines and never merge automatically.</p>
+<p>This is a second paragraph. Two trailing spaces at the end of a line force a soft line break<br>
+so the text continues on the next line.</p>
+<h2 id="inline-styles"><a href="#inline-styles" class="heading-anchor" aria-hidden="true" tabindex="-1"></a>Inline styles</h2>
+<ul>
+<li><strong>Bold</strong>: <code>**bold**</code></li>
+<li><em>Italic</em>: <code>*italic*</code></li>
+<li><em><strong>Bold italic</strong></em>: <code>***bold italic***</code></li>
+<li><del>Strikethrough</del>: <code>~~strikethrough~~</code> (GFM)</li>
+<li>Inline code: <code>const x = 1</code></li>
+<li>Superscript/subscript: x<sup>2</sup>, H<sub>2</sub>O</li>
+</ul>
+<h2 id="links"><a href="#links" class="heading-anchor" aria-hidden="true" tabindex="-1"></a>Links</h2>
+<ul>
+<li>Inline link: <a href="https://luoyuhao.nettix.top">Nettix Blog</a></li>
+<li>Link with title: <a href="https://luoyuhao.nettix.top" title="Docs home">Visit docs</a></li>
+<li>Reference link: <a href="https://luoyuhao.nettix.top" title="Reference link target">Example</a></li>
+<li>Autolink: <a href="https://luoyuhao.nettix.top">https://luoyuhao.nettix.top</a></li>
+</ul>
+<h2 id="images"><a href="#images" class="heading-anchor" aria-hidden="true" tabindex="-1"></a>Images</h2>
+<p><img src="https://picsum.photos/seed/nettix/1200/500" alt="Example image" title="Image with title" draggable="false"></p>
+<p>Images carry alt and title, and are neither selectable nor draggable.</p>
+<h2 id="lists"><a href="#lists" class="heading-anchor" aria-hidden="true" tabindex="-1"></a>Lists</h2>
+<h3 id="unordered"><a href="#unordered" class="heading-anchor" aria-hidden="true" tabindex="-1"></a>Unordered</h3>
+<ul>
+<li>Item one</li>
+<li>Item two
+<ul>
+<li>Nested A</li>
+<li>Nested B</li>
+</ul>
+</li>
+<li>Item three</li>
+</ul>
+<h3 id="ordered"><a href="#ordered" class="heading-anchor" aria-hidden="true" tabindex="-1"></a>Ordered</h3>
+<ol>
+<li>First</li>
+<li>Second</li>
+<li>Third
+<ol>
+<li>Nested a</li>
+<li>Nested b</li>
+</ol>
+</li>
+</ol>
+<h3 id="task-list--gfm"><a href="#task-list--gfm" class="heading-anchor" aria-hidden="true" tabindex="-1"></a>Task list (GFM)</h3>
+<ul class="contains-task-list">
+<li class="task-list-item"><input type="checkbox" checked disabled> Completed task</li>
+<li class="task-list-item"><input type="checkbox" disabled> Open task</li>
+<li class="task-list-item"><input type="checkbox" checked disabled> Task with <code>code</code></li>
+</ul>
+<h2 id="blockquotes"><a href="#blockquotes" class="heading-anchor" aria-hidden="true" tabindex="-1"></a>Blockquotes</h2>
+<blockquote>
+<p>This is a blockquote.</p>
+<blockquote>
+<p>Nested blockquote.</p>
+</blockquote>
+<p>A blockquote can include <strong>bold</strong> and <code>inline code</code>.</p>
+</blockquote>
+<h2 id="code"><a href="#code" class="heading-anchor" aria-hidden="true" tabindex="-1"></a>Code</h2>
+<p>Inline code: <code>npm run dev</code>.</p>
+<p>Fenced block (JavaScript):</p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="javascript"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">function</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> greet</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#E36209;--shiki-dark:#FFAB70">name</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) {</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  return</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> `Hello, ${</span><span style="color:#24292E;--shiki-dark:#E1E4E8">name</span><span style="color:#032F62;--shiki-dark:#9ECBFF">}!`</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre>
+<p>TypeScript:</p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="typescript"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">interface</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> User</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">  id</span><span style="color:#D73A49;--shiki-dark:#F97583">:</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> number</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">  name</span><span style="color:#D73A49;--shiki-dark:#F97583">:</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> string</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">const</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> user</span><span style="color:#D73A49;--shiki-dark:#F97583">:</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> User</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> { id: </span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, name: </span><span style="color:#032F62;--shiki-dark:#9ECBFF">"Alice"</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> };</span></span></code></pre>
+<p>Python:</p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">def</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> fib</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(n):</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    a, b </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    for</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> _ </span><span style="color:#D73A49;--shiki-dark:#F97583">in</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> range</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(n):</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        a, b </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> b, a </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> b</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> a</span></span></code></pre>
+<p>Shell:</p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># install dependencies</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">pnpm</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> install</span></span></code></pre>
+<h2 id="tables"><a href="#tables" class="heading-anchor" aria-hidden="true" tabindex="-1"></a>Tables</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th align="left">Alignment</th><th align="left">Left</th><th align="center">Center</th><th align="right">Right</th></tr></thead><tbody><tr><td align="left">Example</td><td align="left">text</td><td align="center">text</td><td align="right">text</td></tr><tr><td align="left">Value</td><td align="left">100</td><td align="center">200</td><td align="right">300</td></tr></tbody></table>
+<h2 id="horizontal-rule"><a href="#horizontal-rule" class="heading-anchor" aria-hidden="true" tabindex="-1"></a>Horizontal rule</h2>
+<p>Content above, split by a rule below:</p>
+<hr>
+<p>Content after the rule.</p>
+<h2 id="math"><a href="#math" class="heading-anchor" aria-hidden="true" tabindex="-1"></a>Math</h2>
+<p>Inline: Euler’s identity <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>e</mi><mrow><mi>i</mi><mi>π</mi></mrow></msup><mo>+</mo><mn>1</mn><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">e^{i\pi} + 1 = 0</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.908em;vertical-align:-0.0833em;"></span><span class="mord"><span class="mord mathnormal">e</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8247em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.0359em;">iπ</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">0</span></span></span></span>.</p>
+<p>Display:</p>
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msubsup><mo>∫</mo><mrow><mo>−</mo><mi mathvariant="normal">∞</mi></mrow><mi mathvariant="normal">∞</mi></msubsup><msup><mi>e</mi><mrow><mo>−</mo><msup><mi>x</mi><mn>2</mn></msup></mrow></msup><mtext> </mtext><mi>d</mi><mi>x</mi><mo>=</mo><msqrt><mi>π</mi></msqrt></mrow><annotation encoding="application/x-tex">\int_{-\infty}^{\infty} e^{-x^2}\,dx = \sqrt{\pi}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:2.3846em;vertical-align:-0.9703em;"></span><span class="mop"><span class="mop op-symbol large-op" style="margin-right:0.4445em;position:relative;top:-0.0011em;">∫</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.4143em;"><span style="top:-1.7881em;margin-left:-0.4445em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span><span class="mord mtight">∞</span></span></span></span><span style="top:-3.8129em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">∞</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.9703em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">e</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:1.0369em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span><span class="mord mtight"><span class="mord mathnormal mtight">x</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8913em;"><span style="top:-2.931em;margin-right:0.0714em;"><span class="pstrut" style="height:2.5em;"></span><span class="sizing reset-size3 size1 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">d</span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.04em;vertical-align:-0.1908em;"></span><span class="mord sqrt"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8492em;"><span class="svg-align" style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord" style="padding-left:0.833em;"><span class="mord mathnormal" style="margin-right:0.0359em;">π</span></span></span><span style="top:-2.8092em;"><span class="pstrut" style="height:3em;"></span><span class="hide-tail" style="min-width:0.853em;height:1.08em;"><svg xmlns="http://www.w3.org/2000/svg" width="400em" height="1.08em" viewBox="0 0 400000 1080" preserveAspectRatio="xMinYMin slice"><path d="M95,702
+c-2.7,0,-7.17,-2.7,-13.5,-8c-5.8,-5.3,-9.5,-10,-9.5,-14
+c0,-2,0.3,-3.3,1,-4c1.3,-2.7,23.83,-20.7,67.5,-54
+c44.2,-33.3,65.8,-50.3,66.5,-51c1.3,-1.3,3,-2,5,-2c4.7,0,8.7,3.3,12,10
+s173,378,173,378c0.7,0,35.3,-71,104,-213c68.7,-142,137.5,-285,206.5,-429
+c69,-144,104.5,-217.7,106.5,-221
+l0 -0
+c5.3,-9.3,12,-14,20,-14
+H400000v40H845.2724
+s-225.272,467,-225.272,467s-235,486,-235,486c-2.7,4.7,-9,7,-19,7
+c-6,0,-10,-1,-12,-3s-194,-422,-194,-422s-65,47,-65,47z
+M834 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.1908em;"><span></span></span></span></span></span></span></span></span></span>
+<h2 id="mermaid-diagrams"><a href="#mermaid-diagrams" class="heading-anchor" aria-hidden="true" tabindex="-1"></a>Mermaid diagrams</h2>
+<h3 id="flowchart"><a href="#flowchart" class="heading-anchor" aria-hidden="true" tabindex="-1"></a>Flowchart</h3>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="mermaid"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">flowchart</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> LR</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">  A</span><span style="color:#D73A49;--shiki-dark:#F97583">[</span><span style="color:#032F62;--shiki-dark:#9ECBFF">Start</span><span style="color:#D73A49;--shiki-dark:#F97583">]</span><span style="color:#D73A49;--shiki-dark:#F97583"> --></span><span style="color:#E36209;--shiki-dark:#FFAB70"> B</span><span style="color:#D73A49;--shiki-dark:#F97583">{</span><span style="color:#032F62;--shiki-dark:#9ECBFF">Ready?</span><span style="color:#D73A49;--shiki-dark:#F97583">}</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">  B </span><span style="color:#D73A49;--shiki-dark:#F97583">--</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> Yes </span><span style="color:#D73A49;--shiki-dark:#F97583">--></span><span style="color:#E36209;--shiki-dark:#FFAB70"> C</span><span style="color:#D73A49;--shiki-dark:#F97583">[</span><span style="color:#032F62;--shiki-dark:#9ECBFF">Run task</span><span style="color:#D73A49;--shiki-dark:#F97583">]</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">  B </span><span style="color:#D73A49;--shiki-dark:#F97583">--</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> No </span><span style="color:#D73A49;--shiki-dark:#F97583">--></span><span style="color:#E36209;--shiki-dark:#FFAB70"> D</span><span style="color:#D73A49;--shiki-dark:#F97583">[</span><span style="color:#032F62;--shiki-dark:#9ECBFF">Wait</span><span style="color:#D73A49;--shiki-dark:#F97583">]</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">  C </span><span style="color:#D73A49;--shiki-dark:#F97583">--></span><span style="color:#E36209;--shiki-dark:#FFAB70"> E</span><span style="color:#D73A49;--shiki-dark:#F97583">[</span><span style="color:#032F62;--shiki-dark:#9ECBFF">End</span><span style="color:#D73A49;--shiki-dark:#F97583">]</span></span></code></pre>
+<h3 id="sequence"><a href="#sequence" class="heading-anchor" aria-hidden="true" tabindex="-1"></a>Sequence</h3>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="mermaid"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">sequenceDiagram</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  participant</span><span style="color:#E36209;--shiki-dark:#FFAB70"> User</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  participant</span><span style="color:#E36209;--shiki-dark:#FFAB70"> Server</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">  User</span><span style="color:#D73A49;--shiki-dark:#F97583">->></span><span style="color:#E36209;--shiki-dark:#FFAB70">Server</span><span style="color:#D73A49;--shiki-dark:#F97583">:</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> Send request</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  activate</span><span style="color:#E36209;--shiki-dark:#FFAB70"> Server</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">  Server</span><span style="color:#D73A49;--shiki-dark:#F97583">-->></span><span style="color:#E36209;--shiki-dark:#FFAB70">User</span><span style="color:#D73A49;--shiki-dark:#F97583">:</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> Return result</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  deactivate</span><span style="color:#E36209;--shiki-dark:#FFAB70"> Server</span></span></code></pre>
+<h2 id="raw-html---full-bleed-image"><a href="#raw-html---full-bleed-image" class="heading-anchor" aria-hidden="true" tabindex="-1"></a>Raw HTML &#x26; full-bleed image</h2>
+<p>Wrapped in raw HTML, this one bleeds to the paper edge:</p>
+<figure class="full-bleed">
+  <img src="https://picsum.photos/seed/nettix-wide/1600/600" alt="Paper-edge bleed example">
+  <figcaption class="px-2 pt-2 text-center text-sm text-text-muted">Flush to the paper edge</figcaption>
+</figure>
+<h2 id="emoji---special-characters"><a href="#emoji---special-characters" class="heading-anchor" aria-hidden="true" tabindex="-1"></a>Emoji &#x26; special characters</h2>
+<p>😄 🚀 ✨ — plus characters that need escaping: <code>&#x26;</code>, <code>&#x3C;</code>, <code>></code>, <code>"</code>.</p>
+<h2 id="closing"><a href="#closing" class="heading-anchor" aria-hidden="true" tabindex="-1"></a>Closing</h2>
+<p>That covers most common syntax. If anything renders wrong, please report it.</p></div><!-- 移动端广告位(留空,槽位预留) --><aside class="post-ad-mobile mt-10 lg:hidden" data-slot="ad-mobile" aria-hidden="true"></aside><!-- 评论区:预留区域,默认隐藏,不加载任何评论脚本 --><section id="comments" class="mt-12 hidden" aria-hidden="true" data-reserved="comments"></section></article><!-- 桌面左栏:广告位(留空,槽位预留) --><aside class="post-ad hidden min-w-0 py-10 lg:block xl:block" aria-label="Ad"><div class="mb-4" data-slot="ad-1"></div><div data-slot="ad-2"></div></aside></div></main><footer class="border-t border-border"><div class="mx-auto flex w-full max-w-6xl flex-col items-center gap-3 px-4 py-6 text-sm text-text-muted sm:flex-row sm:justify-between"><p>luoyuhao.nettix.top</p><a href="#top" class="rounded-full px-3 py-1.5 transition-colors hover:bg-surface-alt hover:text-text-primary">Back to top ↑</a></div></footer><!-- Mermaid 懒加载渲染:无图页面不引入运行时 --><script type="module" src="/_astro/MarkdownPostLayout.astro_astro_type_script_index_0_lang.w9LPiwDu.js"></script><!-- 手机端目录按钮/平板端定住玻璃质感 --><script type="module">var e=document.getElementById(`toc-nav-btn`),t=document.getElementById(`mobile-toc-panel`);e&&t&&(e.addEventListener(`click`,()=>{let n=t.classList.toggle(`is-open`);e.setAttribute(`aria-expanded`,String(n))}),document.addEventListener(`click`,n=>{t.classList.contains(`is-open`)&&!n.target.closest(`#toc-nav-btn`)&&!n.target.closest(`#mobile-toc-panel`)&&(t.classList.remove(`is-open`),e.setAttribute(`aria-expanded`,`false`))}));var n=document.querySelector(`.post-toc-mobile`);if(n){let e=()=>{n.classList.toggle(`is-stuck`,n.getBoundingClientRect().top<=80)};window.addEventListener(`scroll`,e,{passive:!0}),e()}</script></body></html>

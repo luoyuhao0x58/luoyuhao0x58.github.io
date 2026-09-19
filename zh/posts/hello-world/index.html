@@ -1,0 +1,205 @@
+<!DOCTYPE html><html lang="zh-CN"><head><!-- 主题初始化脚本:必须放在 <head>,在首帧前应用 data-theme,避免主题闪烁。
+     三种状态:light / dark / auto(无 data-theme 属性 = 跟随系统)。
+     与 ThemeToggle.astro 的按钮配合,用事件委托处理点击。 --><script>
+  (function () {
+    var KEY = "nettix-theme";
+    var ORDER = ["light", "dark", "auto"];
+    var ICONS = { light: "☀️", dark: "🌙", auto: "🔄" };
+
+    function current() {
+      var t = document.documentElement.getAttribute("data-theme");
+      return t === "light" || t === "dark" ? t : "auto";
+    }
+    function setState(t) {
+      var root = document.documentElement;
+      if (t === "auto") root.removeAttribute("data-theme");
+      else root.setAttribute("data-theme", t);
+      try {
+        localStorage.setItem(KEY, t);
+      } catch (e) {}
+      root.setAttribute("data-theme-state", t);
+    }
+    function updateButton() {
+      var btn = document.getElementById("theme-toggle");
+      if (!btn) return;
+      var t = current();
+      var icon = btn.querySelector("[data-theme-icon]");
+      var label = btn.querySelector("[data-theme-label]");
+      if (icon) icon.textContent = ICONS[t] || "🔄";
+      if (label) {
+        var key = "label" + t.charAt(0).toUpperCase() + t.slice(1);
+        label.textContent = btn.dataset[key] || t;
+      }
+      btn.setAttribute("data-theme-state", t);
+    }
+
+    var saved = "auto";
+    try {
+      saved = localStorage.getItem(KEY) || "auto";
+    } catch (e) {}
+    setState(saved);
+
+    document.addEventListener("DOMContentLoaded", updateButton);
+    document.addEventListener("click", function (e) {
+      var el = e.target && e.target.closest ? e.target.closest("#theme-toggle") : null;
+      if (!el) return;
+      setState(ORDER[(ORDER.indexOf(current()) + 1) % ORDER.length]);
+      updateButton();
+    });
+  })();
+</script><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="generator" content="Astro v7.3.2"><meta name="description" content="覆盖 Markdown / GFM / KaTeX / Mermaid 完整语法测试文章,用来检验文章页的渲染与布局。"><link rel="icon" href="/favicon.svg"><title>Markdown 语法测试</title><link rel="stylesheet" href="/_astro/ThemeScript.BJrWeSlr.css"></head><body class="flex min-h-dvh flex-col bg-surface text-text-primary antialiased"><header class="sticky top-0 z-10 border-b border-border bg-surface/90 backdrop-blur"><div class="mx-auto flex h-14 w-full max-w-6xl items-center justify-between px-4 sm:px-6"><a href="/zh" class="text-lg font-semibold tracking-wide">羽皓のBlog</a><nav class="flex items-center gap-4 text-sm" aria-label="Main"><a href="/zh" class="rounded-full px-3 py-1.5 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">首页</a><!-- 手机端:目录缩进导航条按钮(<640px 显示) --><button id="toc-nav-btn" type="button" class="inline-flex items-center rounded-full px-3 py-1.5 text-sm text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary sm:hidden" aria-expanded="false" aria-controls="mobile-toc-panel">目录</button><!-- 三态切换:白天 → 黑夜 → 自动,点击循环。逻辑在 ThemeScript.astro(head 内)。 --><button id="theme-toggle" type="button" data-label-light="白天" data-label-dark="黑夜" data-label-auto="自动" class="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary" aria-label="切换主题" title="主题:白天 / 黑夜 / 自动"><span data-theme-icon aria-hidden="true">🔄</span><span data-theme-label>自动</span></button></nav></div></header><main id="top" class="flex-1"><!-- 手机端目录下拉面板(导航条按钮展开,固定定位) --><div id="mobile-toc-panel" class="mobile-toc-panel" aria-label="目录"><nav class="toc" aria-label="目录"><ul class="mt-2 space-y-1 border-l border-border text-sm"><li><a href="#标题层级" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">标题层级</a><ul class="ml-3 mt-1 space-y-1 border-l border-border"><li><a href="#三级标题" class="block rounded px-2 py-0.5 text-text-muted transition-colors hover:bg-surface-alt hover:text-text-primary">三级标题</a></li></ul></li><li><a href="#段落与换行" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">段落与换行</a></li><li><a href="#文字样式" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">文字样式</a></li><li><a href="#链接" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">链接</a></li><li><a href="#图片" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">图片</a></li><li><a href="#列表" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">列表</a><ul class="ml-3 mt-1 space-y-1 border-l border-border"><li><a href="#无序列表" class="block rounded px-2 py-0.5 text-text-muted transition-colors hover:bg-surface-alt hover:text-text-primary">无序列表</a></li><li><a href="#有序列表" class="block rounded px-2 py-0.5 text-text-muted transition-colors hover:bg-surface-alt hover:text-text-primary">有序列表</a></li><li><a href="#任务列表-gfm" class="block rounded px-2 py-0.5 text-text-muted transition-colors hover:bg-surface-alt hover:text-text-primary">任务列表(GFM)</a></li></ul></li><li><a href="#引用" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">引用</a></li><li><a href="#代码" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">代码</a></li><li><a href="#表格" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">表格</a></li><li><a href="#分割线" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">分割线</a></li><li><a href="#数学公式" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">数学公式</a></li><li><a href="#mermaid-图" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">Mermaid 图</a><ul class="ml-3 mt-1 space-y-1 border-l border-border"><li><a href="#流程图" class="block rounded px-2 py-0.5 text-text-muted transition-colors hover:bg-surface-alt hover:text-text-primary">流程图</a></li><li><a href="#时序图" class="block rounded px-2 py-0.5 text-text-muted transition-colors hover:bg-surface-alt hover:text-text-primary">时序图</a></li></ul></li><li><a href="#原始-html-与破格图" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">原始 HTML 与破格图</a></li><li><a href="#emoji-与特殊字符" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">Emoji 与特殊字符</a></li><li><a href="#结语" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">结语</a></li></ul></nav></div><div class="post-grid has-hero"><!-- 桌面右栏:sticky TOC(>=1152px 显示,与三栏网格同断点) --><aside class="post-toc hidden min-w-0 px-4 py-10" aria-label="目录"><nav class="toc" aria-label="目录"><p class="text-sm font-semibold text-text-secondary">目录</p><ul class="mt-2 space-y-1 border-l border-border text-sm"><li><a href="#标题层级" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">标题层级</a><ul class="ml-3 mt-1 space-y-1 border-l border-border"><li><a href="#三级标题" class="block rounded px-2 py-0.5 text-text-muted transition-colors hover:bg-surface-alt hover:text-text-primary">三级标题</a></li></ul></li><li><a href="#段落与换行" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">段落与换行</a></li><li><a href="#文字样式" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">文字样式</a></li><li><a href="#链接" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">链接</a></li><li><a href="#图片" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">图片</a></li><li><a href="#列表" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">列表</a><ul class="ml-3 mt-1 space-y-1 border-l border-border"><li><a href="#无序列表" class="block rounded px-2 py-0.5 text-text-muted transition-colors hover:bg-surface-alt hover:text-text-primary">无序列表</a></li><li><a href="#有序列表" class="block rounded px-2 py-0.5 text-text-muted transition-colors hover:bg-surface-alt hover:text-text-primary">有序列表</a></li><li><a href="#任务列表-gfm" class="block rounded px-2 py-0.5 text-text-muted transition-colors hover:bg-surface-alt hover:text-text-primary">任务列表(GFM)</a></li></ul></li><li><a href="#引用" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">引用</a></li><li><a href="#代码" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">代码</a></li><li><a href="#表格" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">表格</a></li><li><a href="#分割线" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">分割线</a></li><li><a href="#数学公式" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">数学公式</a></li><li><a href="#mermaid-图" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">Mermaid 图</a><ul class="ml-3 mt-1 space-y-1 border-l border-border"><li><a href="#流程图" class="block rounded px-2 py-0.5 text-text-muted transition-colors hover:bg-surface-alt hover:text-text-primary">流程图</a></li><li><a href="#时序图" class="block rounded px-2 py-0.5 text-text-muted transition-colors hover:bg-surface-alt hover:text-text-primary">时序图</a></li></ul></li><li><a href="#原始-html-与破格图" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">原始 HTML 与破格图</a></li><li><a href="#emoji-与特殊字符" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">Emoji 与特殊字符</a></li><li><a href="#结语" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">结语</a></li></ul></nav></aside><!-- 中栏:文章 --><article class="post-article"><div class="post-hero overflow-hidden rounded-lg"><img src="https://picsum.photos/seed/alps/1600/900" alt="阿尔卑斯山风景" draggable="false" class="h-56 w-full object-cover [mask-image:linear-gradient(to_bottom,black_85%,transparent_100%)]"></div><h1 id="post-title" class="text-3xl font-bold tracking-tight sm:text-4xl"><a href="#post-title" class="heading-anchor" aria-hidden="true" tabindex="-1"></a>Markdown 语法测试</h1><div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-text-muted"><time datetime="2026-09-14T00:00:00.000Z">2026年9月14日</time><span class="rounded-full bg-surface-alt px-2.5 py-0.5 text-xs text-text-secondary">#markdown</span><span class="rounded-full bg-surface-alt px-2.5 py-0.5 text-xs text-text-secondary">#测试</span><span class="rounded-full bg-surface-alt px-2.5 py-0.5 text-xs text-text-secondary">#astro</span></div><!-- 移动/平板:TOC 折叠(题图之后、正文之前;<1152px 显示) --><details class="post-toc-mobile mt-8 rounded-lg border border-border bg-surface-raised"><summary class="cursor-pointer select-none px-4 py-3 text-sm font-semibold text-text-secondary">目录</summary><div class="border-t border-border px-4 py-3"><nav class="toc" aria-label="目录"><ul class="mt-2 space-y-1 border-l border-border text-sm"><li><a href="#标题层级" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">标题层级</a><ul class="ml-3 mt-1 space-y-1 border-l border-border"><li><a href="#三级标题" class="block rounded px-2 py-0.5 text-text-muted transition-colors hover:bg-surface-alt hover:text-text-primary">三级标题</a></li></ul></li><li><a href="#段落与换行" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">段落与换行</a></li><li><a href="#文字样式" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">文字样式</a></li><li><a href="#链接" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">链接</a></li><li><a href="#图片" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">图片</a></li><li><a href="#列表" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">列表</a><ul class="ml-3 mt-1 space-y-1 border-l border-border"><li><a href="#无序列表" class="block rounded px-2 py-0.5 text-text-muted transition-colors hover:bg-surface-alt hover:text-text-primary">无序列表</a></li><li><a href="#有序列表" class="block rounded px-2 py-0.5 text-text-muted transition-colors hover:bg-surface-alt hover:text-text-primary">有序列表</a></li><li><a href="#任务列表-gfm" class="block rounded px-2 py-0.5 text-text-muted transition-colors hover:bg-surface-alt hover:text-text-primary">任务列表(GFM)</a></li></ul></li><li><a href="#引用" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">引用</a></li><li><a href="#代码" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">代码</a></li><li><a href="#表格" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">表格</a></li><li><a href="#分割线" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">分割线</a></li><li><a href="#数学公式" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">数学公式</a></li><li><a href="#mermaid-图" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">Mermaid 图</a><ul class="ml-3 mt-1 space-y-1 border-l border-border"><li><a href="#流程图" class="block rounded px-2 py-0.5 text-text-muted transition-colors hover:bg-surface-alt hover:text-text-primary">流程图</a></li><li><a href="#时序图" class="block rounded px-2 py-0.5 text-text-muted transition-colors hover:bg-surface-alt hover:text-text-primary">时序图</a></li></ul></li><li><a href="#原始-html-与破格图" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">原始 HTML 与破格图</a></li><li><a href="#emoji-与特殊字符" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">Emoji 与特殊字符</a></li><li><a href="#结语" class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">结语</a></li></ul></nav></div></details><div class="article-content mt-8"><p>欢迎来到 Markdown 语法测试页。这篇文章覆盖了 Markdown、GFM（GitHub 风格）、数学公式与 Mermaid 图的常用语法,用来验证渲染管线。</p>
+<h2 id="标题层级"><a href="#标题层级" class="heading-anchor" aria-hidden="true" tabindex="-1"></a>标题层级</h2>
+<h3 id="三级标题"><a href="#三级标题" class="heading-anchor" aria-hidden="true" tabindex="-1"></a>三级标题</h3>
+<p>这是 h3 下的正文。所有 h2/h3/h4 标题都有锚点——悬停标题左侧,会出现 <code>#</code> 链接图标。</p>
+<h4 id="四级标题"><a href="#四级标题" class="heading-anchor" aria-hidden="true" tabindex="-1"></a>四级标题</h4>
+<p>h4 用于更细的分节。<strong>加粗</strong>、<em>斜体</em>、<em><strong>粗斜体</strong></em>、<del>删除线</del>都可以在这里混排。</p>
+<h2 id="段落与换行"><a href="#段落与换行" class="heading-anchor" aria-hidden="true" tabindex="-1"></a>段落与换行</h2>
+<p>这是一个段落。段落之间用空行分隔,相邻段落不会自动合并。</p>
+<p>这是第二段。行尾加两个空格再换行,可以强制软换行<br>
+这样文字就到了下一行。</p>
+<h2 id="文字样式"><a href="#文字样式" class="heading-anchor" aria-hidden="true" tabindex="-1"></a>文字样式</h2>
+<ul>
+<li><strong>粗体</strong>:<code>**加粗**</code></li>
+<li><em>斜体</em>:<code>*斜体*</code></li>
+<li><em><strong>粗斜体</strong></em>:<code>***粗斜体***</code></li>
+<li><del>删除线</del>:<code>~~删除线~~</code>(GFM)</li>
+<li>行内代码:<code>const x = 1</code></li>
+<li>上标/下标:x<sup>2</sup>、H<sub>2</sub>O</li>
+</ul>
+<h2 id="链接"><a href="#链接" class="heading-anchor" aria-hidden="true" tabindex="-1"></a>链接</h2>
+<ul>
+<li>行内链接:<a href="https://luoyuhao.nettix.top">Nettix 博客</a></li>
+<li>带标题的链接:<a href="https://luoyuhao.nettix.top" title="文档首页">访问文档</a></li>
+<li>引用式链接:<a href="https://luoyuhao.nettix.top" title="引用式链接目标">示例站</a></li>
+<li>自动链接:<a href="https://luoyuhao.nettix.top">https://luoyuhao.nettix.top</a></li>
+</ul>
+<h2 id="图片"><a href="#图片" class="heading-anchor" aria-hidden="true" tabindex="-1"></a>图片</h2>
+<p><img src="https://picsum.photos/seed/nettix/1200/500" alt="示例图片" title="带标题的图片" draggable="false"></p>
+<p>图片支持 alt 与 title,且不可选中、不可拖拽。</p>
+<h2 id="列表"><a href="#列表" class="heading-anchor" aria-hidden="true" tabindex="-1"></a>列表</h2>
+<h3 id="无序列表"><a href="#无序列表" class="heading-anchor" aria-hidden="true" tabindex="-1"></a>无序列表</h3>
+<ul>
+<li>项目一</li>
+<li>项目二
+<ul>
+<li>嵌套项目 A</li>
+<li>嵌套项目 B</li>
+</ul>
+</li>
+<li>项目三</li>
+</ul>
+<h3 id="有序列表"><a href="#有序列表" class="heading-anchor" aria-hidden="true" tabindex="-1"></a>有序列表</h3>
+<ol>
+<li>第一步</li>
+<li>第二步</li>
+<li>第三步
+<ol>
+<li>嵌套步骤 a</li>
+<li>嵌套步骤 b</li>
+</ol>
+</li>
+</ol>
+<h3 id="任务列表-gfm"><a href="#任务列表-gfm" class="heading-anchor" aria-hidden="true" tabindex="-1"></a>任务列表(GFM)</h3>
+<ul class="contains-task-list">
+<li class="task-list-item"><input type="checkbox" checked disabled> 已完成的任务</li>
+<li class="task-list-item"><input type="checkbox" disabled> 未完成的任务</li>
+<li class="task-list-item"><input type="checkbox" checked disabled> 带 <code>code</code> 的任务</li>
+</ul>
+<h2 id="引用"><a href="#引用" class="heading-anchor" aria-hidden="true" tabindex="-1"></a>引用</h2>
+<blockquote>
+<p>这是一段引用。</p>
+<blockquote>
+<p>嵌套引用。</p>
+</blockquote>
+<p>引用里可以包含 <strong>粗体</strong> 与 <code>行内代码</code>。</p>
+</blockquote>
+<h2 id="代码"><a href="#代码" class="heading-anchor" aria-hidden="true" tabindex="-1"></a>代码</h2>
+<p>行内代码:<code>npm run dev</code>。</p>
+<p>围栏代码块(JavaScript):</p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="javascript"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">function</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> greet</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#E36209;--shiki-dark:#FFAB70">name</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) {</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  return</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> `Hello, ${</span><span style="color:#24292E;--shiki-dark:#E1E4E8">name</span><span style="color:#032F62;--shiki-dark:#9ECBFF">}!`</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre>
+<p>TypeScript:</p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="typescript"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">interface</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> User</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">  id</span><span style="color:#D73A49;--shiki-dark:#F97583">:</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> number</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">  name</span><span style="color:#D73A49;--shiki-dark:#F97583">:</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> string</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">const</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> user</span><span style="color:#D73A49;--shiki-dark:#F97583">:</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> User</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> { id: </span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, name: </span><span style="color:#032F62;--shiki-dark:#9ECBFF">"Alice"</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> };</span></span></code></pre>
+<p>Python:</p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">def</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> fib</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(n):</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    a, b </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    for</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> _ </span><span style="color:#D73A49;--shiki-dark:#F97583">in</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> range</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(n):</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        a, b </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> b, a </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> b</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> a</span></span></code></pre>
+<p>Shell:</p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># 安装依赖</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">pnpm</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> install</span></span></code></pre>
+<h2 id="表格"><a href="#表格" class="heading-anchor" aria-hidden="true" tabindex="-1"></a>表格</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th align="left">对齐方式</th><th align="left">左对齐</th><th align="center">居中</th><th align="right">右对齐</th></tr></thead><tbody><tr><td align="left">示例</td><td align="left">文本</td><td align="center">文本</td><td align="right">文本</td></tr><tr><td align="left">值</td><td align="left">100</td><td align="center">200</td><td align="right">300</td></tr></tbody></table>
+<h2 id="分割线"><a href="#分割线" class="heading-anchor" aria-hidden="true" tabindex="-1"></a>分割线</h2>
+<p>上面是内容,下面用分割线断开:</p>
+<hr>
+<p>分割线之后的内容。</p>
+<h2 id="数学公式"><a href="#数学公式" class="heading-anchor" aria-hidden="true" tabindex="-1"></a>数学公式</h2>
+<p>行内公式:欧拉恒等式 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>e</mi><mrow><mi>i</mi><mi>π</mi></mrow></msup><mo>+</mo><mn>1</mn><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">e^{i\pi} + 1 = 0</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.908em;vertical-align:-0.0833em;"></span><span class="mord"><span class="mord mathnormal">e</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8247em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.0359em;">iπ</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">0</span></span></span></span>。</p>
+<p>块级公式:</p>
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msubsup><mo>∫</mo><mrow><mo>−</mo><mi mathvariant="normal">∞</mi></mrow><mi mathvariant="normal">∞</mi></msubsup><msup><mi>e</mi><mrow><mo>−</mo><msup><mi>x</mi><mn>2</mn></msup></mrow></msup><mtext> </mtext><mi>d</mi><mi>x</mi><mo>=</mo><msqrt><mi>π</mi></msqrt></mrow><annotation encoding="application/x-tex">\int_{-\infty}^{\infty} e^{-x^2}\,dx = \sqrt{\pi}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:2.3846em;vertical-align:-0.9703em;"></span><span class="mop"><span class="mop op-symbol large-op" style="margin-right:0.4445em;position:relative;top:-0.0011em;">∫</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.4143em;"><span style="top:-1.7881em;margin-left:-0.4445em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span><span class="mord mtight">∞</span></span></span></span><span style="top:-3.8129em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">∞</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.9703em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">e</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:1.0369em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span><span class="mord mtight"><span class="mord mathnormal mtight">x</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8913em;"><span style="top:-2.931em;margin-right:0.0714em;"><span class="pstrut" style="height:2.5em;"></span><span class="sizing reset-size3 size1 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">d</span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.04em;vertical-align:-0.1908em;"></span><span class="mord sqrt"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8492em;"><span class="svg-align" style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord" style="padding-left:0.833em;"><span class="mord mathnormal" style="margin-right:0.0359em;">π</span></span></span><span style="top:-2.8092em;"><span class="pstrut" style="height:3em;"></span><span class="hide-tail" style="min-width:0.853em;height:1.08em;"><svg xmlns="http://www.w3.org/2000/svg" width="400em" height="1.08em" viewBox="0 0 400000 1080" preserveAspectRatio="xMinYMin slice"><path d="M95,702
+c-2.7,0,-7.17,-2.7,-13.5,-8c-5.8,-5.3,-9.5,-10,-9.5,-14
+c0,-2,0.3,-3.3,1,-4c1.3,-2.7,23.83,-20.7,67.5,-54
+c44.2,-33.3,65.8,-50.3,66.5,-51c1.3,-1.3,3,-2,5,-2c4.7,0,8.7,3.3,12,10
+s173,378,173,378c0.7,0,35.3,-71,104,-213c68.7,-142,137.5,-285,206.5,-429
+c69,-144,104.5,-217.7,106.5,-221
+l0 -0
+c5.3,-9.3,12,-14,20,-14
+H400000v40H845.2724
+s-225.272,467,-225.272,467s-235,486,-235,486c-2.7,4.7,-9,7,-19,7
+c-6,0,-10,-1,-12,-3s-194,-422,-194,-422s-65,47,-65,47z
+M834 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.1908em;"><span></span></span></span></span></span></span></span></span></span>
+<h2 id="mermaid-图"><a href="#mermaid-图" class="heading-anchor" aria-hidden="true" tabindex="-1"></a>Mermaid 图</h2>
+<h3 id="流程图"><a href="#流程图" class="heading-anchor" aria-hidden="true" tabindex="-1"></a>流程图</h3>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="mermaid"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">flowchart</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> LR</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">  A</span><span style="color:#D73A49;--shiki-dark:#F97583">[</span><span style="color:#032F62;--shiki-dark:#9ECBFF">开始</span><span style="color:#D73A49;--shiki-dark:#F97583">]</span><span style="color:#D73A49;--shiki-dark:#F97583"> --></span><span style="color:#E36209;--shiki-dark:#FFAB70"> B</span><span style="color:#D73A49;--shiki-dark:#F97583">{</span><span style="color:#032F62;--shiki-dark:#9ECBFF">是否就绪?</span><span style="color:#D73A49;--shiki-dark:#F97583">}</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">  B </span><span style="color:#D73A49;--shiki-dark:#F97583">--</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> 是 </span><span style="color:#D73A49;--shiki-dark:#F97583">--></span><span style="color:#E36209;--shiki-dark:#FFAB70"> C</span><span style="color:#D73A49;--shiki-dark:#F97583">[</span><span style="color:#032F62;--shiki-dark:#9ECBFF">执行任务</span><span style="color:#D73A49;--shiki-dark:#F97583">]</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">  B </span><span style="color:#D73A49;--shiki-dark:#F97583">--</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> 否 </span><span style="color:#D73A49;--shiki-dark:#F97583">--></span><span style="color:#E36209;--shiki-dark:#FFAB70"> D</span><span style="color:#D73A49;--shiki-dark:#F97583">[</span><span style="color:#032F62;--shiki-dark:#9ECBFF">等待</span><span style="color:#D73A49;--shiki-dark:#F97583">]</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">  C </span><span style="color:#D73A49;--shiki-dark:#F97583">--></span><span style="color:#E36209;--shiki-dark:#FFAB70"> E</span><span style="color:#D73A49;--shiki-dark:#F97583">[</span><span style="color:#032F62;--shiki-dark:#9ECBFF">结束</span><span style="color:#D73A49;--shiki-dark:#F97583">]</span></span></code></pre>
+<h3 id="时序图"><a href="#时序图" class="heading-anchor" aria-hidden="true" tabindex="-1"></a>时序图</h3>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="mermaid"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">sequenceDiagram</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  participant</span><span style="color:#E36209;--shiki-dark:#FFAB70"> 用户</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  participant</span><span style="color:#E36209;--shiki-dark:#FFAB70"> 服务</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">  用户</span><span style="color:#D73A49;--shiki-dark:#F97583">->></span><span style="color:#E36209;--shiki-dark:#FFAB70">服务</span><span style="color:#D73A49;--shiki-dark:#F97583">:</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> 发起请求</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  activate</span><span style="color:#E36209;--shiki-dark:#FFAB70"> 服务</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">  服务</span><span style="color:#D73A49;--shiki-dark:#F97583">-->></span><span style="color:#E36209;--shiki-dark:#FFAB70">用户</span><span style="color:#D73A49;--shiki-dark:#F97583">:</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> 返回结果</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  deactivate</span><span style="color:#E36209;--shiki-dark:#FFAB70"> 服务</span></span></code></pre>
+<h2 id="原始-html-与破格图"><a href="#原始-html-与破格图" class="heading-anchor" aria-hidden="true" tabindex="-1"></a>原始 HTML 与破格图</h2>
+<p>下面这张用原生 HTML 包裹,在纸张模式下顶格到纸张边缘:</p>
+<figure class="full-bleed">
+  <img src="https://picsum.photos/seed/nettix-wide/1600/600" alt="纸张边缘破格示例">
+  <figcaption class="px-2 pt-2 text-center text-sm text-text-muted">顶格到纸张边缘</figcaption>
+</figure>
+<h2 id="emoji-与特殊字符"><a href="#emoji-与特殊字符" class="heading-anchor" aria-hidden="true" tabindex="-1"></a>Emoji 与特殊字符</h2>
+<p>😄 🚀 ✨ —— 以及需要转义的字符:<code>&#x26;</code>、<code>&#x3C;</code>、<code>></code>、<code>"</code>。</p>
+<h2 id="结语"><a href="#结语" class="heading-anchor" aria-hidden="true" tabindex="-1"></a>结语</h2>
+<p>以上覆盖了大部分常用语法。若发现渲染异常,欢迎反馈。</p></div><!-- 移动端广告位(留空,槽位预留) --><aside class="post-ad-mobile mt-10 lg:hidden" data-slot="ad-mobile" aria-hidden="true"></aside><!-- 评论区:预留区域,默认隐藏,不加载任何评论脚本 --><section id="comments" class="mt-12 hidden" aria-hidden="true" data-reserved="comments"></section></article><!-- 桌面左栏:广告位(留空,槽位预留) --><aside class="post-ad hidden min-w-0 py-10 lg:block xl:block" aria-label="Ad"><div class="mb-4" data-slot="ad-1"></div><div data-slot="ad-2"></div></aside></div></main><footer class="border-t border-border"><div class="mx-auto flex w-full max-w-6xl flex-col items-center gap-3 px-4 py-6 text-sm text-text-muted sm:flex-row sm:justify-between"><p>luoyuhao.nettix.top</p><a href="#top" class="rounded-full px-3 py-1.5 transition-colors hover:bg-surface-alt hover:text-text-primary">返回顶部 ↑</a></div></footer><!-- Mermaid 懒加载渲染:无图页面不引入运行时 --><script type="module" src="/_astro/MarkdownPostLayout.astro_astro_type_script_index_0_lang.w9LPiwDu.js"></script><!-- 手机端目录按钮/平板端定住玻璃质感 --><script type="module">var e=document.getElementById(`toc-nav-btn`),t=document.getElementById(`mobile-toc-panel`);e&&t&&(e.addEventListener(`click`,()=>{let n=t.classList.toggle(`is-open`);e.setAttribute(`aria-expanded`,String(n))}),document.addEventListener(`click`,n=>{t.classList.contains(`is-open`)&&!n.target.closest(`#toc-nav-btn`)&&!n.target.closest(`#mobile-toc-panel`)&&(t.classList.remove(`is-open`),e.setAttribute(`aria-expanded`,`false`))}));var n=document.querySelector(`.post-toc-mobile`);if(n){let e=()=>{n.classList.toggle(`is-stuck`,n.getBoundingClientRect().top<=80)};window.addEventListener(`scroll`,e,{passive:!0}),e()}</script></body></html>

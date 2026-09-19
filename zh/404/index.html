@@ -1,0 +1,50 @@
+<!DOCTYPE html><html lang="zh-CN"><head><!-- 主题初始化脚本:必须放在 <head>,在首帧前应用 data-theme,避免主题闪烁。
+     三种状态:light / dark / auto(无 data-theme 属性 = 跟随系统)。
+     与 ThemeToggle.astro 的按钮配合,用事件委托处理点击。 --><script>
+  (function () {
+    var KEY = "nettix-theme";
+    var ORDER = ["light", "dark", "auto"];
+    var ICONS = { light: "☀️", dark: "🌙", auto: "🔄" };
+
+    function current() {
+      var t = document.documentElement.getAttribute("data-theme");
+      return t === "light" || t === "dark" ? t : "auto";
+    }
+    function setState(t) {
+      var root = document.documentElement;
+      if (t === "auto") root.removeAttribute("data-theme");
+      else root.setAttribute("data-theme", t);
+      try {
+        localStorage.setItem(KEY, t);
+      } catch (e) {}
+      root.setAttribute("data-theme-state", t);
+    }
+    function updateButton() {
+      var btn = document.getElementById("theme-toggle");
+      if (!btn) return;
+      var t = current();
+      var icon = btn.querySelector("[data-theme-icon]");
+      var label = btn.querySelector("[data-theme-label]");
+      if (icon) icon.textContent = ICONS[t] || "🔄";
+      if (label) {
+        var key = "label" + t.charAt(0).toUpperCase() + t.slice(1);
+        label.textContent = btn.dataset[key] || t;
+      }
+      btn.setAttribute("data-theme-state", t);
+    }
+
+    var saved = "auto";
+    try {
+      saved = localStorage.getItem(KEY) || "auto";
+    } catch (e) {}
+    setState(saved);
+
+    document.addEventListener("DOMContentLoaded", updateButton);
+    document.addEventListener("click", function (e) {
+      var el = e.target && e.target.closest ? e.target.closest("#theme-toggle") : null;
+      if (!el) return;
+      setState(ORDER[(ORDER.indexOf(current()) + 1) % ORDER.length]);
+      updateButton();
+    });
+  })();
+</script><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="generator" content="Astro v7.3.2"><meta name="description"><link rel="icon" href="/favicon.svg"><title>404</title><link rel="stylesheet" href="/_astro/ThemeScript.BJrWeSlr.css"></head><body class="flex min-h-dvh flex-col bg-surface text-text-primary antialiased"><header class="sticky top-0 z-10 border-b border-border bg-surface/90 backdrop-blur"><div class="mx-auto flex h-14 w-full max-w-6xl items-center justify-between px-4 sm:px-6"><a href="/zh" class="text-lg font-semibold tracking-wide">羽皓のBlog</a><nav class="flex items-center gap-4 text-sm" aria-label="Main"><a href="/zh" class="rounded-full px-3 py-1.5 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">首页</a><nav aria-label="Language" class="flex items-center gap-1 text-sm"><a href="/zh/404/" aria-current="page" class="rounded-full px-2.5 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">中文</a><a href="/en/404/" class="rounded-full px-2.5 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary">EN</a></nav><!-- 三态切换:白天 → 黑夜 → 自动,点击循环。逻辑在 ThemeScript.astro(head 内)。 --><button id="theme-toggle" type="button" data-label-light="白天" data-label-dark="黑夜" data-label-auto="自动" class="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary" aria-label="切换主题" title="主题:白天 / 黑夜 / 自动"><span data-theme-icon aria-hidden="true">🔄</span><span data-theme-label>自动</span></button></nav></div></header><main class="flex-1"><div class="flex min-h-80 flex-col items-center justify-center px-4 text-center"><p class="text-5xl font-bold text-text-muted">404</p><h1 class="mt-4 text-xl font-semibold">页面不存在</h1><p class="mt-2 text-text-secondary">你访问的页面不存在或已被移动。</p><a href="/zh" class="mt-6 inline-flex h-10 items-center justify-center rounded-full bg-action px-5 text-base font-medium text-action-contrast transition-colors hover:bg-action-hover">首页</a></div></main><footer class="border-t border-border"><div class="mx-auto flex w-full max-w-6xl flex-col items-center gap-3 px-4 py-6 text-sm text-text-muted sm:flex-row sm:justify-between"><p>luoyuhao.nettix.top</p><a href="#top" class="rounded-full px-3 py-1.5 transition-colors hover:bg-surface-alt hover:text-text-primary">返回顶部 ↑</a></div></footer></body></html>
