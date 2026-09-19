@@ -1,0 +1,50 @@
+/* ==========================================================================
+ * Mermaid 图:容器 + 令牌化颜色覆盖
+ * 单次渲染 + CSS 变量覆盖:切换主题时颜色即时跟随,无需重新渲染。
+ * ========================================================================== */
+
+/* Mermaid 容器:宽图横向滚动 */
+.article-content pre.mermaid-container {
+  overflow-x: auto;
+  text-align: center;
+  background: var(--surface-raised);
+}
+
+/* 颜色用令牌变量实时覆盖(压过 mermaid 内联色) */
+.mermaid-container svg {
+  background: transparent;
+}
+/* 文字 */
+.mermaid-container svg text,
+.mermaid-container svg .nodeLabel,
+.mermaid-container svg .edgeLabel,
+.mermaid-container svg .actor {
+  fill: var(--text-primary) !important;
+}
+/* 节点/形状背景与描边(流程图/时序/类图/状态图/ER/注释) */
+.mermaid-container svg .node rect,
+.mermaid-container svg .node polygon,
+.mermaid-container svg .node circle,
+.mermaid-container svg .node ellipse,
+.mermaid-container svg .node path,
+.mermaid-container svg .cluster rect,
+.mermaid-container svg .cluster polygon,
+.mermaid-container svg .actor rect,
+.mermaid-container svg .classGroup rect,
+.mermaid-container svg .stateGroup rect,
+.mermaid-container svg .entityBox,
+.mermaid-container svg .note {
+  fill: var(--brand-subtle) !important;
+  stroke: var(--brand) !important;
+}
+/* 连线 */
+.mermaid-container svg .edgePath .path,
+.mermaid-container svg .flowchart-link,
+.mermaid-container svg .relation,
+.mermaid-container svg .actor-line {
+  stroke: var(--text-muted) !important;
+}
+/* 边标签底色跟随抬升面 */
+.mermaid-container svg .edgeLabel {
+  background-color: var(--surface-raised) !important;
+}

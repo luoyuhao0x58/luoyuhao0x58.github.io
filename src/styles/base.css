@@ -1,0 +1,48 @@
+/* ==========================================================================
+ * 站点级基础:博客私有变量与 html/body 全局样式
+ * 品牌/语义令牌见 tokens.css(共享,不可改);此处仅博客自己的布局/纸片变量。
+ * ========================================================================== */
+
+:root {
+  --content-width: 664px; /* 纸张宽:正文 = 664 − 2×2em(32px) = 600px(邮件常见宽度) */
+  --indent: 2rem; /* 其他元素缩进(正文 16px 基准下 2rem = 2em) */
+  --article-bg: #faf9f5;
+  --hero-h: 14rem; /* 题图高度 h-56 */
+  --hero-gap: 1.5rem; /* 题图与标题间距(同时用于目录对齐偏移) */
+  /* 纸张立体感:接触阴影 + 中距阴影 + 环境阴影,三层叠出抬升感 */
+  --paper-shadow:
+    0 1px 2px rgb(16 24 40 / 0.06),
+    0 8px 16px -4px rgb(16 24 40 / 0.1),
+    0 32px 64px -20px rgb(16 24 40 / 0.28);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):not([data-theme="dark"]) {
+    /* 纸面恢复抬升面色,不提亮底色 */
+    --article-bg: var(--surface-raised);
+    /* 深色下阴影要"提亮":浅色光晕 + 顶部受光,让纸沿在深色底上可见 */
+    --paper-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.08),
+      0 1px 2px rgb(0 0 0 / 0.4),
+      0 0 40px -8px rgb(255 255 255 / 0.08);
+  }
+}
+/* 手动深色时纸张底色与阴影跟随抬升面 */
+:root[data-theme="dark"] {
+  --article-bg: var(--surface-raised);
+  --paper-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.08),
+    0 1px 2px rgb(0 0 0 / 0.4),
+    0 0 40px -8px rgb(255 255 255 / 0.08);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+[id] {
+  scroll-margin-top: calc(3.5rem + 1rem);
+}
+
+body {
+  font-family: var(--font-sans);
+}

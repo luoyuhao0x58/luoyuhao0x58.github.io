@@ -1,0 +1,25 @@
+---
+interface Props {
+  lang: string;
+}
+const { lang } = Astro.props;
+const isEn = lang === "en";
+const labels = isEn
+  ? { light: "Light", dark: "Dark", auto: "Auto" }
+  : { light: "白天", dark: "黑夜", auto: "自动" };
+---
+
+<!-- 三态切换:白天 → 黑夜 → 自动,点击循环。逻辑在 ThemeScript.astro(head 内)。 -->
+<button
+  id="theme-toggle"
+  type="button"
+  data-label-light={labels.light}
+  data-label-dark={labels.dark}
+  data-label-auto={labels.auto}
+  class="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary"
+  aria-label={isEn ? "Switch theme" : "切换主题"}
+  title={isEn ? "Theme: light / dark / auto" : "主题:白天 / 黑夜 / 自动"}
+>
+  <span data-theme-icon aria-hidden="true">🔄</span>
+  <span data-theme-label>{labels.auto}</span>
+</button>

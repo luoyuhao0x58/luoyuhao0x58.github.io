@@ -1,0 +1,160 @@
+---
+import "../styles/global.css";
+import Toc from "../components/Toc.astro";
+import ThemeScript from "../components/ThemeScript.astro";
+import ThemeToggle from "../components/ThemeToggle.astro";
+import { t } from "../i18n";
+
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+interface Props {
+  title: string;
+  description?: string;
+  pubDate?: Date;
+  tags?: string[];
+  image?: { url: string; alt: string };
+  lang: string;
+  headings: Heading[];
+}
+const { title, description, pubDate, tags, image, lang, headings } = Astro.props;
+const htmlLang = lang === "en" ? "en" : "zh-CN";
+const dateLabel = pubDate
+  ? new Intl.DateTimeFormat(lang === "zh" ? "zh-CN" : "en-US", {
+      dateStyle: "medium",
+    }).format(pubDate)
+  : "";
+const tocTitle = t(lang, "tocTitle");
+---
+
+<html lang={htmlLang}>
+  <head>
+    <ThemeScript />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="description" content={description} />
+    <link rel="icon" href="/favicon.svg" />
+    <title>{title}</title>
+  </head>
+  <body class="flex min-h-dvh flex-col bg-surface text-text-primary antialiased">
+    <header class="sticky top-0 z-10 border-b border-border bg-surface/90 backdrop-blur">
+      <div class="mx-auto flex h-14 w-full max-w-6xl items-center justify-between px-4 sm:px-6">
+        <a href={`/${lang}`} class="text-lg font-semibold tracking-wide">
+          {t(lang, "siteName")}
+        </a>
+        <nav class="flex items-center gap-4 text-sm" aria-label="Main">
+          <a
+            href={`/${lang}`}
+            class="rounded-full px-3 py-1.5 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary"
+          >
+            {t(lang, "navHome")}
+          </a>
+          <!-- 手机端:目录缩进导航条按钮(<640px 显示) -->
+          <button
+            id="toc-nav-btn"
+            type="button"
+            class="inline-flex items-center rounded-full px-3 py-1.5 text-sm text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary sm:hidden"
+            aria-expanded="false"
+            aria-controls="mobile-toc-panel"
+          >
+            {tocTitle}
+          </button>
+          <ThemeToggle lang={lang} />
+        </nav>
+      </div>
+    </header>
+
+    <main id="top" class="flex-1">
+      <!-- 手机端目录下拉面板(导航条按钮展开,固定定位) -->
+      <div id="mobile-toc-panel" class="mobile-toc-panel" aria-label={tocTitle}>
+        <Toc headings={headings} lang={lang} showHeading={false} />
+      </div>
+      <div class={`post-grid ${image ? "has-hero" : ""}`}>
+        <!-- 桌面右栏:sticky TOC(>=1152px 显示,与三栏网格同断点) -->
+        <aside class="post-toc hidden min-w-0 px-4 py-10" aria-label={tocTitle}>
+          <Toc headings={headings} lang={lang} />
+        </aside>
+
+        <!-- 中栏:文章 -->
+        <article class="post-article">
+          {image && (
+            <div class="post-hero overflow-hidden rounded-lg">
+              <img
+                src={image.url}
+                alt={image.alt}
+                draggable="false"
+                class="h-56 w-full object-cover [mask-image:linear-gradient(to_bottom,black_85%,transparent_100%)]"
+              />
+            </div>
+          )}
+
+          <h1 id="post-title" class="text-3xl font-bold tracking-tight sm:text-4xl">
+            <a
+              href="#post-title"
+              class="heading-anchor"
+              aria-hidden="true"
+              tabindex="-1"
+            ></a>
+            {title}
+          </h1>
+          <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-text-muted">
+            {dateLabel && <time datetime={pubDate?.toISOString()}>{dateLabel}</time>}
+            {tags?.map((tag) => (
+              <span class="rounded-full bg-surface-alt px-2.5 py-0.5 text-xs text-text-secondary">
+                #{tag}
+              </span>
+            ))}
+          </div>
+
+          <!-- 移动/平板:TOC 折叠(题图之后、正文之前;<1152px 显示) -->
+          <details class="post-toc-mobile mt-8 rounded-lg border border-border bg-surface-raised">
+            <summary class="cursor-pointer select-none px-4 py-3 text-sm font-semibold text-text-secondary">
+              {tocTitle}
+            </summary>
+            <div class="border-t border-border px-4 py-3">
+              <Toc headings={headings} lang={lang} showHeading={false} />
+            </div>
+          </details>
+
+          <div class="article-content mt-8">
+            <slot />
+          </div>
+
+          <!-- 移动端广告位(留空,槽位预留) -->
+          <aside class="post-ad-mobile mt-10 lg:hidden" data-slot="ad-mobile" aria-hidden="true"></aside>
+
+          <!-- 评论区:预留区域,默认隐藏,不加载任何评论脚本 -->
+          <section id="comments" class="mt-12 hidden" aria-hidden="true" data-reserved="comments"></section>
+        </article>
+
+        <!-- 桌面左栏:广告位(留空,槽位预留) -->
+        <aside class="post-ad hidden min-w-0 py-10 lg:block xl:block" aria-label="Ad">
+          <div class="mb-4" data-slot="ad-1"></div>
+          <div data-slot="ad-2"></div>
+        </aside>
+      </div>
+    </main>
+
+    <footer class="border-t border-border">
+      <div class="mx-auto flex w-full max-w-6xl flex-col items-center gap-3 px-4 py-6 text-sm text-text-muted sm:flex-row sm:justify-between">
+        <p>luoyuhao.nettix.top</p>
+        <a
+          href="#top"
+          class="rounded-full px-3 py-1.5 transition-colors hover:bg-surface-alt hover:text-text-primary"
+        >
+          {t(lang, "backToTop")} ↑
+        </a>
+      </div>
+    </footer>
+
+    <!-- Mermaid 懒加载渲染:无图页面不引入运行时 -->
+    <script src="../scripts/mermaid.js"></script>
+
+    <!-- 手机端目录按钮/平板端定住玻璃质感 -->
+    <script src="../scripts/post-toc.js"></script>
+  </body>
+</html>

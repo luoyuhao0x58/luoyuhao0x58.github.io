@@ -1,0 +1,17 @@
+/* ==========================================================================
+ * 全局样式编排入口
+ * 按模块组织:
+ *   tokens.css   — vendored 设计令牌(@nettix/design-tokens 副本)
+ *   base.css     — 站点级变量(:root/深浅主题)与 html/body 基础
+ *   article.css  — 文章正文排版(标题/段落/代码/表格/图片/引用等)
+ *   mermaid.css  — Mermaid 图(容器 + 令牌化颜色覆盖)
+ *   layout.css   — 文章页布局(纸片/三栏/目录/题图/锚点/响应式)
+ * ========================================================================== */
+@import "tailwindcss";
+@import "katex/dist/katex.min.css";
+@import "./tokens.css";
+@import "./base.css";
+@import "./article.css";
+@import "./mermaid.css";
+@import "./layout.css";
+@source "../components";

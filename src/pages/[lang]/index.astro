@@ -1,0 +1,68 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { t } from "../../i18n";
+
+export async function getStaticPaths() {
+  return ["zh", "en"].map((lang) => ({ params: { lang } }));
+}
+
+const lang = Astro.params.lang ?? "zh";
+const posts = (await getCollection("blog"))
+  .filter((post) => post.data.lang === lang)
+  .sort((a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime());
+---
+
+<BaseLayout
+  lang={lang}
+  title={t(lang, "siteName")}
+  description={t(lang, "siteName")}
+>
+  <div class="mx-auto w-full max-w-3xl px-4 py-12 sm:py-16" id="list">
+    <h1 class="text-3xl font-bold tracking-tight sm:text-4xl">
+      {t(lang, "siteName")}
+    </h1>
+    {posts.length === 0 ? (
+      <p class="mt-10 text-text-muted">{t(lang, "listEmpty")}</p>
+    ) : (
+      <ul class="mt-10 divide-y divide-border">
+        {posts.map((post) => (
+          <li class="py-5">
+            <a
+              href={`/${lang}/posts/${post.id.split("/")[1]}`}
+              class="group block"
+            >
+              <div class="flex items-baseline justify-between gap-4">
+                <h2 class="text-lg font-semibold group-hover:text-brand">
+                  {post.data.title}
+                </h2>
+                <time
+                  datetime={post.data.pubDate.toISOString()}
+                  class="shrink-0 text-sm text-text-muted"
+                >
+                  {
+                    new Intl.DateTimeFormat(lang === "zh" ? "zh-CN" : "en-US", {
+                      dateStyle: "medium",
+                    }).format(post.data.pubDate)
+                  }
+                </time>
+              </div>
+              <p class="mt-1.5 text-sm leading-relaxed text-text-secondary">
+                {post.data.description}
+              </p>
+              {post.data.tags.length > 0 && (
+                <div class="mt-2.5 flex flex-wrap gap-1.5">
+                  {post.data.tags.map((tag) => (
+                    <span class="rounded-full bg-surface-alt px-2.5 py-0.5 text-xs text-text-secondary">
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </a>
+          </li>
+        ))}
+      </ul>
+    )}
+  </div>
+</BaseLayout>

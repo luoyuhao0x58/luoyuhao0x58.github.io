@@ -1,0 +1,112 @@
+# 博客自动部署:构建一次 → 先推 gh-pages,再经 API/CLI 推送各平台
+#
+# 模型 A(构建一次、多端同字节):GitHub Actions 构建 → 上传 dist 产物 →
+#   1. 推 gh-pages 分支(供 GitHub Pages)
+#   2. 平台矩阵直传:Cloudflare / EdgeOne / Vercel / Netlify
+# 加平台 = 在下方加一步 + 加一个 secret,无需改构建逻辑。
+#
+# 所需 Secrets(仓库 Settings → Secrets and variables → Actions):
+#   Cloudflare: CLOUDFLARE_API_TOKEN(wrangler Pages:Edit)、CLOUDFLARE_ACCOUNT_ID
+#   EdgeOne:    EDGEONE_API_TOKEN(EdgeOne Makers 控制台生成)
+#   Vercel:     VERCEL_TOKEN、VERCEL_ORG_ID、VERCEL_PROJECT_ID
+#   Netlify:    NETLIFY_AUTH_TOKEN、NETLIFY_SITE_ID
+#   GitHub Pages 用内置 GITHUB_TOKEN,无需配置。
+# 未配置 secret 的平台会自动跳过。
+
+name: Deploy
+
+on:
+  workflow_dispatch:
+
+# 串行发布:新 push 会排队,避免部署互相覆盖
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+
+      - name: Upload dist artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: blog-dist
+          path: dist
+          if-no-files-found: error
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download dist artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: blog-dist
+          path: dist
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: pnpm
+
+      - name: Allow pnpm build scripts globally
+        run: pnpm config set dangerously-allow-all-builds true --location=global
+
+      - name: Publish to GitHub Pages (gh-pages)
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GH_TOKEN }}
+          publish_dir: ./dist
+          publish_branch: gh-pages
+
+      - name: Deploy Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name luoyuhao0x58
+
+      - name: Deploy EdgeOne Makers
+        run: |
+          pnpm --allow-build=esbuild dlx edgeone makers deploy ./dist -n luoyuhao0x58 -t "${{ secrets.EDGEONE_API_TOKEN }}" -e production
+
+      - name: Deploy Vercel
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          npx vercel deploy dist --prod --yes
+
+      - name: Deploy Netlify
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        run: |
+          npx netlify-cli deploy --prod --dir dist

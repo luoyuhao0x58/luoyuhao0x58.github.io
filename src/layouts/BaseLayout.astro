@@ -1,0 +1,33 @@
+---
+import "../styles/global.css";
+import Footer from "../components/Footer.astro";
+import Header from "../components/Header.astro";
+import ThemeScript from "../components/ThemeScript.astro";
+
+interface Props {
+  title: string;
+  description?: string;
+  lang: string;
+}
+const { title, description, lang } = Astro.props;
+const htmlLang = lang === "en" ? "en" : "zh-CN";
+---
+
+<html lang={htmlLang}>
+  <head>
+    <ThemeScript />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="description" content={description} />
+    <link rel="icon" href="/favicon.svg" />
+    <title>{title}</title>
+  </head>
+  <body class="flex min-h-dvh flex-col bg-surface text-text-primary antialiased">
+    <Header lang={lang} />
+    <main class="flex-1">
+      <slot />
+    </main>
+    <Footer lang={lang} />
+  </body>
+</html>

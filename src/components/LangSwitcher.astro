@@ -1,0 +1,25 @@
+---
+import { langFromPath } from "../i18n";
+
+interface Props {
+  currentPath: string;
+}
+const { currentPath } = Astro.props;
+const current = langFromPath(currentPath);
+const rest = currentPath.replace(/^\/(zh|en)(\/|$)/, "/");
+const labels = { zh: "中文", en: "EN" };
+---
+
+<nav aria-label="Language" class="flex items-center gap-1 text-sm">
+  {
+    ["zh", "en"].map((l) => (
+      <a
+        href={`/${l}${rest === "/" ? "" : rest}`}
+        aria-current={current === l ? "page" : undefined}
+        class="rounded-full px-2.5 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary"
+      >
+        {labels[l]}
+      </a>
+    ))
+  }
+</nav>

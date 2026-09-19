@@ -1,0 +1,51 @@
+<!-- 主题初始化脚本:必须放在 <head>,在首帧前应用 data-theme,避免主题闪烁。
+     三种状态:light / dark / auto(无 data-theme 属性 = 跟随系统)。
+     与 ThemeToggle.astro 的按钮配合,用事件委托处理点击。 -->
+<script is:inline>
+  (function () {
+    var KEY = "nettix-theme";
+    var ORDER = ["light", "dark", "auto"];
+    var ICONS = { light: "☀️", dark: "🌙", auto: "🔄" };
+
+    function current() {
+      var t = document.documentElement.getAttribute("data-theme");
+      return t === "light" || t === "dark" ? t : "auto";
+    }
+    function setState(t) {
+      var root = document.documentElement;
+      if (t === "auto") root.removeAttribute("data-theme");
+      else root.setAttribute("data-theme", t);
+      try {
+        localStorage.setItem(KEY, t);
+      } catch (e) {}
+      root.setAttribute("data-theme-state", t);
+    }
+    function updateButton() {
+      var btn = document.getElementById("theme-toggle");
+      if (!btn) return;
+      var t = current();
+      var icon = btn.querySelector("[data-theme-icon]");
+      var label = btn.querySelector("[data-theme-label]");
+      if (icon) icon.textContent = ICONS[t] || "🔄";
+      if (label) {
+        var key = "label" + t.charAt(0).toUpperCase() + t.slice(1);
+        label.textContent = btn.dataset[key] || t;
+      }
+      btn.setAttribute("data-theme-state", t);
+    }
+
+    var saved = "auto";
+    try {
+      saved = localStorage.getItem(KEY) || "auto";
+    } catch (e) {}
+    setState(saved);
+
+    document.addEventListener("DOMContentLoaded", updateButton);
+    document.addEventListener("click", function (e) {
+      var el = e.target && e.target.closest ? e.target.closest("#theme-toggle") : null;
+      if (!el) return;
+      setState(ORDER[(ORDER.indexOf(current()) + 1) % ORDER.length]);
+      updateButton();
+    });
+  })();
+</script>

@@ -1,0 +1,205 @@
+/* ==========================================================================
+ * 文章页布局:标题锚点 + 纸片/三栏/目录/题图 + 响应式
+ * ========================================================================== */
+
+/* ================= 标题锚点链接 ================= */
+
+.article-content h2,
+.article-content h3,
+.article-content h4,
+.post-article h1 {
+  position: relative;
+}
+/* 链接图标:位于纸张左侧之外,默认隐藏,悬停/聚焦时浮现。无框无底色。
+   # 由 ::before 渲染(锚点本身为空元素)。 */
+.heading-anchor {
+  position: absolute;
+  top: 50%;
+  right: 100%;
+  margin-right: 5px; /* 统一离纸张边缘 5px */
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9em;
+  line-height: 1;
+  color: var(--text-muted);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.heading-anchor::before {
+  content: "#";
+}
+.heading-anchor:hover {
+  color: var(--brand);
+}
+/* 覆盖 .article-content a 的链接样式(蓝字+下划线),锚点图标不受其影响:
+   出现时是弱色,鼠标移到图标上才高亮 */
+.article-content a.heading-anchor {
+  color: var(--text-muted);
+  text-decoration: none;
+}
+.article-content a.heading-anchor:hover {
+  color: var(--brand);
+}
+/* h3/h4 的边框盒被 margin-left 内移 0.5em,补足让图标统一离纸边 5px。
+   h1/h2 的 padding-inline 不移动边框盒,锚点定位仍贴纸边,无需补偿。 */
+.article-content h3 > .heading-anchor,
+.article-content h4 > .heading-anchor {
+  margin-right: calc(0.5em + 5px);
+}
+.article-content h2:hover > .heading-anchor,
+.article-content h3:hover > .heading-anchor,
+.article-content h4:hover > .heading-anchor,
+.article-content h2:focus-within > .heading-anchor,
+.article-content h3:focus-within > .heading-anchor,
+.article-content h4:focus-within > .heading-anchor,
+.post-article h1:hover > .heading-anchor,
+.post-article h1:focus-within > .heading-anchor {
+  opacity: 1;
+}
+
+/* ================= 文章页布局网格 ================= */
+
+.post-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "toc" "article" "ad" "comments";
+  width: 100%;
+}
+.post-toc {
+  grid-area: toc;
+}
+/* 纸片:全视口存在。手机(默认)无圆角;平板/桌面恢复圆角,两侧有空隙时顶部留白。 */
+.post-article {
+  --paper-pad-y: 2rem;
+  grid-area: article;
+  width: 100%;
+  max-width: var(--content-width);
+  margin-inline: auto;
+  background: var(--article-bg);
+  border: 1px solid var(--border);
+  border-radius: 0; /* 手机去圆角 */
+  box-shadow: var(--paper-shadow);
+  padding: var(--paper-pad-y) 0;
+}
+/* 纸张直接子元素(标题/元信息等)内缩 0.75rem;折叠目录盒子用外边距内缩 */
+.post-article > *:not(.article-content):not(.post-hero):not(.post-toc-mobile) {
+  padding-inline: 0.75rem;
+}
+.post-toc-mobile {
+  /* 平板:滚动到顶部时定住在导航条下方(玻璃质感见 .is-stuck) */
+  position: sticky;
+  top: 3.5rem; /* 导航条高度 h-14 */
+  z-index: 5;
+  margin-inline: 0.75rem;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+/* 定住时:像导航条一样的半透明玻璃质感 */
+.post-toc-mobile.is-stuck {
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  backdrop-filter: blur(8px);
+  box-shadow: var(--ntx-shadow-sm);
+}
+/* 手机端:隐藏折叠目录,改用导航条按钮(见 .mobile-toc-panel) */
+@media (max-width: 639px) {
+  .post-toc-mobile {
+    display: none;
+  }
+}
+/* 平板:视口两侧有空隙时,定住位置与纸片顶部留白一致(不贴导航条) */
+@media (min-width: 680px) {
+  .post-toc-mobile {
+    top: calc(3.5rem + 1em);
+  }
+}
+
+/* 手机端目录下拉面板(导航条"目录"按钮展开) */
+.mobile-toc-panel {
+  display: none;
+  position: fixed;
+  top: calc(3.5rem + 0.5rem);
+  left: 0.75rem;
+  right: 0.75rem;
+  z-index: 9; /* 低于导航条(10),高于正文 */
+  max-height: 65vh;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  background: color-mix(in srgb, var(--surface) 90%, transparent);
+  backdrop-filter: blur(8px);
+  box-shadow: var(--ntx-shadow-md);
+}
+.mobile-toc-panel.is-open {
+  display: block;
+}
+@media (min-width: 640px) {
+  .mobile-toc-panel {
+    display: none !important;
+  }
+}
+/* 题图:覆盖纸张上/左/右的 1px 边框,顶到最外缘;底部留 --hero-gap 与标题拉开距离 */
+.post-hero {
+  margin: calc(-1 * var(--paper-pad-y) - 1px) -1px var(--hero-gap) -1px;
+  border-radius: 0;
+}
+.post-ad {
+  grid-area: ad;
+}
+.post-comments {
+  grid-area: comments;
+  width: 100%;
+  max-width: var(--content-width);
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+
+/* 平板+:纸片加大上下留白、恢复圆角 */
+@media (min-width: 640px) {
+  .post-article {
+    --paper-pad-y: 3rem;
+    border-radius: 0.375rem;
+  }
+  .post-hero {
+    border-radius: 0.375rem 0.375rem 0 0;
+  }
+}
+/* 平板+:视口能放下 664px 纸片(两侧有空隙)时,顶部留出空隙 */
+@media (min-width: 680px) {
+  .post-grid {
+    margin-top: 1em;
+  }
+}
+
+@media (min-width: 1152px) {
+  .post-grid {
+    /* 中列固定 664px(文章不缩小),左右列可收缩吸收余量;顶部空隙由 680px+ 规则承担 */
+    grid-template-columns: minmax(0, 220px) var(--content-width) minmax(0, 220px);
+    justify-content: center;
+    column-gap: 2rem;
+    grid-template-areas: "ads article toc";
+    align-items: start;
+  }
+  .post-toc {
+    display: block;
+    position: sticky;
+    top: calc(3.5rem + 1em);
+  }
+  /* 有题图时:目录下移,顶部与标题对齐(题图破格到视窗也不会盖住目录) */
+  .post-grid.has-hero .post-toc {
+    margin-top: calc(var(--hero-h) + var(--hero-gap));
+  }
+  .post-ad {
+    position: sticky;
+    top: calc(3.5rem + 1em);
+  }
+  .post-toc-mobile {
+    display: none;
+  }
+  /* h3/h4 保持 0.5em 左缩进(h2 已全宽,文字内缩由自身 padding 承担) */
+  .article-content > h3,
+  .article-content > h4 {
+    margin-left: calc(-1 * var(--indent) + 0.5em);
+  }
+}

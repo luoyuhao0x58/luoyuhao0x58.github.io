@@ -1,0 +1,61 @@
+---
+import { t } from "../i18n";
+
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+interface Props {
+  headings: Heading[];
+  lang: string;
+  /** 是否显示"目录"标题(手机面板/折叠条自带标题时可关掉,避免重复) */
+  showHeading?: boolean;
+}
+const { headings, lang, showHeading = true } = Astro.props;
+
+// 构建两级树:h2 为顶层,h3 嵌套其下。
+const items: Array<{ h: Heading; children: Heading[] }> = [];
+let current: (typeof items)[number] | undefined;
+for (const h of headings) {
+  if (h.depth === 2) {
+    current = { h, children: [] };
+    items.push(current);
+  } else if (h.depth === 3 && current) {
+    current.children.push(h);
+  }
+}
+---
+
+<nav class="toc" aria-label={t(lang, "tocTitle")}>
+  {showHeading && (
+    <p class="text-sm font-semibold text-text-secondary">{t(lang, "tocTitle")}</p>
+  )}
+  <ul class="mt-2 space-y-1 border-l border-border text-sm">
+    {items.map((item) => (
+      <li>
+        <a
+          href={`#${item.h.slug}`}
+          class="block rounded px-2 py-1 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary"
+        >
+          {item.h.text}
+        </a>
+        {item.children.length > 0 && (
+          <ul class="ml-3 mt-1 space-y-1 border-l border-border">
+            {item.children.map((child) => (
+              <li>
+                <a
+                  href={`#${child.slug}`}
+                  class="block rounded px-2 py-0.5 text-text-muted transition-colors hover:bg-surface-alt hover:text-text-primary"
+                >
+                  {child.text}
+                </a>
+              </li>
+            ))}
+          </ul>
+        )}
+      </li>
+    ))}
+  </ul>
+</nav>

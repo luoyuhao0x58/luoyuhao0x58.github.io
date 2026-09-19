@@ -1,0 +1,230 @@
+/*
+ * design-tokens 令牌定义(VENDORED)
+ *
+ * 来源:@nettix/design-tokens 包(共享设计系统,org 仓库维护)。
+ * 本文件是从该包复制的临时副本,使 blog 独立仓库可自包含构建。
+ * 待 tokens 包发布到 npm/GitHub Packages 后,改回 import "@nettix/design-tokens" 并删除本文件。
+ * 注意:改动共享令牌请先同步回 org 仓库,避免版本漂移。
+ */
+
+/*
+ * Nettix design tokens — 浅色/深色双主题
+ *
+ * 构成:
+ *   1) 调色板/字体/圆角/阴影/动效  → Tailwind v4 `@theme`(生成工具类 + :root 变量)
+ *   2) 语义层(角色色)              → :root 变量,随 prefers-color-scheme 翻转
+ *   3) 语义工具类映射               → `@theme inline`,使 bg-surface 等跟随主题翻转
+ *
+ * 占位值说明:当前为原型占位色板,待 creative-direction 定稿后替换。
+ */
+@theme {
+  /* ---- 品牌色(蓝) ---- */
+  --color-brand-50: #eff6ff;
+  --color-brand-100: #dbeafe;
+  --color-brand-200: #bfdbfe;
+  --color-brand-300: #93c5fd;
+  --color-brand-400: #60a5fa;
+  --color-brand-500: #3b82f6;
+  --color-brand-600: #2563eb;
+  --color-brand-700: #1d4ed8;
+  --color-brand-800: #1e40af;
+  --color-brand-900: #1e3a8a;
+
+  /* ---- 行动色(绿,CTA 专用,与文字/装饰色区分) ---- */
+  --color-action-50: #f0fdf4;
+  --color-action-100: #dcfce7;
+  --color-action-200: #bbf7d0;
+  --color-action-300: #86efac;
+  --color-action-400: #4ade80;
+  --color-action-500: #22c55e;
+  --color-action-600: #16a34a;
+  --color-action-700: #15803d;
+  --color-action-800: #166534;
+  --color-action-900: #14532d;
+
+  /* ---- 强调色(琥珀,装饰性,克制使用) ---- */
+  --color-accent-50: #fffbeb;
+  --color-accent-100: #fef3c7;
+  --color-accent-200: #fde68a;
+  --color-accent-300: #fcd34d;
+  --color-accent-400: #fbbf24;
+  --color-accent-500: #f59e0b;
+  --color-accent-600: #d97706;
+  --color-accent-700: #b45309;
+
+  /* ---- 字体 ---- */
+  /* 优先 antd v5 字族,追加中文/emoji 回退 */
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, "Noto Sans", "Noto Sans SC", "PingFang SC", "Hiragino Sans GB",
+    "Microsoft YaHei", sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+    "Segoe UI Symbol", "Noto Color Emoji";
+  --font-serif:
+    Georgia, "Songti SC", "Noto Serif SC", "SimSun", serif;
+  --font-mono:
+    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono",
+    monospace;
+
+  /* ---- 圆角 ---- */
+  --radius-xs: 0.25rem;
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-full: 9999px;
+
+  /* ---- 动效 ---- */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-emphasized: cubic-bezier(0.2, 0, 0, 1.4);
+  --duration-fast: 150ms;
+  --duration-medium: 250ms;
+  --duration-slow: 400ms;
+
+  /* ---- 断点 ---- */
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+}
+
+/* ================= 语义层(随主题翻转) ================= */
+
+:root {
+  color-scheme: light;
+
+  --surface: #ffffff;
+  --surface-alt: #f6f8fa;
+  --surface-raised: #ffffff;
+
+  --text-primary: #1a2333;
+  --text-secondary: #4b5563;
+  --text-muted: #6b7280;
+  --text-inverse: #f9fafb;
+
+  --border: #e5e7eb;
+  --border-strong: #d1d5db;
+
+  --brand: #2563eb;
+  --brand-contrast: #ffffff;
+  --brand-subtle: #eff6ff;
+
+  --accent: #d97706;
+
+  --action: #16a34a;
+  --action-hover: #15803d;
+  --action-contrast: #ffffff;
+
+  --code-bg: #f6f8fa;
+  --code-text: #1a2333;
+  --code-border: #e5e7eb;
+
+  --ntx-shadow-sm: 0 1px 2px rgb(16 24 40 / 0.06);
+  --ntx-shadow-md: 0 4px 12px rgb(16 24 40 / 0.1);
+  --ntx-shadow-lg: 0 12px 32px rgb(16 24 40 / 0.16);
+}
+
+@media (prefers-color-scheme: dark) {
+  /* 自动模式(无 data-theme 或 data-theme="auto")跟随系统;
+     手动主题覆盖见下方 :root[data-theme="dark"]。 */
+  :root:not([data-theme="light"]):not([data-theme="dark"]) {
+    color-scheme: dark;
+
+    --surface: #0d1117;
+    --surface-alt: #161b22;
+    --surface-raised: #161b22;
+
+    --text-primary: #e6edf3;
+    --text-secondary: #9ca3af;
+    --text-muted: #7d8590;
+    --text-inverse: #0d1117;
+
+    --border: #30363d;
+    --border-strong: #484f58;
+
+    --brand: #60a5fa;
+    --brand-contrast: #0d1117;
+    --brand-subtle: #1e293b;
+
+    --accent: #fbbf24;
+
+    --action: #34d399;
+    --action-hover: #2dd4bf;
+    --action-contrast: #0d1117;
+
+    --code-bg: #161b22;
+    --code-text: #e6edf3;
+    --code-border: #30363d;
+
+    --ntx-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.5);
+    --ntx-shadow-md: 0 4px 12px rgb(0 0 0 / 0.5);
+    --ntx-shadow-lg: 0 12px 32px rgb(0 0 0 / 0.6);
+  }
+}
+
+/* 手动强制深色(主题切换按钮置 data-theme="dark") */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --surface: #0d1117;
+  --surface-alt: #161b22;
+  --surface-raised: #161b22;
+
+  --text-primary: #e6edf3;
+  --text-secondary: #9ca3af;
+  --text-muted: #7d8590;
+  --text-inverse: #0d1117;
+
+  --border: #30363d;
+  --border-strong: #484f58;
+
+  --brand: #60a5fa;
+  --brand-contrast: #0d1117;
+  --brand-subtle: #1e293b;
+
+  --accent: #fbbf24;
+
+  --action: #34d399;
+  --action-hover: #2dd4bf;
+  --action-contrast: #0d1117;
+
+  --code-bg: #161b22;
+  --code-text: #e6edf3;
+  --code-border: #30363d;
+
+  --ntx-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.5);
+  --ntx-shadow-md: 0 4px 12px rgb(0 0 0 / 0.5);
+  --ntx-shadow-lg: 0 12px 32px rgb(0 0 0 / 0.6);
+}
+
+/* ================= 语义工具类映射(随主题翻转) ================= */
+
+@theme inline {
+  --color-surface: var(--surface);
+  --color-surface-alt: var(--surface-alt);
+  --color-surface-raised: var(--surface-raised);
+
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-text-inverse: var(--text-inverse);
+
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+
+  --color-brand: var(--brand);
+  --color-brand-contrast: var(--brand-contrast);
+  --color-brand-subtle: var(--brand-subtle);
+
+  --color-accent: var(--accent);
+
+  --color-action: var(--action);
+  --color-action-hover: var(--action-hover);
+  --color-action-contrast: var(--action-contrast);
+
+  --color-code-bg: var(--code-bg);
+  --color-code-text: var(--code-text);
+  --color-code-border: var(--code-border);
+
+  --shadow-sm: var(--ntx-shadow-sm);
+  --shadow-md: var(--ntx-shadow-md);
+  --shadow-lg: var(--ntx-shadow-lg);
+}
