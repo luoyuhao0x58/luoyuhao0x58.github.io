@@ -1,0 +1,124 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import { getActiveLangs } from "../../../lib/active-langs";
+import { codeFromPath, langPath, languages, t } from "../../../i18n";
+import { tagLabels, taxonomyLabel } from "../../../taxonomy";
+import Tag from "../../../components/icons/Tag.astro";
+
+export async function getStaticPaths() {
+  const activeLangs = await getActiveLangs();
+  return activeLangs.map((lang) => ({ params: { lang: langPath(lang.code) } }));
+}
+
+const lang = codeFromPath(Astro.params.lang ?? "zh");
+const posts = (await getCollection("posts")).filter(
+  (post) => post.data.lang === lang,
+);
+// 统计当前语言下每个标签的文章数,按计数降序(同数按标签名)
+const tagCounts = new Map<string, number>();
+for (const post of posts) {
+  for (const tag of post.data.tags) {
+    tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1);
+  }
+}
+const tags = [...tagCounts.entries()].sort(
+  (a, b) => b[1] - a[1] || a[0].localeCompare(b[0], lang),
+);
+// 显示名按当前语言翻译;链接用英文 key
+const tagLabel = (tag: string) => taxonomyLabel(tagLabels, tag, lang);
+
+// 索引页胶囊:与正文 TagChip 同源色板/同哈希(tag 英文 key 为 seed,跨语言同色),保留大胶囊尺寸着色。
+// 深色派生在前端算好(设备不支持 color-mix)。
+const tagPalette = [
+  { fg: "#7ea249", bg: "#eef3e6" }, // 黄绿
+  { fg: "#5c8349", bg: "#e8efe4" }, // 橄榄
+  { fg: "#4e8997", bg: "#e6f0f2" }, // 青
+  { fg: "#456b92", bg: "#e6ecf2" }, // 蓝
+  { fg: "#404b77", bg: "#e9eaf3" }, // 藏蓝
+  { fg: "#58569f", bg: "#ebe9f5" }, // 蓝紫
+  { fg: "#7d5ca3", bg: "#efeaf4" }, // 紫
+  { fg: "#a4659f", bg: "#f3ebf2" }, // 玫紫
+];
+const hexRgb = (hex: string) => {
+  const n = parseInt(hex.slice(1), 16);
+  return `${(n >> 16) & 255} ${(n >> 8) & 255} ${n & 255}`;
+};
+const hexLight = (hex: string, k: number) => {
+  const n = parseInt(hex.slice(1), 16);
+  const l = (c: number) => Math.round(c * k + 255 * (1 - k));
+  const r = l((n >> 16) & 255);
+  const g = l((n >> 8) & 255);
+  const b = l(n & 255);
+  return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, "0")}`;
+};
+const tagChipColor = (key: string) => {
+  let hash = 7;
+  for (const ch of key) hash = (hash * 31 + (ch.codePointAt(0) ?? 0)) >>> 0;
+  const c = tagPalette[hash % tagPalette.length];
+  return { fg: c.fg, bg: c.bg, rgb: hexRgb(c.fg), light: hexLight(c.fg, 0.72) };
+};
+---
+
+<BaseLayout lang={lang} title={t(lang, "tagsTitle")} description={t(lang, "tagsTitle")}>
+  <div class="page-container w-full">
+    <div class="paper-list">
+      <div class="paper-list-head">
+        <h1>
+          <span class="inline-flex items-center gap-2">
+            <Tag class="h-6 w-6" />
+            {t(lang, "tagsTitle")}
+          </span>
+        </h1>
+      </div>
+      <div class="paper-list-body">
+        {tags.length === 0 ? (
+          <div class="empty-state flex items-center justify-center rounded-lg border border-dashed border-border px-6 text-center">
+            <p class="text-text-muted">{t(lang, "listEmpty")}</p>
+          </div>
+        ) : (
+          <ul class="flex flex-wrap gap-2 py-4">
+            {tags.map(([tag, count]) => {
+              const { fg, bg, rgb, light } = tagChipColor(tag);
+              return (
+                <li>
+                  <a
+                    href={`/${langPath(lang)}/tags/${encodeURIComponent(tag)}/`}
+                    class="tag-pill inline-flex items-center gap-1.5 rounded-full border px-4 py-1.5 text-sm transition-opacity hover:opacity-80"
+                    style={`--pill-fg:${fg};--pill-bg:${bg};--pill-fg-rgb:${rgb};--pill-fg-light:${light}`}
+                  >
+                    <Tag class="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                    <span>{tagLabel(tag)}</span>
+                    <span class="text-xs tabular-nums opacity-75">({count})</span>
+                  </a>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .tag-pill {
+    color: var(--pill-fg);
+    background-color: var(--pill-bg);
+    border-color: var(--pill-fg);
+    text-decoration: none;
+  }
+  /* 深色模式:文字提亮(72% 前景 + 白),底改前景色 20% 透明叠纸片底,边框 55% */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]):not([data-theme="dark"]) .tag-pill {
+      color: var(--pill-fg-light);
+      background-color: rgb(var(--pill-fg-rgb) / 0.2);
+      border-color: rgb(var(--pill-fg-rgb) / 0.55);
+    }
+  }
+  :root[data-theme="dark"] .tag-pill {
+    color: var(--pill-fg-light);
+    background-color: rgb(var(--pill-fg-rgb) / 0.2);
+    border-color: rgb(var(--pill-fg-rgb) / 0.55);
+  }
+</style>

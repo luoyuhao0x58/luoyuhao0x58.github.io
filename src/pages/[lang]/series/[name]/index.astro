@@ -1,0 +1,64 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../../../../layouts/BaseLayout.astro";
+import PostCard from "../../../../components/PostCard.astro";
+import { getActiveLangs } from "../../../../lib/active-langs";
+import { codeFromPath, langPath, languages, t } from "../../../../i18n";
+import { seriesLabels, taxonomyLabel } from "../../../../taxonomy";
+import BookOpenText from "../../../../components/icons/BookOpenText.astro";
+
+export async function getStaticPaths() {
+  const posts = await getCollection("posts");
+  const seriesByLang = new Map<string, Set<string>>();
+  for (const post of posts) {
+    if (!post.data.series) continue;
+    const names = seriesByLang.get(post.data.lang) ?? new Set<string>();
+    names.add(post.data.series);
+    seriesByLang.set(post.data.lang, names);
+  }
+  const activeLangs = await getActiveLangs();
+  return activeLangs.flatMap((lang) => {
+    const names = seriesByLang.get(lang.code) ?? new Set<string>();
+    return [...names].map((name) => ({
+      params: { lang: langPath(lang.code), name },
+    }));
+  });
+}
+
+const lang = codeFromPath(Astro.params.lang ?? "zh");
+const name = Astro.params.name ?? "";
+// 专栏:同一 series 聚合,按发布时间正序(旧 -> 新)
+const posts = (await getCollection("posts"))
+  .filter((post) => post.data.lang === lang && post.data.series === name)
+  .sort((a, b) => a.data.pubDate.getTime() - b.data.pubDate.getTime());
+// 标题由映射表按当前语言提供
+const seriesTitle = taxonomyLabel(seriesLabels, name, lang);
+---
+
+<BaseLayout lang={lang} title={seriesTitle} description={seriesTitle}>
+  <div class="page-container w-full">
+    <div class="paper-list">
+      <div class="paper-list-head">
+        <h1>
+          <span class="inline-flex items-center gap-2">
+            <BookOpenText class="h-6 w-6" />
+            {t(lang, "seriesLabel")}：{seriesTitle}
+          </span>
+        </h1>
+      </div>
+      <div class="paper-list-body">
+        {posts.length === 0 ? (
+          <div class="empty-state flex items-center justify-center rounded-lg border border-dashed border-border px-6 text-center">
+            <p class="text-text-muted">{t(lang, "listEmpty")}</p>
+          </div>
+        ) : (
+          <ul class="paper-list-rows">
+            {posts.map((post) => (
+              <PostCard post={post} lang={lang} />
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  </div>
+</BaseLayout>

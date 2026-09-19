@@ -1,0 +1,85 @@
+---
+import "../styles/global.css";
+import Footer from "../components/Footer.astro";
+import Header from "../components/Header.astro";
+import ScrollbarOverlay from "../components/ScrollbarOverlay.astro";
+import CloudflareAnalytics from "../components/CloudflareAnalytics.astro";
+import ThemeScript from "../components/ThemeScript.astro";
+import ViewTransitionDisable from "../components/ViewTransitionDisable.astro";
+import { ClientRouter } from "astro:transitions";
+import { codeFromPath, languages, langPath, stripLangPrefix, t } from "../i18n";
+import { expandCdnBase } from "../lib/cdn.mjs";
+
+interface Props {
+  title: string;
+  description?: string;
+  lang: string;
+  /** Emit <meta name="robots" content="noindex"> (e.g. for 404 pages). */
+  noindex?: boolean;
+  /** 题图:注入 og:image/twitter:image(IM 分享抓缩略图),与文章详情页一致 */
+  image?: { url: string; alt?: string };
+}
+const { title, description, lang, noindex = false, image } = Astro.props;
+const code = codeFromPath(lang);
+const htmlLang = languages.find((l) => l.code === code)?.htmlLang ?? "zh-CN";
+
+const pathname = Astro.url.pathname;
+const site = new URL(Astro.site ?? "https://luoyuhao.nettix.top");
+const canonical = new URL(pathname, site).href;
+const rest = stripLangPrefix(pathname);
+---
+
+<html lang={htmlLang} dir={htmlLang === "ar" ? "rtl" : "ltr"}>
+  <head>
+    <ThemeScript />
+    <ViewTransitionDisable />
+    <ClientRouter />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex" />}
+    <link rel="icon" href="/favicon.svg" />
+    <link rel="canonical" href={canonical} />
+    {/* Open Graph / Twitter Card:IM 贴链接分享时抓标题、描述、缩略图 */}
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={site.hostname} />
+    <meta property="og:title" content={title} />
+    {description && <meta property="og:description" content={description} />}
+    <meta property="og:url" content={canonical} />
+    {image && <meta property="og:image" content={new URL(expandCdnBase(image.url), site).href} />}
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={title} />
+    {description && <meta name="twitter:description" content={description} />}
+    {image && <meta name="twitter:image" content={new URL(expandCdnBase(image.url), site).href} />}
+    <link rel="alternate" hreflang="x-default" href={new URL("/zh/", site).href} />
+    {/* RSS:指向当前语言的 feed(每语言独立),供阅读器发现订阅 */}
+    <link
+      rel="alternate"
+      type="application/rss+xml"
+      title={`${t(lang, "siteName")} · RSS`}
+      href={`/${langPath(code)}/rss.xml`}
+    />
+    {
+      languages.map((langEntry) => (
+        <link
+          rel="alternate"
+          hreflang={langEntry.code}
+          href={new URL(`/${langPath(langEntry.code)}${rest}`, site).href}
+        />
+      ))
+    }
+    <title>{title}</title>
+  </head>
+  <body class="flex min-h-dvh flex-col bg-surface text-text-primary antialiased">
+    <Header lang={code} />
+    <main class="flex flex-1 flex-col">
+      <slot />
+    </main>
+    <Footer lang={code} />
+    <ScrollbarOverlay />
+    <script src="../scripts/time-localize.js"></script>
+    {/* 统计脚本放 body 末尾 + async:不阻塞解析/DOMContentLoaded,失败也无影响 */}
+    <CloudflareAnalytics />
+  </body>
+</html>

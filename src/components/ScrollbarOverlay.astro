@@ -1,0 +1,153 @@
+---
+// 浮层滚动指示条:原生滚动条隐藏后(base.css 的 scrollbar-width:none),
+// 用 fixed 定位的自绘细条提供滚动位置指示。层在内容之上(z-50,高于 sticky header 的 z-10),
+// pointer-events:none 不拦截交互;滚动时淡入、停止后淡出。
+// 两个布局均渲染本组件,且 persist,View Transitions 导航后元素不丢失。
+---
+
+<div
+  id="scroll-indicator"
+  data-astro-transition-persist="scroll-indicator"
+  aria-hidden="true"
+>
+  <div class="scroll-thumb"></div>
+</div>
+
+<style>
+  #scroll-indicator {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 0.5rem;
+    z-index: 50;
+    pointer-events: none;
+  }
+  .scroll-thumb {
+    position: absolute;
+    right: 0.125rem;
+    width: var(--scrollbar-thickness);
+    border-radius: 0.125rem;
+    /* 跟随主题令牌:深浅色模式自动变色 */
+    background: color-mix(in srgb, var(--text-muted, #888) 45%, transparent);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    /* 可拖拽:命中区扩展、光标提示、触屏不劫持为页面滚动 */
+    pointer-events: auto;
+    cursor: grab;
+    touch-action: none;
+  }
+  .scroll-thumb::before {
+    content: "";
+    position: absolute;
+    inset: -0.25rem; /* 扩大命中区(视觉 4px,点击约 12px 宽) */
+  }
+  .scroll-thumb:active {
+    cursor: grabbing;
+  }
+  #scroll-indicator.is-scrolling .scroll-thumb {
+    opacity: 1;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .scroll-thumb {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  // 事件委托 + window 单次注册标记:View Transitions 导航后模块脚本可能重新执行,
+  // 重复 addEventListener 会累积监听器。指示条本身 persist,实时 getElementById 即可。
+  (function () {
+    if (window.__scrollIndicatorBound__) return;
+    window.__scrollIndicatorBound__ = true;
+
+    const bar = () => document.getElementById("scroll-indicator");
+    const thumb = () =>
+      bar() ? bar().querySelector(".scroll-thumb") : null;
+
+    let hideTimer: ReturnType<typeof setTimeout> | null = null;
+
+    function update() {
+      const b = bar();
+      const t = thumb();
+      if (!b || !t) return;
+      const doc = document.documentElement;
+      const max = doc.scrollHeight - doc.clientHeight;
+      if (max <= 0) {
+        b.classList.remove("is-scrolling");
+        return;
+      }
+      const ratio = doc.scrollTop / max;
+      const heightPct = Math.max(
+        (doc.clientHeight / doc.scrollHeight) * 100,
+        6,
+      );
+      t.style.height = `${heightPct}%`;
+      t.style.top = `${ratio * (100 - heightPct)}%`;
+      b.classList.add("is-scrolling");
+      if (hideTimer) clearTimeout(hideTimer);
+      hideTimer = setTimeout(() => {
+        const cur = bar();
+        if (cur) cur.classList.remove("is-scrolling");
+      }, 700);
+    }
+
+    window.addEventListener("scroll", update, { passive: true });
+    document.addEventListener("astro:page-load", update);
+    update();
+
+    // --- 拖拽:抓住 thumb 上下拖动(Pointer Events + capture,指针移出条外仍跟手) ---
+    let dragging = false;
+    let startY = 0;
+    let startScrollTop = 0;
+
+    document.addEventListener("pointerdown", (e) => {
+      if (e.button !== 0) return;
+      const t = thumb();
+      if (!t || !e.target) return;
+      if (e.target !== t && !t.contains(e.target)) return;
+      const doc = document.documentElement;
+      const max = doc.scrollHeight - doc.clientHeight;
+      if (max <= 0) return;
+      dragging = true;
+      startY = e.clientY;
+      startScrollTop = doc.scrollTop;
+      // 拖动期间禁用 scroll-behavior:smooth(否则 scrollTop 赋值变动画,拇指跟不上鼠标)
+      doc.style.scrollBehavior = "auto";
+      // 拖动期间保持指示条可见
+      const b = bar();
+      if (b) {
+        b.classList.add("is-scrolling");
+        if (hideTimer) clearTimeout(hideTimer);
+      }
+      t.setPointerCapture(e.pointerId);
+      e.preventDefault();
+    });
+
+    document.addEventListener("pointermove", (e) => {
+      if (!dragging) return;
+      const doc = document.documentElement;
+      const max = doc.scrollHeight - doc.clientHeight;
+      if (max <= 0) {
+        dragging = false;
+        return;
+      }
+      // 精确跟手:减掉 thumb 自身高度,使 thumb 移动量与鼠标一致
+      const t = thumb();
+      if (!t) return;
+      const track = doc.clientHeight - t.getBoundingClientRect().height;
+      const dy = e.clientY - startY;
+      doc.scrollTop = startScrollTop + (dy / track) * max;
+    });
+
+    const endDrag = () => {
+      if (!dragging) return;
+      dragging = false;
+      // 恢复平滑滚动
+      document.documentElement.style.scrollBehavior = "";
+    };
+    document.addEventListener("pointerup", endDrag);
+    document.addEventListener("pointercancel", endDrag);
+  })();
+</script>

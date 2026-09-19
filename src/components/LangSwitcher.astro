@@ -1,0 +1,53 @@
+---
+// 语言切换器(桌面/平板 ≥640px):"文A"图标 summary,点击直接展开三语下拉。
+// 手机(<640px)整个隐藏——语言入口收纳进 Header 的 ⋮ 工具横条(见 Header.astro)。
+// 点击外部自动收起(渐进增强,无 JS 时 details 仍可原生开合)。
+import { languages } from "../i18n";
+import type { Locale } from "../i18n";
+import LangLinks from "./LangLinks.astro";
+import Languages from "./icons/Languages.astro";
+
+interface Props {
+  currentPath: string;
+  /** 活跃语言(有文章才渲染),由 Header 计算后传入。 */
+  langs: typeof languages;
+  /** Explicit per-language target URLs (e.g. translated post pages); falls back to parallel path replacement. */
+  targets?: Partial<Record<Locale, string>>;
+}
+const { currentPath, langs, targets = {} } = Astro.props;
+---
+
+<nav aria-label="Language" class="lang-switcher relative">
+  <details class="group">
+    <summary
+      class="flex cursor-pointer list-none select-none items-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary [&::marker]:hidden [&::-webkit-details-marker]:hidden"
+    >
+      <Languages class="h-4 w-4" />
+      <span
+        aria-hidden="true"
+        class="text-xs text-text-secondary transition-transform duration-150 group-open:rotate-180"
+      >
+        ▾
+      </span>
+    </summary>
+    <ul
+      class="absolute end-0 z-20 mt-2 w-max min-w-36 overflow-hidden whitespace-nowrap rounded-lg border border-border bg-surface-raised shadow-md"
+    >
+      <LangLinks currentPath={currentPath} langs={langs} targets={targets} />
+    </ul>
+  </details>
+</nav>
+
+<script>
+  // 渐进增强:点击下拉外部时自动收起(无 JS 时 details 仍可原生展开/收起)。
+  document.addEventListener("click", (e) => {
+    const nav = (e.target as Element | null)?.closest?.(".lang-switcher");
+    document
+      .querySelectorAll<HTMLDetailsElement>(".lang-switcher details")
+      .forEach((details) => {
+        if (details.open && !nav?.contains(details)) {
+          details.removeAttribute("open");
+        }
+      });
+  });
+</script>

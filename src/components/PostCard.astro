@@ -1,0 +1,100 @@
+---
+import { langPath } from "../i18n";
+import { DEFAULT_TIME_ZONE } from "../lib/time";
+import type { CollectionEntry } from "astro:content";
+
+interface Props {
+  post: CollectionEntry<"posts">;
+  lang: string;
+}
+const { post, lang } = Astro.props;
+const slug = post.id.split("/")[1];
+const href = `/${langPath(lang)}/posts/${slug}/`;
+const excerpt = post.data.excerpt ?? post.data.description;
+// 年月日拆开供日历块使用;月份/日期不补 0(日历习惯),时区按站点配置。
+// weekday 同源同时区(避免查看者本地时区导致星期漂移),en-CA 输出英文 "Monday"~"Sunday"。
+const parts = new Intl.DateTimeFormat("en-CA", {
+  year: "numeric",
+  month: "numeric",
+  day: "numeric",
+  weekday: "long",
+  timeZone: DEFAULT_TIME_ZONE,
+}).formatToParts(post.data.pubDate);
+const pick = (type: string) => parts.find((x) => x.type === type)!.value;
+const year = pick("year");
+// 月份/日期转数字去前缀 0(日历习惯,如 09→9)
+const month = String(parseInt(pick("month"), 10));
+const day = String(parseInt(pick("day"), 10));
+// 星期 → 日历 token 颜色(周一~周日,柔和彩虹,避开主题蓝/金;深色模式 token 自动提亮)
+const WEEKDAY_COLORS: Record<string, string> = {
+  Monday: "var(--cal-mon)",
+  Tuesday: "var(--cal-tue)",
+  Wednesday: "var(--cal-wed)",
+  Thursday: "var(--cal-thu)",
+  Friday: "var(--cal-fri)",
+  Saturday: "var(--cal-sat)",
+  Sunday: "var(--cal-sun)",
+};
+const dayColor = WEEKDAY_COLORS[pick("weekday")] ?? "var(--brand)";
+---
+
+<li class="py-2.5">
+  <a href={href} class="group flex items-start gap-4">
+    <!-- 左:标题 + 描述(衬线,浅色小字) -->
+    <div class="min-w-0 flex-1">
+      <h3
+        class="text-xl font-semibold text-brand transition-colors hover:underline hover:decoration-brand hover:underline-offset-4"
+        style="letter-spacing: -0.01em"
+      >
+        {post.data.title}
+      </h3>
+      {excerpt && (
+        <p
+          class="mt-1.5 text-[15px] font-light leading-normal text-text-secondary"
+          style="font-family: var(--font-serif)"
+        >
+          {excerpt}
+        </p>
+      )}
+    </div>
+    <!-- 右:正方形日历块。宽 = 上方"月|年"行(月 2 位 + 竖线 + 年 4 位)决定,高 = 宽。
+         月/年/日各自固定宽度格子(text-xs 下 2ch/4ch,日期 2xl 下 2ch)内水平垂直居中。
+         月/年背景两档深浅不同(月 --code-bg / 年 --code-gutter-bg);日期区 = 45° 方形斜纹(线色同边框)。
+         data-tz-cal = 发布时间 UTC ISO(与正文 time-localize 同机制:SSR 兑底东八区,
+         客户端按浏览器时区重算月/年/日/星期并同步背景色与文字色)。 -->
+    <div
+      class="aspect-square w-max shrink-0 overflow-hidden rounded-lg border border-border flex flex-col"
+      data-tz-cal={post.data.pubDate.toISOString()}
+    >
+      <div class="flex items-stretch border-b border-border text-xs tabular-nums text-text-muted">
+        <span
+          data-cal-month
+          class="w-[calc(2ch+0.5rem)] py-0.5 ps-1 text-center"
+          style={`background-color: var(--cal-month-${month})`}
+        >
+          {month}
+        </span>
+        <span class="w-px bg-border" aria-hidden="true"></span>
+        <span
+          data-cal-year
+          class="w-[calc(4ch+0.5rem)] py-0.5 pe-1 text-center"
+          style={`background-color: var(--cal-year-${Number(year) % 4})`}
+        >
+          {year}
+        </span>
+      </div>
+      <div
+        class="flex flex-1 items-center justify-center"
+        style={`background-color: var(--cal-day-bg); background-image: repeating-linear-gradient(45deg, var(--border) 0 1px, transparent 1px 6px)`}
+      >
+        <span
+          data-cal-day
+          class="w-[calc(2ch+0.5rem)] py-0.5 text-center text-2xl font-semibold tabular-nums leading-tight"
+          style={`color: ${dayColor}`}
+        >
+          {day}
+        </span>
+      </div>
+    </div>
+  </a>
+</li>

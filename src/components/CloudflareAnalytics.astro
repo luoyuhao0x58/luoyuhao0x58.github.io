@@ -1,0 +1,14 @@
+---
+// Cloudflare Web Analytics beacon:token 非机密(公开嵌入),配置见 src/lib/analytics.ts,
+// 置空即不渲染(关闭统计)。所有主布局(head)复用此组件,逻辑改一处生效。
+import { CF_WEB_ANALYTICS } from "../lib/analytics";
+---
+
+{CF_WEB_ANALYTICS.token && (
+  <script
+    type="module"
+    async
+    src="https://static.cloudflareinsights.com/beacon.min.js"
+    data-cf-beacon={`{"token": "${CF_WEB_ANALYTICS.token}"}`}
+  ></script>
+)}

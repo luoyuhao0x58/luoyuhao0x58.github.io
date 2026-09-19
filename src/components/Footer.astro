@@ -1,0 +1,69 @@
+---
+// 页脚:主题切换按钮 + 版权声明。版权固定为 LUO YUHAO(与语言无关,不做翻译),
+// 年份区间:起始年 2026 固定,当年不同则显示“2026–当年”。内部文字全部等宽(--font-nav)。
+import ThemeToggle from "./ThemeToggle.astro";
+import Rss from "./icons/Rss.astro";
+import { codeFromPath, langPath } from "../i18n";
+
+interface Props {
+  lang: string;
+}
+const { lang } = Astro.props;
+const code = codeFromPath(lang);
+const START_YEAR = 2026;
+const year = new Date().getFullYear();
+// 版权拆两段:宽裕时单行;宽度不够时在 ©...LUO YUHAO. 后换行(<wbr> 为固定断点),
+// 不从中途断词。年份区间只在跨年后出现。
+const yearRange = year > START_YEAR ? `–${year}` : "";
+---
+
+<footer
+  class="select-none border-t border-border"
+  data-astro-transition-persist="site-footer"
+>
+  <div
+    class="mx-auto flex w-full max-w-6xl items-center justify-center px-4 py-6 text-sm text-text-muted"
+    style="font-family: var(--font-nav)"
+  >
+    {/* 版权 span 作为定位锚点(relative)并精确居中;主题切换按钮 absolute 贴到其左侧
+       (right-full + me-2 间距),不占布局宽度——版权以屏幕中心为轴,按钮挨着版权左边 */}
+    <span class="relative min-w-0 text-center">
+      <span class="absolute right-full top-1/2 -translate-y-1/2 me-2">
+        <ThemeToggle lang={lang} />
+      </span>
+      {/* RSS 订阅按钮:对称于主题切换(absolute 贴版权右侧)。无 hover 高亮/选中
+         特效(按要求),仅保留悬停 tooltip(RSS 所有语言一致);新开 tab 指向
+         当前语言的 feed */}
+      <span class="absolute left-full top-1/2 -translate-y-1/2 ms-2">
+        <a
+          href={`/${langPath(code)}/rss.xml`}
+          target="_blank"
+          rel="noopener"
+          class="group relative inline-flex items-center rounded-full p-1.5 text-text-muted"
+          aria-label="RSS"
+        >
+          <Rss class="h-3.5 w-3.5" />
+          <span
+            role="tooltip"
+            class="pointer-events-none absolute bottom-[calc(100%+6px)] left-1/2 -translate-x-1/2 rounded-md border border-border bg-surface-raised px-2 py-1 text-xs whitespace-nowrap text-text-secondary opacity-0 invisible shadow-md transition-opacity duration-150 group-hover:visible group-hover:opacity-100"
+          >
+            RSS
+          </span>
+        </a>
+      </span>
+      {/* 两段都 nowrap 使 <wbr> 成为唯一断点:宽度不够时在 ©...LUO YUHAO. 后整体换行。
+         wbr 前后各一空格(连续空白折叠为一个):单行显示 "LUO YUHAO. All",折行时行首/行尾空白被裁掉 */}
+      <span class="whitespace-nowrap">© {START_YEAR}{yearRange} LUO YUHAO.</span> <wbr /> <span class="footer-copy-part2 whitespace-nowrap">All rights reserved.</span>
+    </span>
+  </div>
+</footer>
+
+<style>
+  /* 小屏(<480px)强制版权折行:按钮 absolute 贴版权左侧,单行时版权接近屏宽会
+     把按钮挤出屏幕无法点击;折行后版权变窄(最宽行),按钮回到屏幕内。 */
+  @media (max-width: 480px) {
+    .footer-copy-part2 {
+      display: block;
+    }
+  }
+</style>

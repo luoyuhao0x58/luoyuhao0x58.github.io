@@ -1,0 +1,21 @@
+---
+// 禁用 View Transitions 过渡动画:浏览器对 ::view-transition 伪元素动画
+// 禁止 author 样式覆盖(CSS animation:none 无效,Chrome 内建仅尊重
+// prefers-reduced-motion)。这里运行时包装 startViewTransition,过渡就绪后
+// 立即 skipTransition() 跳到最终状态——翻页/导航瞬间切换,
+// 避免列表翻页时整页(纸片)淡入淡出闪烁。保留 SPA 无刷新。
+// 需在 ClientRouter 之前注入(点击导航时调用的是被包装的版本)。
+---
+<script is:inline>
+  (function () {
+    const orig = document.startViewTransition;
+    if (typeof orig !== "function") return;
+    document.startViewTransition = function (updateCallback) {
+      const vt = orig.call(document, updateCallback);
+      Promise.resolve(vt.ready)
+        .then(() => vt.skipTransition())
+        .catch(() => {});
+      return vt;
+    };
+  })();
+</script>

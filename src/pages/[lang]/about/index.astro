@@ -1,0 +1,198 @@
+---
+import { getCollection, render } from "astro:content";
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import GitHub from "../../../components/icons/GitHub.astro";
+import Mail from "../../../components/icons/Mail.astro";
+import { getActiveLangs } from "../../../lib/active-langs";
+import { codeFromPath, langPath, languages, t } from "../../../i18n";
+import { SITE } from "../../../lib/site";
+import { expandCdnBase } from "../../../lib/cdn.mjs";
+
+export async function getStaticPaths() {
+  const activeLangs = await getActiveLangs();
+  return activeLangs.map((lang) => ({ params: { lang: langPath(lang.code) } }));
+}
+
+const lang = codeFromPath(Astro.params.lang ?? "zh");
+const entry = (await getCollection("about")).find((e) => e.data.lang === lang);
+const { Content } = entry ? await render(entry) : { Content: undefined };
+const data = entry?.data;
+
+// 邮箱反爬:构建时编码 base64,客户端 atob 解码(见文件底部 <script>)
+const emailB64 = btoa(`${SITE.emailUser}@${SITE.emailDomain}`);
+const chipClass =
+  "inline-flex items-center gap-2 rounded-full border border-border bg-(--article-bg-soft) px-4 py-1.5 text-sm text-text-secondary transition-colors hover:border-brand hover:text-brand";
+---
+
+<BaseLayout lang={lang} title={data?.title ?? t(lang, "navAbout")} image={data?.image}>
+  <div class="page-container w-full">
+    <div class="paper-list">
+      <!-- 题图(16:9 横幅,纸片最顶部顶格,与文章正文题图同处理:淡入+底部渐隐) -->
+      {data?.image && (
+        <div class="about-hero overflow-hidden">
+          <img
+            src={expandCdnBase(data.image.url)}
+            alt={data.image.alt}
+            draggable="false"
+            class="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-500 [mask-image:linear-gradient(to_bottom,black_85%,transparent_100%)]"
+            onload={`this.classList.remove("opacity-0");`}
+            onerror={`this.closest(".about-hero")?.classList.add("hidden");this.setAttribute("alt","");`}
+          />
+        </div>
+      )}
+
+      <!-- 纸片头:页面主题 -->
+      <div class="paper-list-head">
+        <h1>{data?.title ?? t(lang, "navAbout")}</h1>
+      </div>
+
+      <!-- 纸片正文 -->
+      <div class="paper-list-body about-body">
+        <!-- 简介 + 基本信息(区块标题"关于我") -->
+        <section class="about-intro">
+          <h2>{t(lang, "aboutMe")}</h2>
+          {data?.intro && (
+            <p class="mt-4 max-w-2xl leading-relaxed text-text-secondary">{data.intro}</p>
+          )}
+          {data?.facts.length ? (
+            <dl class="about-facts mt-3">
+              {data.facts.map((f) => (
+                <div class="about-fact">
+                  <dt>{f.label}</dt>
+                  <dd>{f.value}</dd>
+                </div>
+              ))}
+            </dl>
+          ) : null}
+        </section>
+
+        <!-- 经历时间线(倒序:最新在前) -->
+        {data?.timeline.length ? (
+          <section class="about-section mt-10">
+            <h3>{t(lang, "timelineTitle")}</h3>
+            <ol class="about-timeline">
+              {data.timeline.map((item) => (
+                <li class="about-timeline-item">
+                  <span class="about-timeline-period">{item.period}</span>
+                  <div class="about-timeline-content">
+                    <p class="about-timeline-title">{item.title}</p>
+                    {item.org && <p class="about-timeline-org">{item.org}</p>}
+                    {item.desc && <p class="about-timeline-desc">{item.desc}</p>}
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </section>
+        ) : null}
+
+        <!-- 技术能力:名称 + 水平进度条(按熟练度降序,不显示数字) -->
+        {data?.skills.length ? (
+          <section class="about-section mt-10">
+            <h3>{t(lang, "skillsTitle")}</h3>
+            <ul class="about-skills">
+              {[...data.skills]
+                .sort((a, b) => b.level - a.level)
+                .map((skill) => (
+                  <li class="about-skill">
+                    <span class="about-skill-name">{skill.name}</span>
+                    <span
+                      class="about-skill-bar"
+                      role="img"
+                      aria-label={`${skill.name} ${skill.level}/10`}
+                    >
+                      <span
+                        class="about-skill-fill"
+                        style={`width: ${skill.level * 10}%`}
+                      ></span>
+                    </span>
+                  </li>
+                ))}
+            </ul>
+          </section>
+        ) : null}
+
+        <!-- 喜好:名称 + 电池能量格(按喜好程度点亮格子,与技能横条区分) -->
+        {data?.interests.length ? (
+          <section class="about-section mt-10">
+            <h3>{t(lang, "interestsTitle")}</h3>
+            <ul class="about-interests">
+              {[...data.interests]
+                .sort((a, b) => b.level - a.level)
+                .map((interest) => (
+                  <li class="about-interest">
+                    <span class="about-interest-name">{interest.name}</span>
+                    <span
+                      class="about-interest-battery"
+                      role="img"
+                      aria-label={`${interest.name} ${interest.level}/10`}
+                    >
+                      {[0, 1, 2, 3, 4].map((i) => {
+                        const full = Math.floor(interest.level / 2); // 整格数
+                        const isFull = i < full;
+                        const isPartial = i === full && interest.level % 2 === 1; // 最右半格
+                        return (
+                          <span
+                            class="about-battery-cell"
+                            data-on={isFull}
+                            data-partial={isPartial}
+                            style={isPartial ? "--frac: 0.5" : undefined}
+                          ></span>
+                        );
+                      })}
+                    </span>
+                  </li>
+                ))}
+            </ul>
+          </section>
+        ) : null}
+
+        <!-- 正文长文(与文章正文样式完全一致) -->
+        {Content && (
+          <section class="article-content about-content mt-10">
+            <Content />
+          </section>
+        )}
+
+        <!-- 联系我(放文章末尾;GitHub/Email,交互与首页 hero 区一致;Email 在前) -->
+        <section class="about-section mt-10">
+          <h2>{t(lang, "socialsTitle")}</h2>
+          <ul class="mt-4 flex flex-wrap gap-2">
+            <li>
+              <a
+                id="about-email-link"
+                href="#"
+                class={chipClass}
+                data-email-b64={emailB64}
+                aria-label={`Email ${SITE.ownerName}`}
+              >
+                <Mail class="h-4 w-4" />
+                Email
+              </a>
+            </li>
+            <li>
+              <a
+                href={SITE.githubUrl}
+                rel="me noopener noreferrer"
+                target="_blank"
+                class={chipClass}
+              >
+                <GitHub class="h-4 w-4" />
+                GitHub
+              </a>
+            </li>
+          </ul>
+        </section>
+      </div>
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+  // 邮箱反爬:data-email-b64 存 base64,atob 解码组装 mailto(静态 HTML 无明文邮箱)
+  import { SITE } from "../../../lib/site";
+  const emailLink = document.getElementById("about-email-link");
+  if (emailLink?.dataset.emailB64) {
+    const email = atob(emailLink.dataset.emailB64);
+    emailLink.setAttribute("href", `mailto:${SITE.ownerName} <${email}>`);
+  }
+</script>

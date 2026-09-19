@@ -1,0 +1,543 @@
+/*
+ * design-tokens 令牌定义(唯一事实源)
+ *
+ * 本文件是设计令牌的唯一事实源,直接在此改动,无需同步任何外部仓库。
+ * 将来若抽离为独立包(如供 SolidJS 组件库消费),从本文件迁出;
+ * 命名约定已定稿:统一 --nettix- 前缀(既有令牌重命名待执行)。
+ */
+
+/*
+ * Nettix design tokens — 浅色/深色双主题
+ *
+ * 构成:
+ *   1) 调色板/字体/圆角/阴影/动效  → Tailwind v4 `@theme`(生成工具类 + :root 变量)
+ *   2) 语义层(角色色)              → :root 变量,随 prefers-color-scheme 翻转
+ *   3) 语义工具类映射               → `@theme inline`,使 bg-surface 等跟随主题翻转
+ *
+ * 定稿方向(2026-09):
+ *   白天 = 日式·和纸(纸白 + 靛蓝链接 + 朱印点缀 + 苔绿按钮,冷调克制)
+ *   黑夜 = 中式·夜墨(玄色 + 朱砂链接 + 夜竹青按钮 + 夜灯琥珀,暖点集中)
+ *   即:按明暗模式混搭中日两套气质,浅冷深暖。
+ */
+@theme {
+  /* ---- 品牌色(靛蓝,日式紺色;深色下语义层切换为朱砂) ---- */
+  --color-brand-50: #eef3f9;
+  --color-brand-100: #d8e4f1;
+  --color-brand-200: #b3c9e2;
+  --color-brand-300: #86a9cd;
+  --color-brand-400: #5b8ab8;
+  --color-brand-500: #3d6d9d;
+  --color-brand-600: #2b4a70;
+  --color-brand-700: #213c5c;
+  --color-brand-800: #1a2f49;
+  --color-brand-900: #122036;
+
+  /* ---- 行动色(苔绿,CTA 专用,与文字/装饰色区分) ---- */
+  --color-action-50: #eef5f0;
+  --color-action-100: #d5e7dc;
+  --color-action-200: #aecfbb;
+  --color-action-300: #80b295;
+  --color-action-400: #529570;
+  --color-action-500: #387e5c;
+  --color-action-600: #2f6b4f;
+  --color-action-700: #255744;
+  --color-action-800: #1c4234;
+  --color-action-900: #142e24;
+
+  /* ---- 强调色(朱印/琥珀,装饰性,克制使用) ---- */
+  --color-accent-50: #fbf1ec;
+  --color-accent-100: #f6ddd2;
+  --color-accent-200: #eabaa6;
+  --color-accent-300: #dc9274;
+  --color-accent-400: #cc6b4a;
+  --color-accent-500: #b84e30;
+  --color-accent-600: #b3452f;
+  --color-accent-700: #8f3622;
+
+  /* ---- 字体 ---- */
+  /* 角色化字体系统(角色 × 语言):
+     - Latin 段全站共享(各平台系统拉丁字体已足够接近);
+     - CJK 段按语言切换:zh 默认系统字体(Windows 雅黑/macOS 苹方/Android 系统 Noto),
+       各平台本地最优;zh-Hant 由文件尾 html[lang] 块覆盖为繁体字形(TC)优先;
+     - 导航角色(--font-nav):拉丁走等宽(终端感),CJK 走系统方块字。
+     注:曾尝试自托管思源 subset 拉齐跨平台观感,经 Windows/Android 真机反馈
+     收益未兑现(渲染引擎差异字体文件救不了,且拖累 Android),已回退,记录于 design.md。 */
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, "Noto Sans", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei",
+    "Noto Sans SC", sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+    "Segoe UI Symbol", "Noto Color Emoji";
+  --font-serif:
+    Georgia, "Times New Roman", "Songti SC", "Noto Serif SC", "SimSun", serif;
+  /* 楷体:中文手写书卷气(摘要/引文等短文本);拉丁/韩/阿 fallback 系统衬线 */
+  --font-kai:
+    "Kaiti SC", "STKaiti", "KaiTi", "Kaiti", "AR PL UKai CN", "AR PL UKai HK",
+    "Noto Serif CJK SC", "Noto Serif SC", Georgia, "Times New Roman", "Songti SC", serif;
+  --font-mono:
+    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono",
+    monospace, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei",
+    "Noto Sans SC";
+  /* 导航:等宽拉丁(终端感)+ CJK 方块字(等宽仅作用于拉丁字符) */
+  --font-nav:
+    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono",
+    "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC",
+    monospace;
+
+  /* ---- 圆角 ---- */
+  --radius-xs: 0.25rem;
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-full: 9999px;
+
+  /* ---- 动效 ---- */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-emphasized: cubic-bezier(0.2, 0, 0, 1.4);
+  --duration-fast: 150ms;
+  --duration-medium: 250ms;
+  --duration-slow: 400ms;
+
+  /* ---- 断点 ---- */
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+}
+
+/* ================= 语义层(随主题翻转) ================= */
+
+/* 白天:日式·和纸 */
+:root {
+  color-scheme: light;
+
+  /* 中性灰白页面底 + 中性近白纸片(无色相,降亮度不刺眼) */
+  --surface: #e4e4e4;
+  --surface-alt: #e7e7e7;
+  --toc-hover: #d2d2d2; /* 目录悬浮背景(比 surface-alt 深一档:纸片 f7 上 e7 太淡,用户反馈看不清) */
+  --surface-raised: #f7f7f7;
+
+  /* 区域纹理(纯 CSS 颗粒/渐变,极淡用于区分区域;深浅主题各自派生) */
+  --texture-grain: rgb(0 0 0 / 0.03); /* 页面底颗粒点 */
+  --texture-nav-start: color-mix(in srgb, var(--surface) 96%, #fff); /* 导航顶略提亮 */
+  --texture-line: rgb(0 0 0 / 0.04); /* 页脚分界/横向细线 */
+  --nav-shadow: rgb(0 0 0 / 0.06); /* 导航底部柔和投影(仅大屏;0.10 用户反馈过明显,减弱) */
+  --stone-line: rgb(0 0 0 / 0.025); /* 页脚细纹线色(与导航共用时曾一致,后导航改用 nav-line) */
+  --nav-grid-line: rgb(0 0 0 / 0.02); /* 导航格子纹线色(比 stone-line 浅一点点,与页脚分离) */
+  --paper-line: rgb(6 82 121 / 0.04); /* 纸片标题区格线(品牌色 --brand #065279 的浅版) */
+  --weave-line: rgb(6 82 121 / 0.07); /* hero 编织底纹线色(品牌色浅版,用户确认 0.07 浓度(比 0.1 浅,减弱对文字的干扰)) */
+
+  /* 墨色:中性墨黑;次要/弱化走 alpha 分级(antd 式,α 与 border 统一) */
+  --text-primary: #2c3139;
+  /* 主标题浮起立体感(PC/平板,品牌色大字):高光边 + 柔和投影。浅色下白高光在深色品牌字上亮边明显 */
+  --title-shadow-hi: rgb(255 255 255 / 0.8);
+  --title-shadow-lo: rgb(0 0 0 / 0.15);
+  /* logo 轻立体感(浮起,不动颜色/字号):1px 无 blur 高光边(不产生首帧色块)+
+     小柔影(blur 3px,首帧色块小淡不可感知,避免刷新时 logo 先闪大块颜色) */
+  --logo-shadow-hi: rgb(255 255 255 / 0.9);
+  --logo-shadow-lo: rgb(0 0 0 / 0.16);
+  --text-secondary: rgb(0 0 0 / 0.65);
+  --text-muted: rgb(0 0 0 / 0.45);
+  --text-inverse: #f2f2f2;
+
+  /* 发丝线:半透明自适应(浅=黑线, 深=白线, α 全站统一) */
+  --border: rgb(0 0 0 / 0.14);
+  --border-strong: rgb(0 0 0 / 0.24);
+  /* 引用竖线:中性灰结构线,不抢内容色 */
+  --quote-bar: #6B5458;
+  --quote-bg: color-mix(in srgb, var(--quote-bar) 12%, #fff); /* blockquote 背景:白天与竖线同色系淡彩(改竖线色自动跟随) */
+
+  /* 滚动条粗细:竖向浮层与代码块横向共用,统一视觉(需大于 Chrome 最小可交互尺寸) */
+  --scrollbar-thickness: 0.375rem;
+
+  /* 品牌:深邃蓝 */
+  --brand: #065279;
+  --brand-contrast: #ffffff;
+  --brand-subtle: #4994c4;
+
+  /* 强调:朱印 */
+  --accent: #b3452f;
+
+  /* 行动:苔绿 */
+  --action: #2f6b4f;
+  --action-hover: #255744;
+  --action-contrast: #f2f2f2;
+
+  /* 代码:浅纸底(比纸面深一档,协调区分;靠发丝线+底色双重标识) */
+  --code-bg: #e6e6e6;
+  --code-text: #2a2a2a;
+  --code-border: rgb(0 0 0 / 0.14);
+
+  /* 代码块增强:行号列底色(与代码底 #e6e6e6 相近略深一档,中性灰),行 hover 强调条
+     (代码块背景统一用 --code-bg,不分语言块/plaintext) */
+  --code-gutter-bg: #dedede;
+  --code-line-hover: rgb(0 0 0 / 0.06);
+
+  /* 文章摘要文字色(浅红褐):表格表头背景用 */
+  --summary-fg: #664757;
+  /* 日历星期色(周一~周日):心情梯度——周一二三灰暗压抑、周四琥珀盼头、周五亮橙期待、周六日明亮欢快;深色模式提亮 */
+  --cal-mon: #767c86;
+  --cal-tue: #7a8896;
+  --cal-wed: #8a97a3;
+  --cal-thu: #d4a03c;
+  --cal-fri: #e08a3c;
+  --cal-sat: #4fae6a;
+  --cal-sun: #d46aa0;
+    /* 日历日期区背景:浅色同纸片底(不变) */
+    --cal-day-bg: #f7f7f7;
+  /* 月份格子背景(1-12月):柔和四季,已淡化——浅色 10% 月色混纸底 / 深色 25%(存在感弱) */
+  --cal-month-1: #e9ebee;
+  --cal-month-2: #ebecee;
+  --cal-month-3: #eef0e8;
+  --cal-month-4: #e9eee6;
+  --cal-month-5: #e8ede8;
+  --cal-month-6: #e5eeeb;
+  --cal-month-7: #e5eded;
+  --cal-month-8: #e6edee;
+  --cal-month-9: #f2efe5;
+  --cal-month-10: #f4efe5;
+  --cal-month-11: #f2ebe6;
+  --cal-month-12: #e7ebee;
+    /* 年份格子背景:4 色按 year%4 选(余0紫罗兰/余1蓝紫/余2粉紫/余3暖灰),淡化不抢眼 */
+    --cal-year-0: #ece9f2;
+    --cal-year-1: #e9ebf2;
+    --cal-year-2: #f0ecf2;
+    --cal-year-3: #eeeceb;
+
+  /* 阴影:中性灰调 */
+  --ntx-shadow-sm: 0 1px 2px rgb(40 44 54 / 0.06);
+  --ntx-shadow-md: 0 4px 12px rgb(40 44 54 / 0.1);
+  --ntx-shadow-lg: 0 12px 32px rgb(40 44 54 / 0.16);
+}
+
+/* 手机窄屏:滚动条收细到 3px(触屏用细条,不占可视面积) */
+@media (max-width: 639px) {
+  :root {
+    --scrollbar-thickness: 0.1875rem;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  /* 自动模式(无 data-theme 或 data-theme="auto")跟随系统;
+     手动主题覆盖见下方 :root[data-theme="dark"]。 */
+  :root:not([data-theme="light"]):not([data-theme="dark"]) {
+    color-scheme: dark;
+
+    /* 中性灰底 + 黑板灰纸张(整站色相统一中性) */
+    --surface: #333333;
+    --surface-alt: #222222;
+    --toc-hover: #3a3a3a; /* 目录悬浮背景:比纸片(242424)亮一档,深色下可辨 */
+    --surface-raised: #242424;
+
+    /* 区域纹理:深色用白点(人眼对深底亮粒敏感,alpha 略低) */
+    --texture-grain: rgb(255 255 255 / 0.02);
+    --texture-nav-start: color-mix(in srgb, var(--surface) 96%, #000);
+    --texture-line: rgb(255 255 255 / 0.04);
+    --nav-shadow: rgb(0 0 0 / 0.28); /* 深底上黑影要更浓才可辨(0.42 过重,减弱) */
+    --stone-line: rgb(255 255 255 / 0.02); /* 页脚细纹线色 */
+    --nav-grid-line: rgb(255 255 255 / 0.015); /* 导航格子纹线色 */
+    --paper-line: rgb(191 156 70 / 0.04); /* 纸片标题区格线(品牌色 --brand #bf9c46 的浅版) */
+    --weave-line: rgb(191 156 70 / 0.07); /* hero 编织底纹线色(品牌色浅版,用户确认 0.07 浓度(比 0.1 浅,减弱对文字的干扰)) */
+
+    /* 中性近白(无色相,降亮度防刺眼);次要/弱化走 alpha 分级 */
+    --text-primary: #fffbf0;
+    --title-shadow-hi: rgb(255 255 255 / 0.12);
+    --title-shadow-lo: rgb(0 0 0 / 0.4);
+    --logo-shadow-hi: rgb(255 255 255 / 0.12);
+    --logo-shadow-lo: rgb(0 0 0 / 0.45);
+    --text-secondary: rgb(255 255 255 / 0.65);
+    --text-muted: rgb(255 255 255 / 0.45);
+    --text-inverse: #181818;
+
+    /* 发丝线:半透明自适应(浅=黑线, 深=白线, α 全站统一) */
+    --border: rgb(255 255 255 / 0.14);
+    --border-strong: rgb(255 255 255 / 0.24);
+    /* 引用竖线:灰紫 hsl(265° 12% 65%)——冷调灰紫,与白天暖紫棕冷/暖对立 */
+    --quote-bar: hsl(265 12% 65%);
+    --quote-bg: color-mix(in srgb, var(--quote-bar) 12%, #222222); /* blockquote 背景:同色系深色淡彩(呼应白天) */
+
+    /* 品牌:暗金橄榄(深色下唯一的暖点) */
+    --brand: #bf9c46;
+    --brand-contrast: #181818;
+    --brand-subtle: #f0c239;
+
+    /* 强调:夜灯琥珀 */
+    --accent: #e0a050;
+
+    /* 行动:夜竹青 */
+    --action: #2fa07c;
+    --action-hover: #3cbb93;
+    --action-contrast: #131313;
+
+    /* 代码:墨黑面板 */
+    --code-bg: #1a1a1a;
+    --code-text: #e6e6e6;
+    --code-border: rgb(255 255 255 / 0.18);
+
+    /* 代码块增强:行号列底色(与代码底 #1a1a1a 相近略亮一档,中性灰),行 hover 强调条
+       (代码块背景统一用 --code-bg,不分语言块/plaintext) */
+    --code-gutter-bg: #161616;
+    --code-line-hover: rgb(255 255 255 / 0.06);
+
+    /* 文章摘要文字色(深蓝白):表格表头背景用 */
+    --summary-fg: #d6ecf0;
+    /* 日历星期色(周一~周日):心情梯度,深色提亮一档 */
+    --cal-mon: #9aa0aa;
+    --cal-tue: #9aa8b8;
+    --cal-wed: #aeb6c0;
+    --cal-thu: #e8b05f;
+    --cal-fri: #f0a85f;
+    --cal-sat: #6fc98a;
+    --cal-sun: #e88ab8;
+      --cal-day-bg: #2d2d2d; /* 暗色提亮,与深色月/年 header 形成对比 */
+    /* 月份格子背景(1-12月):四季色淡化,深色 25% 混纸底 */
+    --cal-month-1: #3e434b;
+    --cal-month-2: #42464c;
+    --cal-month-3: #474d3b;
+    --cal-month-4: #3e483a;
+    --cal-month-5: #3a473a;
+    --cal-month-6: #334742;
+    --cal-month-7: #334747;
+    --cal-month-8: #37474b;
+    --cal-month-9: #534b33;
+    --cal-month-10: #554733;
+    --cal-month-11: #534237;
+    --cal-month-12: #3a424b;
+      /* 年份格子背景:4 色按 year%4 选(余0紫罗兰/余1蓝紫/余2粉紫/余3暖灰),淡化不抢眼 */
+      --cal-year-0: #3e364b;
+      --cal-year-1: #363a4b;
+      --cal-year-2: #473e4b;
+      --cal-year-3: #423e3a;
+
+    --ntx-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.5);
+    --ntx-shadow-md: 0 4px 12px rgb(0 0 0 / 0.5);
+    --ntx-shadow-lg: 0 12px 32px rgb(0 0 0 / 0.6);
+  }
+}
+
+/* 手动强制深色(主题切换按钮置 data-theme="dark") */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* 中性灰底 + 黑板灰纸张(整站色相统一中性) */
+  --surface: #333333;
+  --surface-alt: #222222;
+  --toc-hover: #3a3a3a; /* 目录悬浮背景:比纸片(242424)亮一档,深色下可辨 */
+  --surface-raised: #242424;
+
+  /* 区域纹理:深色用白点(人眼对深底亮粒敏感,alpha 略低) */
+  --texture-grain: rgb(255 255 255 / 0.02);
+  --texture-nav-start: color-mix(in srgb, var(--surface) 96%, #000);
+  --texture-line: rgb(255 255 255 / 0.04);
+  --nav-shadow: rgb(0 0 0 / 0.28); /* 深底上黑影要更浓才可辨(0.42 过重,减弱) */
+  --stone-line: rgb(255 255 255 / 0.02); /* 页脚细纹线色 */
+  --nav-grid-line: rgb(255 255 255 / 0.015); /* 导航格子纹线色 */
+  --paper-line: rgb(191 156 70 / 0.04); /* 纸片标题区格线(品牌色 --brand #bf9c46 的浅版) */
+  --weave-line: rgb(191 156 70 / 0.07); /* hero 编织底纹线色(品牌色浅版,用户确认 0.07 浓度(比 0.1 浅,减弱对文字的干扰)) */
+
+  /* 中性近白(无色相,降亮度防刺眼);次要/弱化走 alpha 分级 */
+  --text-primary: #fffbf0;
+  --title-shadow-hi: rgb(255 255 255 / 0.12);
+  --title-shadow-lo: rgb(0 0 0 / 0.4);
+  --logo-shadow-hi: rgb(255 255 255 / 0.12);
+  --logo-shadow-lo: rgb(0 0 0 / 0.45);
+  --text-secondary: rgb(255 255 255 / 0.65);
+  --text-muted: rgb(255 255 255 / 0.45);
+  --text-inverse: #181818;
+
+  /* 发丝线:半透明自适应(浅=黑线, 深=白线, α 全站统一) */
+  --border: rgb(255 255 255 / 0.14);
+  --border-strong: rgb(255 255 255 / 0.24);
+  /* 引用竖线:灰紫 hsl(265° 12% 65%) */
+  --quote-bar: hsl(265 12% 65%);
+  --quote-bg: color-mix(in srgb, var(--quote-bar) 12%, #222222);
+  /* 品牌:暗金橄榄(深色下唯一的暖点) */
+  --brand: #bf9c46;
+  --brand-contrast: #181818;
+  --brand-subtle: #f0c239;
+
+  /* 强调:夜灯琥珀 */
+  --accent: #e0a050;
+
+  /* 行动:夜竹青 */
+  --action: #2fa07c;
+  --action-hover: #3cbb93;
+  --action-contrast: #131313;
+
+  /* 代码:墨黑面板 */
+  --code-bg: #1a1a1a;
+  --code-text: #e6e6e6;
+  --code-border: rgb(255 255 255 / 0.18);
+
+  /* 代码块增强:行号列底色(与代码底 #1a1a1a 相近略亮一档,中性灰),行 hover 强调条
+     (代码块背景统一用 --code-bg,不分语言块/plaintext) */
+  --code-gutter-bg: #161616;
+  --code-line-hover: rgb(255 255 255 / 0.06);
+
+  /* 文章摘要文字色(深蓝白):表格表头背景用 */
+  --summary-fg: #d6ecf0;
+  /* 日历星期色(周一~周日):心情梯度,深色提亮一档 */
+  --cal-mon: #9aa0aa;
+  --cal-tue: #9aa8b8;
+  --cal-wed: #aeb6c0;
+  --cal-thu: #e8b05f;
+  --cal-fri: #f0a85f;
+  --cal-sat: #6fc98a;
+  --cal-sun: #e88ab8;
+    --cal-day-bg: #2d2d2d; /* 暗色提亮,与深色月/年 header 形成对比 */
+    /* 月份格子背景(1-12月):四季色淡化,深色 25% 混纸底 */
+    --cal-month-1: #3e434b;
+    --cal-month-2: #42464c;
+    --cal-month-3: #474d3b;
+    --cal-month-4: #3e483a;
+    --cal-month-5: #3a473a;
+    --cal-month-6: #334742;
+    --cal-month-7: #334747;
+    --cal-month-8: #37474b;
+    --cal-month-9: #534b33;
+    --cal-month-10: #554733;
+    --cal-month-11: #534237;
+    --cal-month-12: #3a424b;
+      /* 年份格子背景:4 色按 year%4 选(余0紫罗兰/余1蓝紫/余2粉紫/余3暖灰),淡化不抢眼 */
+      --cal-year-0: #3e364b;
+      --cal-year-1: #363a4b;
+      --cal-year-2: #473e4b;
+      --cal-year-3: #423e3a;
+
+  --ntx-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.5);
+  --ntx-shadow-md: 0 4px 12px rgb(0 0 0 / 0.5);
+  --ntx-shadow-lg: 0 12px 32px rgb(0 0 0 / 0.6);
+}
+
+/* ================= 语义工具类映射(随主题翻转) ================= */
+
+@theme inline {
+  --color-surface: var(--surface);
+  --color-surface-alt: var(--surface-alt);
+  --color-surface-raised: var(--surface-raised);
+
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-text-inverse: var(--text-inverse);
+
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+
+  --color-brand: var(--brand);
+  --color-brand-contrast: var(--brand-contrast);
+  --color-brand-subtle: var(--brand-subtle);
+
+  --color-accent: var(--accent);
+
+  --color-action: var(--action);
+  --color-action-hover: var(--action-hover);
+  --color-action-contrast: var(--action-contrast);
+
+  --color-code-bg: var(--code-bg);
+  --color-code-text: var(--code-text);
+  --color-code-border: var(--code-border);
+
+  --shadow-sm: var(--ntx-shadow-sm);
+  --shadow-md: var(--ntx-shadow-md);
+  --shadow-lg: var(--ntx-shadow-lg);
+}
+
+/* ================= 语言字体切换(zh-Hant) =================
+ * zh-Hant 页面的 CJK 段切换为繁体字形优先字体族(TC),不再落入简体字体。
+ * 无 TC 字体环境由栈尾通用 CJK 字体兜底;Latin 段与 emoji 段保持不变。 */
+html[lang="zh-Hant"] {
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, "Noto Sans", "PingFang TC", "Heiti TC", "Microsoft JhengHei",
+    "Noto Sans TC", sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+    "Segoe UI Symbol", "Noto Color Emoji";
+  --font-serif:
+    Georgia, "Times New Roman", "Songti TC", "Noto Serif TC", "Songti SC",
+    "Noto Serif SC", serif;
+  /* 楷体/等宽同样切 TC:代码块/脚注/目录/引文等 mono 与 kai 区域的中文
+     不落入简体字体,避免繁体页面显示简体字形 */
+  --font-kai:
+    "Kaiti TC", "STKaiti", "DFKai-SB", "KaiTi", "Kaiti", "AR PL UKai CN",
+    "AR PL UKai HK", "Noto Serif CJK TC", "Noto Serif TC", Georgia,
+    "Times New Roman", "Songti TC", serif;
+  --font-mono:
+    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono",
+    monospace, "PingFang TC", "Heiti TC", "Microsoft JhengHei", "Noto Sans TC";
+  --font-nav:
+    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono",
+    "PingFang TC", "Heiti TC", "Microsoft JhengHei", "Noto Sans TC",
+    monospace;
+}
+
+/* ================= 语言字体切换(日文/韩文/阿拉伯文) =================
+ * 日文:假名与日文汉字走日文字体(Hiragino/Noto Sans JP/游ゴシック),避免日文汉字
+ *   落到简体字体(PingFang SC)的简体字形;韩文:谚文/汉字走韩文字体(Apple SD Gothic
+ *   Neo/Malgun Gothic/Noto Sans KR);阿拉伯文:走阿拉伯字体(Geeza Pro/Segoe UI
+ *   Arabic/Noto Naskh Arabic),页面方向已由 html dir="rtl" 处理。
+ * Latin 段与 emoji 段保持不变。 */
+html[lang="ja"] {
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, "Noto Sans", "Hiragino Sans", "Hiragino Kaku Gothic ProN",
+    "Noto Sans JP", "Yu Gothic UI", "Yu Gothic", "Meiryo", "MS PGothic",
+    sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
+    "Noto Color Emoji";
+  --font-serif:
+    Georgia, "Times New Roman", "Hiragino Mincho ProN", "Noto Serif JP",
+    "Yu Mincho", "MS PMincho", serif;
+  /* 楷体/等宽切日文字体:代码/脚注/目录等区域不落简体字形 */
+  --font-kai:
+    Georgia, "Times New Roman", "Hiragino Mincho ProN", "Noto Serif JP",
+    "Yu Mincho", "MS PMincho", serif;
+  --font-mono:
+    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono",
+    monospace, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP",
+    "Yu Gothic UI", "Meiryo", "MS PGothic";
+  --font-nav:
+    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono",
+    "Hiragino Sans", "Noto Sans JP", "Yu Gothic UI", "Meiryo", monospace;
+}
+
+html[lang="ko"] {
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, "Noto Sans", "Apple SD Gothic Neo", "Malgun Gothic",
+    "Noto Sans KR", "Nanum Gothic", sans-serif, "Apple Color Emoji",
+    "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-serif:
+    Georgia, "Times New Roman", "Apple SD Gothic Neo", "Nanum Myeongjo",
+    "Noto Serif KR", serif;
+  /* 楷体/等宽切韩文字体:代码/脚注/目录等区域不落简体字形 */
+  --font-kai:
+    Georgia, "Times New Roman", "Apple SD Gothic Neo", "Nanum Myeongjo",
+    "Noto Serif KR", serif;
+  --font-mono:
+    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono",
+    monospace, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR",
+    "Nanum Gothic";
+  --font-nav:
+    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono",
+    "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", monospace;
+}
+
+html[lang="ar"] {
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, "Noto Sans", "Geeza Pro", "Segoe UI Arabic", "Noto Naskh Arabic",
+    "Noto Sans Arabic", Tahoma, sans-serif, "Apple Color Emoji",
+    "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-serif:
+    Georgia, "Times New Roman", "Geeza Pro", "Noto Naskh Arabic",
+    "Noto Serif Arabic", Tahoma, serif;
+  /* 楷体/等宽切阿拉伯字体:代码/脚注/目录等区域保持阿拉伯字形 */
+  --font-kai:
+    Georgia, "Times New Roman", "Geeza Pro", "Noto Naskh Arabic",
+    "Noto Serif Arabic", Tahoma, serif;
+  --font-mono:
+    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono",
+    monospace, "Geeza Pro", "Segoe UI Arabic", "Noto Naskh Arabic",
+    "Noto Sans Arabic", Tahoma;
+  --font-nav:
+    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono",
+    "Geeza Pro", "Segoe UI Arabic", "Noto Naskh Arabic", Tahoma, monospace;
+}

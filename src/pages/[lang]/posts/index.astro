@@ -1,0 +1,54 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import Pagination from "../../../components/Pagination.astro";
+import PostCard from "../../../components/PostCard.astro";
+import BookText from "../../../components/icons/BookText.astro";
+import { getActiveLangs } from "../../../lib/active-langs";
+import { codeFromPath, langPath, languages, t } from "../../../i18n";
+import { firstPage } from "../../../lib/pagination";
+
+export async function getStaticPaths() {
+  const activeLangs = await getActiveLangs();
+  return activeLangs.map((lang) => ({ params: { lang: langPath(lang.code) } }));
+}
+
+const lang = codeFromPath(Astro.params.lang ?? "zh");
+const prefix = `/${langPath(lang)}/posts`;
+// 第一页由本页静态渲染,第 2 页起由 page/[...page].astro 的 paginate 生成
+const posts = (await getCollection("posts"))
+  .filter((post) => post.data.lang === lang)
+  .sort((a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime());
+const page = firstPage(posts, `${prefix}/`, prefix);
+---
+
+<BaseLayout lang={lang} title={t(lang, "navPosts")} description={t(lang, "navPosts")}>
+  <div class="page-container w-full">
+    <div class="paper-list">
+      <div class="paper-list-head">
+        <h1>
+          <span class="inline-flex items-center gap-2">
+            <BookText class="h-6 w-6" />
+            {t(lang, "navPosts")}
+          </span>
+        </h1>
+      </div>
+      <div class="paper-list-body">
+        {page.data.length === 0 ? (
+          <div class="empty-state flex items-center justify-center rounded-lg border border-dashed border-border px-6 text-center">
+            <p class="text-text-muted">{t(lang, "listEmpty")}</p>
+          </div>
+        ) : (
+          <>
+            <ul class="paper-list-rows">
+              {page.data.map((post) => (
+                <PostCard post={post} lang={lang} />
+              ))}
+            </ul>
+            <Pagination lang={lang} page={page} firstPageUrl={`${prefix}/`} />
+          </>
+        )}
+      </div>
+    </div>
+  </div>
+</BaseLayout>

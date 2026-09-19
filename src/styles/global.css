@@ -1,0 +1,25 @@
+/* ==========================================================================
+ * 全局样式编排入口
+ * 按模块组织:
+ *   tokens.css   — 设计令牌(唯一事实源)
+ *   base.css     — 站点级变量(:root/深浅主题)与 html/body 基础
+ *   article.css  — 文章正文排版(标题/段落/代码/表格/图片/引用等)
+ *   mermaid.css  — Mermaid 图(容器 + 类覆盖)
+ *   mermaid-palette.css — Mermaid 色板(redux 官方配色,自动生成)
+ *   layout.css   — 文章页布局(纸片/三栏/目录/题图/锚点/响应式)
+ * ========================================================================== */
+@import "tailwindcss";
+/* 覆盖 Tailwind v4 默认 hover variant:默认包在 @media (hover: hover) 内,
+   触屏 Windows 设备(触摸屏笔记本/平板)Chrome 判定 hover:none → 整个媒体块跳过,
+   tooltip/按钮背景/TOC 高亮等 hover 效果全部失效(mac 无触屏故正常)。
+   改为纯 :hover 后任何设备生效(含触屏点击瞬时高亮)。 */
+@custom-variant hover (&:hover);
+@custom-variant group-hover (&:is(:where(.group):hover *));
+@import "katex/dist/katex.min.css";
+@import "./tokens.css";
+@import "./base.css";
+@import "./article.css";
+@import "./mermaid.css";
+@import "./mermaid-palette.css";
+@import "./layout.css";
+@source "../components";

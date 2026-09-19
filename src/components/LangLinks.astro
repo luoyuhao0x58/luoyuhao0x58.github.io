@@ -1,0 +1,80 @@
+---
+// 语言链接列表(被 LangSwitcher 的桌面/手机两种形态复用)。
+// data-astro-reload:语言切换强制整页加载,SSR 按新语言完整重渲(persist 的 header/footer 不残留旧语言)。
+import { langFromPath, languages, langPath, stripLangPrefix } from "../i18n";
+import type { Locale } from "../i18n";
+
+interface Props {
+  currentPath: string;
+  /** 活跃语言(有文章才渲染),由 Header 计算后传入;无文章的语言不列在切换器里。 */
+  langs: typeof languages;
+  /** Explicit per-language target URLs (e.g. translated post pages); falls back to parallel path replacement. */
+  targets?: Partial<Record<Locale, string>>;
+}
+const { currentPath, langs, targets = {} } = Astro.props;
+const current = langFromPath(currentPath);
+const rest = stripLangPrefix(currentPath);
+---
+
+{
+  langs.map((lang) => {
+    const href = targets[lang.code] ?? `/${langPath(lang.code)}${rest}`;
+    return (
+      <li>
+        <a
+          href={href}
+          data-astro-reload
+          lang={lang.htmlLang}
+          aria-current={current === lang.code ? "page" : undefined}
+          class="flex items-center px-4 py-2 text-sm text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary"
+        >
+          <span class="lang-name">{lang.label}</span>
+          {/* 显示代码:简体用 zh-Hans(BCP47 简繁区分语义);其余直接用 htmlLang */}
+          <span class="lang-code">({lang.code === "zh" ? "zh-Hans" : lang.htmlLang})</span>
+        </a>
+      </li>
+    );
+  })
+}
+
+<style>
+  /* 语言名按各自语言字形渲染:页面 html[lang] 的字体变量只作用于整页,
+     菜单里非当前语言项需按元素自身 lang 逐项匹配字体(栈与 tokens.css 各语言 sans 一致)。 */
+  .lang-name:lang(zh-CN) {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, "Noto Sans", "PingFang SC", "Hiragino Sans GB",
+      "Microsoft YaHei", "Noto Sans SC", sans-serif;
+  }
+  .lang-name:lang(zh-Hant) {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, "Noto Sans", "PingFang TC", "Heiti TC",
+      "Microsoft JhengHei", "Noto Sans TC", sans-serif;
+  }
+  .lang-name:lang(ja) {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, "Noto Sans", "Hiragino Sans",
+      "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic UI", "Yu Gothic",
+      "Meiryo", "MS PGothic", sans-serif;
+  }
+  .lang-name:lang(ko) {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, "Noto Sans", "Apple SD Gothic Neo",
+      "Malgun Gothic", "Noto Sans KR", "Nanum Gothic", sans-serif;
+  }
+  .lang-name:lang(ar) {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, "Noto Sans", "Geeza Pro", "Segoe UI Arabic",
+      "Noto Naskh Arabic", "Noto Sans Arabic", Tahoma, sans-serif;
+  }
+  /* 括号 + 语言代码:英文等宽体 */
+  .lang-code {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+  /* 悬停横条效果:整行横贯背景条(与代码块行 hover 一致,var(--code-line-hover)),
+     覆盖 Tailwind 的 hover:bg-surface-alt */
+  li a:hover {
+    background-color: var(--code-line-hover);
+  }
+</style>
