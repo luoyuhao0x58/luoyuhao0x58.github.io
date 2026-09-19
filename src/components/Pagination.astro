@@ -1,0 +1,49 @@
+---
+import { t } from "../i18n";
+import type { Page } from "astro";
+import type { CollectionEntry } from "astro:content";
+
+interface Props {
+  lang: string;
+  page: Page<CollectionEntry<"blog">>;
+  /** URL of this list's index page (page 1), used to fix the prev link on page 2. */
+  firstPageUrl: string;
+}
+const { lang, page, firstPageUrl } = Astro.props;
+// Astro 7 paginate 在 [...page] 模式下,第 2 页的 prev 会错误地生成空 rest 的
+// "/zh/page" 而非首页 "/zh/",这里用索引页 URL 覆盖。
+const prevHref = page.currentPage === 2 ? firstPageUrl : page.url.prev;
+const nextHref = page.url.next;
+const hasMultiple = Boolean(prevHref || nextHref);
+const pageLinkClass =
+  "inline-flex items-center rounded-full border border-border px-4 py-1.5 text-sm text-text-secondary transition-colors hover:border-brand hover:text-brand";
+---
+
+{hasMultiple && (
+  <nav
+    aria-label={t(lang, "paginationAria")}
+    class="mt-10 flex items-center justify-between gap-4 border-t border-border pt-6"
+  >
+    {prevHref ? (
+      <a href={prevHref} class={pageLinkClass}>
+        ← {t(lang, "prevPage")}
+      </a>
+    ) : (
+      <span class="inline-flex px-4 py-1.5 text-sm text-text-muted" aria-hidden="true">
+        ← {t(lang, "prevPage")}
+      </span>
+    )}
+    <span class="text-sm tabular-nums text-text-muted">
+      {page.currentPage} / {page.lastPage}
+    </span>
+    {nextHref ? (
+      <a href={nextHref} class={pageLinkClass}>
+        {t(lang, "nextPage")} →
+      </a>
+    ) : (
+      <span class="inline-flex px-4 py-1.5 text-sm text-text-muted" aria-hidden="true">
+        {t(lang, "nextPage")} →
+      </span>
+    )}
+  </nav>
+)}

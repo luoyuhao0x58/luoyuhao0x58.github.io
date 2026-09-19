@@ -1,0 +1,136 @@
+/* ==========================================================================
+ * Mermaid 图:容器 + 类覆盖(色板变量 --mmd-*)
+ *
+ * svg 构建期以 base 主题渲染(见 rehype-mermaid-ssr.mjs),颜色在此用类选择器
+ * 统一覆盖为 --mmd-* 变量。色板取自 redux 官方两套配色(redux-color 白天 /
+ * redux-dark-color 黑夜,自动生成于 mermaid-palette.css),深浅主题靠
+ * data-theme 切换 CSS 变量即换配色——同一份 svg 自动自适应,零 JS、无第二份 DOM。
+ * ========================================================================== */
+
+/* Mermaid 容器:宽图横向滚动;底色与文章纸片一致(融为一体) */
+.article-content pre.mermaid-container {
+  overflow-x: auto;
+  text-align: center;
+  background: var(--article-bg);
+}
+
+/* svg 居中:js-mermaid 输出有 width="100%"(flowchart)与固定像素宽(sequence)
+   两种,固定宽的是 block 级 → text-align 无效,用 margin auto 居中;
+   max-width 防超容器的宽图撑破(由 overflow-x 接管滚动);
+   背景透明兜底(svg 自身无背景矩形,纸片色即底色) */
+.article-content pre.mermaid-container svg {
+  display: block;
+  margin-inline: auto;
+  max-width: 100%;
+  height: auto;
+  background: transparent;
+}
+
+/* ── 颜色覆盖(压过 svg 内部 base 主题色)────────────────── */
+.mermaid-container svg {
+  background: transparent;
+}
+
+/* 文字:统一节点文字色(text / tspan / foreignObject 内 label 全覆盖) */
+.mermaid-container svg text,
+.mermaid-container svg tspan {
+  fill: var(--mmd-nodeText) !important;
+}
+.mermaid-container svg .nodeLabel {
+  color: var(--mmd-nodeText) !important;
+}
+
+/* 节点/形状背景与描边(流程图/类图/状态图/ER)
+   同时覆盖 g.node 包裹与平级 rect 两种结构变体 */
+.mermaid-container svg .node rect,
+.mermaid-container svg .node polygon,
+.mermaid-container svg .node circle,
+.mermaid-container svg .node ellipse,
+.mermaid-container svg .node path,
+.mermaid-container svg .classGroup rect,
+.mermaid-container svg .stateGroup rect,
+.mermaid-container svg .entityBox {
+  fill: var(--mmd-nodeFill) !important;
+  stroke: var(--mmd-nodeStroke) !important;
+}
+
+/* 连线/箭头 */
+.mermaid-container svg .edgePath .path,
+.mermaid-container svg .flowchart-link,
+.mermaid-container svg .relation,
+.mermaid-container svg .actor-line,
+.mermaid-container svg .loopLine {
+  stroke: var(--mmd-edge) !important;
+}
+.mermaid-container svg .arrowheadPath,
+.mermaid-container svg [class*="arrow"] {
+  fill: var(--mmd-edge) !important;
+  stroke: var(--mmd-edge) !important;
+}
+
+/* 时序图:参与者(actor)盒子与文字 */
+.mermaid-container svg .actor rect,
+.mermaid-container svg rect.actor,
+.mermaid-container svg .actor circle,
+.mermaid-container svg circle.actor {
+  fill: var(--mmd-actorFill) !important;
+  stroke: var(--mmd-actorStroke) !important;
+}
+/* redux 官方 actor 多彩色轮:插件按 name 编 data-mmd-actor,CSS 按索引取色
+   (rect.actor 是 actor 盒子自身,.actor rect 兼容 g.actor 包裹结构) */
+.mermaid-container svg .actor rect[data-mmd-actor="0"],
+.mermaid-container svg rect.actor[data-mmd-actor="0"] { fill: var(--mmd-actor0Fill) !important; stroke: var(--mmd-actor0Stroke) !important; }
+.mermaid-container svg .actor rect[data-mmd-actor="1"],
+.mermaid-container svg rect.actor[data-mmd-actor="1"] { fill: var(--mmd-actor1Fill) !important; stroke: var(--mmd-actor1Stroke) !important; }
+.mermaid-container svg .actor rect[data-mmd-actor="2"],
+.mermaid-container svg rect.actor[data-mmd-actor="2"] { fill: var(--mmd-actor2Fill) !important; stroke: var(--mmd-actor2Stroke) !important; }
+.mermaid-container svg .actor rect[data-mmd-actor="3"],
+.mermaid-container svg rect.actor[data-mmd-actor="3"] { fill: var(--mmd-actor3Fill) !important; stroke: var(--mmd-actor3Stroke) !important; }
+.mermaid-container svg .actor rect[data-mmd-actor="4"],
+.mermaid-container svg rect.actor[data-mmd-actor="4"] { fill: var(--mmd-actor4Fill) !important; stroke: var(--mmd-actor4Stroke) !important; }
+.mermaid-container svg .actor rect[data-mmd-actor="5"],
+.mermaid-container svg rect.actor[data-mmd-actor="5"] { fill: var(--mmd-actor5Fill) !important; stroke: var(--mmd-actor5Stroke) !important; }
+.mermaid-container svg .actor rect[data-mmd-actor="6"],
+.mermaid-container svg rect.actor[data-mmd-actor="6"] { fill: var(--mmd-actor6Fill) !important; stroke: var(--mmd-actor6Stroke) !important; }
+.mermaid-container svg .actor rect[data-mmd-actor="7"],
+.mermaid-container svg rect.actor[data-mmd-actor="7"] { fill: var(--mmd-actor7Fill) !important; stroke: var(--mmd-actor7Stroke) !important; }
+/* actor 文字优先级高于通用文字规则(同特异性后者胜);描边同官方(白字深描边) */
+.mermaid-container svg .actor text,
+.mermaid-container svg text.actor {
+  fill: var(--mmd-actorText) !important;
+  stroke: var(--mmd-actorTextStroke) !important;
+}
+
+/* 时序图激活条(动态编号 activation0/1/2...):redux 低调灰 */
+.mermaid-container svg [class^="activation"] {
+  fill: var(--mmd-activation) !important;
+  stroke: var(--mmd-activation) !important;
+}
+
+/* 注释/便签 */
+.mermaid-container svg .note,
+.mermaid-container svg rect.note {
+  fill: var(--mmd-noteFill) !important;
+  stroke: var(--mmd-noteStroke) !important;
+}
+
+/* 边标签(flowchart 分支标签等):官方 redux 为浅灰/深灰底 + 强对比文字。
+   svg 内联 style 块里 base 主题写死淡紫粉(rgba(244,221,255,.5))且选择器带
+   #mmd-xxx(id 特异性),必须连 .labelBkg/span/p 一起用 important 覆盖才能盖掉 */
+.mermaid-container svg .edgeLabel,
+.mermaid-container svg .edgeLabel p,
+.mermaid-container svg .edgeLabel span,
+.mermaid-container svg .labelBkg {
+  background-color: var(--mmd-edgeLabelBkg) !important;
+  color: var(--mmd-nodeText) !important;
+}
+.mermaid-container svg .edgeLabel rect {
+  fill: var(--mmd-edgeLabelBkg) !important;
+  opacity: 1 !important;
+}
+
+/* 时序图细节圆点等无类小元素(官方为节点文字色) */
+.mermaid-container svg circle.no-class {
+  fill: var(--mmd-nodeText) !important;
+  stroke: var(--mmd-nodeText) !important;
+}

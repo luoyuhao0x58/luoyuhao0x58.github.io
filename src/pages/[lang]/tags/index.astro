@@ -1,0 +1,52 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import { codeFromPath, langPath, languages, t } from "../../../i18n";
+import { tagLabels, taxonomyLabel } from "../../../taxonomy";
+
+export async function getStaticPaths() {
+  return languages.map((lang) => ({ params: { lang: langPath(lang.code) } }));
+}
+
+const lang = codeFromPath(Astro.params.lang ?? "zh");
+const posts = (await getCollection("blog")).filter(
+  (post) => post.data.lang === lang,
+);
+// 统计当前语言下每个标签的文章数,按计数降序(同数按标签名)
+const tagCounts = new Map<string, number>();
+for (const post of posts) {
+  for (const tag of post.data.tags) {
+    tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1);
+  }
+}
+const tags = [...tagCounts.entries()].sort(
+  (a, b) => b[1] - a[1] || a[0].localeCompare(b[0], lang),
+);
+// 显示名按当前语言翻译;链接用英文 key
+const tagLabel = (tag: string) => taxonomyLabel(tagLabels, tag, lang);
+---
+
+<BaseLayout lang={lang} title={t(lang, "tagsTitle")} description={t(lang, "tagsTitle")}>
+  <div class="page-container w-full px-4 py-12 sm:py-16">
+    <h1 class="text-3xl font-bold tracking-tight sm:text-4xl">
+      {t(lang, "tagsTitle")}
+    </h1>
+    {tags.length === 0 ? (
+      <p class="mt-10 text-text-muted">{t(lang, "listEmpty")}</p>
+    ) : (
+      <ul class="mt-10 flex flex-wrap gap-2">
+        {tags.map(([tag, count]) => (
+          <li>
+            <a
+              href={`/${langPath(lang)}/tags/${encodeURIComponent(tag)}/`}
+              class="inline-flex items-center gap-1.5 rounded-full border border-border px-4 py-1.5 text-sm text-text-secondary transition-colors hover:border-brand hover:text-brand"
+            >
+              #{tagLabel(tag)}
+              <span class="text-xs tabular-nums text-text-muted">({count})</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    )}
+  </div>
+</BaseLayout>

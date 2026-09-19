@@ -1,0 +1,19 @@
+---
+// 页脚:主题切换按钮 + 版权声明。版权名称在 i18n 定义(copyrightName),年份取构建时。
+import ThemeToggle from "./ThemeToggle.astro";
+import { codeFromPath, t } from "../i18n";
+
+interface Props {
+  lang: string;
+}
+const { lang } = Astro.props;
+const code = codeFromPath(lang);
+const year = new Date().getFullYear();
+---
+
+<footer class="border-t border-border" data-astro-transition-persist="site-footer">
+  <div class="mx-auto flex w-full max-w-6xl items-center justify-center gap-4 px-4 py-6 text-sm text-text-muted">
+    <ThemeToggle lang={lang} />
+    <span>© {year} {t(code, "copyrightName")}</span>
+  </div>
+</footer>

@@ -1,0 +1,23 @@
+---
+// Lucide `more-vertical`(kebab) 图标(ISC 许可,内嵌)。竖向三点,工具菜单入口。
+interface Props {
+  class?: string;
+}
+const { class: className = "h-4 w-4" } = Astro.props;
+---
+
+<svg
+  class={className}
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  aria-hidden="true"
+>
+  <circle cx="12" cy="12" r="1"></circle>
+  <circle cx="12" cy="5" r="1"></circle>
+  <circle cx="12" cy="19" r="1"></circle>
+</svg>

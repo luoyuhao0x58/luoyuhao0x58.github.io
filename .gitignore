@@ -1,0 +1,19 @@
+# deps
+node_modules/
+.pnpm-store/
+
+# build output
+dist/
+build/
+.astro/
+.turbo/
+
+# misc
+.DS_Store
+*.log
+.env
+.env.*
+!.env.example
+
+# agent
+.pi

@@ -1,0 +1,746 @@
+/* ==========================================================================
+ * 文章正文排版(作用于 slot 内容,故为全局)
+ * ========================================================================== */
+
+.article-content {
+  display: grid;
+  grid-template-columns: var(--indent) minmax(0, 1fr) var(--indent);
+  /* 元素上下间距:14px(p 段落间距,原 1.1rem) */
+  row-gap: 0.875rem;
+  /* CJK↔拉丁自动间距(Baseline 2025,渐进增强):不支持时无间距、内容无损。
+     纯呈现层,不修改 DOM;复制场景的中英文空格仍靠写作规范保证。 */
+  text-autospace: normal;
+}
+
+.article-content > * {
+  grid-column: 2;
+  min-width: 0;
+}
+
+/* CJK 字符段专属字体族(仅覆盖中/日/韩码段):配合正文 font-weight: 500 使用,
+   让中文/日文/韩文字符独立加粗——混排时 CJK 黑体/宋体笔画细显"虚",拉丁显"实",
+   按字符拉齐视觉重量。src 优先真实带 500 字重的 Noto Serif,系统宋体/明朝体
+   (SimSun/Songti/Yu Mincho 无 500)依赖 font-synthesis-weight 合成加粗兜底。 */
+@font-face {
+  font-family: "CJK-Strong";
+  src:
+    local("Noto Serif SC"), local("Noto Serif CJK SC"),
+    local("Songti SC"), local("SimSun"),
+    local("Hiragino Mincho ProN"), local("Yu Mincho"), local("Noto Serif JP"),
+    local("Nanum Myeongjo"), local("Noto Serif KR");
+  font-weight: 400 500;
+  unicode-range:
+    U+4E00-9FFF, U+3400-4DBF, U+F900-FAFF, /* CJK 统一表意文字/扩展A/兼容 */
+    U+3000-303F, U+FF00-FFEF, /* CJK 标点、全角形式 */
+    U+3040-30FF, U+31F0-31FF, /* 日文假名/片假名扩展 */
+    U+AC00-D7AF, U+1100-11FF; /* 韩文音节/字母 */
+}
+
+/* 正文衬线:文章阅读内容(段落/列表/引文/脚注)用衬线,与"标题无衬线、UI 等宽"区分。
+   代码块(mono)、摘要(楷体)、meta(mono)等有显式字体的元素不受影响。
+   :where 零特异性,不覆盖 h2-h5 的标题无衬线规则。
+   font-weight: 500 仅使 CJK 字符(命中 CJK-Strong)独立加粗,拉丁字符走 --font-serif;
+   font-synthesis-weight: auto 让缺 500 字重的宋体/明朝体合成加粗兜底。 */
+:where(.article-content) :is(p, li, dt, dd, blockquote, figcaption, caption, address) {
+  font-family: "CJK-Strong", var(--font-serif);
+  font-weight: 500;
+  font-synthesis-weight: auto;
+}
+/* 表格数据用等宽(用户指定):表格内容多为数据/代码,与代码块同字体;其余正文保持衬线 */
+:where(.article-content) :is(td, th) {
+  font-family: var(--font-mono);
+}
+
+/* L2:破格到整列(媒体/代码/表格/引用/标题/分割线)。 */
+.article-content > img,
+.article-content > pre,
+.article-content > table,
+.article-content > blockquote,
+.article-content > figure,
+.article-content > .mermaid-container,
+.article-content > .video-embed,
+.article-content > p:has(> img.image-figure),
+.article-content > h1,
+.article-content > h2,
+.article-content > hr {
+  grid-column: 1 / -1;
+}
+
+.article-content p {
+  line-height: 1.55; /* 1.5 略增(用户反馈过密), 原 1.8 */
+  color: var(--text-primary);
+}
+
+.article-content a {
+  color: var(--brand);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--brand) 40%, transparent);
+  text-underline-offset: 3px;
+}
+.article-content a:hover {
+  text-decoration-color: var(--brand);
+}
+
+.article-content h1,
+.article-content h2,
+.article-content h3,
+.article-content h4,
+.article-content h5 {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+  scroll-margin-top: calc(3.5rem + 1rem);
+}
+.article-content h1 {
+  margin-top: 1.375rem; /* 1.111rem 回调增加(原 2.5rem) */ /* 正文级 h1:比 h2 大、比页面标题小;左竖线顶到纸片边缘(不盖边框) */
+  font-size: 1.75rem;
+  border-inline-start: 2.5px solid var(--brand);
+  padding-inline: var(--indent);
+  padding-inline-start: calc(var(--indent) - 2.5px); /* 抵消竖线 2.5px,文字与正文左缘对齐 */
+}
+.article-content h2 {
+  margin-top: 1.375rem; /* 1.111rem 回调增加(原 2.5rem) */ /* 留白分区:左竖线信号 + 上间距 + 字重 */
+  font-size: 1.5rem;
+  border-inline-start: 2.5px solid var(--brand); /* 左竖线:横贯块顶到纸片边缘(不盖边框) */
+  padding-inline: var(--indent);
+  padding-inline-start: calc(var(--indent) - 2.5px); /* 抵消竖线 2.5px,文字与正文左缘对齐 */
+}
+/* 正文首个 h1/h2(紧跟标题区,前面无正文段落):压缩上间距,避免双重留白 */
+.article-content > h1:first-child,
+.article-content > h2:first-child {
+  margin-top: 0.375rem; /* 0.222rem 回调增加(原 0.5rem) */
+}
+.article-content h3 {
+  margin-top: 1.125rem; /* 0.889rem 回调增加(原 2rem) */
+  font-size: 1.25rem;
+}
+.article-content h4 {
+  margin-top: 0.875rem; /* 0.667rem 回调增加(原 1.5rem) */
+  font-size: 1.05rem;
+}
+
+/* ============ 列表标记:自定义 ::before(原生 marker 无法让圆点与数字对齐,且 text-indent 破坏折行) ============ */
+.article-content ul,
+.article-content ol {
+  line-height: 1.55; /* 与 p 行距一致 */
+  padding-inline-start: 1.1rem;
+}
+.article-content ul {
+  list-style: none; /* 标记改用 ::before(任务列表保留 checkbox) */
+}
+.article-content ol {
+  list-style: decimal; /* 数字保留原生 */
+}
+.article-content ul > li {
+  position: relative;
+}
+/* 通用:标记绝对定位不占文字流,右缘与 ol 数字句点右缘对齐——文字与折行均在 content 起点,天然对齐 */
+.article-content ul:not(.contains-task-list) > li::before {
+  content: "";
+  position: absolute;
+  inset-inline-end: calc(100% + 0.4375rem);
+  top: 0.5625em; /* 垂直居中:相对行高 1.55 减圆点高 */
+}
+/* 一级:实心圆(disc,6px@16px 整数尺寸,避免亚像素渲染大小不一) */
+.article-content > ul:not(.contains-task-list) > li::before {
+  width: 0.375em;
+  height: 0.375em;
+  border-radius: 50%;
+  background: currentColor;
+}
+/* 二级:空心圆(circle,含 ol 内 ul) */
+.article-content li > ul:not(.contains-task-list) > li::before {
+  width: 0.4375em;
+  height: 0.4375em;
+  border-radius: 50%;
+  border: 0.0625em solid currentColor;
+  background: transparent;
+}
+/* 三级:实心方块(square) */
+.article-content li > ul > li > ul:not(.contains-task-list) > li::before {
+  width: 0.375em;
+  height: 0.375em;
+  border: none;
+  border-radius: 0;
+  background: currentColor;
+}
+
+.article-content blockquote {
+  border-inline-start: 2.5px solid var(--quote-bar); /* 与 h2 竖线同宽;中性灰结构线,深浅自适应 */
+  padding: 0 0 0 1rem; /* 去掉上下 padding:多级嵌套时各级竖线底部对齐(原来每级差 0.2rem) */
+  color: var(--text-muted); /* 引用文字亮度低于正文(原 text-secondary 0.65,用户反馈太亮;0.45 一档) */
+  font-style: italic;
+  background: var(--quote-bg); /* 白天与竖线同色系淡彩,黑夜保持 surface-alt */
+  border-radius: 0 0.375rem 0.375rem 0;
+}
+
+/* 定义列表:preflight 清掉默认样式,补回层次——术语加粗、描述缩进+次要色 */
+.article-content dl {
+  margin: 0 0 0.444rem; /* 1rem 两轮缩小 1/3 */
+}
+.article-content dt {
+  font-weight: 700;
+  margin-top: 0.333rem; /* 0.75rem 两轮缩小 1/3 */
+}
+.article-content dl > dt:first-child {
+  margin-top: 0;
+}
+.article-content dd {
+  margin-inline-start: 1.25rem;
+  color: var(--text-secondary);
+}
+
+/* 自动脚注区:remark-gfm 生成的 h2 自带 sr-only 类,但 Tailwind 扫描不到 md 生成 HTML,
+   未编译该类导致标题露出——补标准 sr-only 样式:视觉隐藏、屏读器保留 */
+/* 任务列表 checkbox:remark-gfm 生成的控件带 disabled,浏览器对 disabled 原生
+   checkbox 强制灰色(accent-color 无效)——构建期 rehype-tasklist 已去 disabled,
+   这里用 accent-color 上选中色(原生外观),pointer-events 保持不可交互。
+   checkbox 留在文本流内,与文本的前后间距由 ul 内边距承担
+   (contains-task-list 的 ul 内边距减半,见下) */
+.article-content ul.contains-task-list input[type="checkbox"] {
+  accent-color: #698E6A;
+  pointer-events: none;
+}
+/* 任务列表 ul 内边距去掉(试效果):checkbox 占文本流,左移到 ul 左缘 */
+.article-content ul.contains-task-list {
+  padding-inline-start: 0;
+}
+
+.article-content section[data-footnotes] h2 {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* 脚注区文字整体灰化:正文 p/a 有显式 color,需子元素级强制覆盖;
+   用 muted(比 secondary 更淡)让脚注不抢正文注意 */
+.article-content section[data-footnotes],
+.article-content section[data-footnotes] * {
+  color: var(--text-muted);
+}
+/* footnote 区等宽字体下 marker 数字更宽(25px vs 正文字体 20px),左缘会顶出
+   section padding——marker 改用正文字体,编号位置与正文 ol 完全一致 */
+.article-content section[data-footnotes] ol li::marker {
+  font-family: var(--font-sans);
+}
+
+.article-content section[data-footnotes] {
+  grid-column: 1 / -1; /* 分隔线跨满到纸片边缘 */
+  border-top: 1px solid var(--border);
+  margin-top: 0.889rem; /* 2rem 两轮缩小 1/3 */
+  padding: 1rem var(--indent) 0;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+}
+
+.article-content code {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  background: var(--code-bg);
+  border: 1px solid var(--code-border);
+  border-radius: 0.25rem;
+  padding: 0.1em 0.35em;
+  /* 代码恒为 LTR:在 RTL(阿拉伯文)文档里行内代码保持从左往右,
+     unicode-bidi 隔离避免与周围 RTL 文本互相干扰 */
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+.article-content pre {
+  overflow-x: auto;
+  background: var(--code-bg);
+  border: 1px solid var(--code-border);
+  border-radius: 0.5rem;
+  padding: 0.667rem 0.833rem; /* 1rem 1.25rem 两轮缩小 1/3 */
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  line-height: 1.3; /* 1.55 再收紧:额外行距减半(span.line 行距) */
+  /* 代码块保持 LTR + 左对齐,不受 RTL 文档方向影响(编程语法是 LTR 惯例) */
+  direction: ltr;
+  text-align: left;
+  unicode-bidi: isolate;
+  /* 横向滚动条与竖向 ScrollbarOverlay 同视觉(细条圆角半透明),默认常显 */
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: color-mix(in srgb, var(--text-muted, #888) 45%, transparent) transparent;
+}
+.article-content pre::-webkit-scrollbar {
+  height: var(--scrollbar-thickness); /* 与竖向浮层滚动条同粗 */
+}
+.article-content pre::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--text-muted, #888) 45%, transparent);
+  border-radius: 0.125rem;
+}
+.article-content pre::-webkit-scrollbar-track {
+  background: transparent;
+}
+.article-content pre code {
+  background: transparent;
+  border: none;
+  padding: 0;
+  font-size: inherit;
+}
+
+/* 数学公式恒为 LTR(数学排版国际惯例),在 RTL 文档中隔离方向 */
+.article-content .katex {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+/* 表格:自身为横竖双向滚动容器(display:block + overflow:auto + max-height)。
+   块级表格下 border-collapse 失效,故改用"每格右下边框 + 首行上 + 首列左"的
+   单线方案:每条线只画一次,无双重线,四周边框完整。表格按内容宽(max-content)
+   排布、min-width 保底占满容器;超过容器宽→横向滚动;行多→竖向滚动。
+   单元格 min-width/height 保底。 */
+.article-content table {
+  display: block;
+  border-collapse: separate; /* 单元格边框独立渲染(border-spacing 0 使边框紧贴) */
+  border-spacing: 0;
+  width: max-content;
+  min-width: 100%;
+  max-width: 100%; /* 宽度受容器约束,超宽内容在表格内部横向滚动(不撑破页面) */
+  max-height: 55vh;
+  overflow: auto;
+  scrollbar-gutter: stable; /* 预留滚动条槽位:sticky 表头不延伸到滚动条下方 */
+  /* 滚动条与全站自定义样式一致(细条圆角半透明,同代码块/目录) */
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: color-mix(in srgb, var(--text-muted, #888) 45%, transparent) transparent;
+}
+.article-content table::-webkit-scrollbar {
+  width: var(--scrollbar-thickness); /* 竖向 */
+  height: var(--scrollbar-thickness); /* 横向 */
+}
+.article-content table::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--text-muted, #888) 45%, transparent);
+  border-radius: 0.125rem;
+}
+.article-content table::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.article-content th,
+.article-content td {
+  border-right: 1px solid var(--border); /* 列线:每格右线 */
+  padding: 0.35rem 0.5rem; /* 边距调小(原 0.5rem 0.75rem):宽度不大时更紧凑 */
+  text-align: center; /* 默认水平居中 */
+  vertical-align: middle; /* 垂直居中 */
+  min-width: 4.5rem; /* 列宽保底:多列时不无限制压窄折行 */
+  height: 2.5rem; /* 行高保底(table-cell 的 height 作为最小行高) */
+}
+/* 表头字号 14px、表体 12px(用户试调) */
+.article-content th {
+  font-size: 0.875rem;
+}
+.article-content td {
+  font-size: 0.75rem;
+}
+/* 首列左边框(与每格右线、td 底线合围成完整外框) */
+.article-content th:first-child,
+.article-content td:first-child {
+  border-left: 1px solid var(--border);
+}
+/* 尊重 markdown 表格对齐语法(分隔行 :--- 左 / :---: 中 / ---: 右 → align 属性),
+   带 align 属性的格子覆盖默认居中 */
+.article-content th[align="left"],
+.article-content td[align="left"] {
+  text-align: left;
+}
+.article-content th[align="center"],
+.article-content td[align="center"] {
+  text-align: center;
+}
+.article-content th[align="right"],
+.article-content td[align="right"] {
+  text-align: right;
+}
+.article-content td {
+  border-bottom: 1px solid var(--border); /* 行线:每格底线(数据行) */
+  background: var(--code-bg); /* A: 编程语言代码块背景色(默认行) */
+}
+/* 行背景 ABAB 相间:B = 行号背景色,偶数数据行使用(表头行不参与) */
+.article-content tbody tr:nth-child(even) td {
+  background: var(--code-gutter-bg);
+}
+/* 表格十字交叉 hover 高亮(仅表体,表头 th 不参与):
+   行高亮 = CSS `tbody tr:hover`(整行统一高亮色,覆盖 ABAB 隔行底色);
+   列高亮 = table-hover.js 给同列 tbody td 加 .table-col-hover。
+   行列同色,交叉处自然重合。高亮色 = 文字色叠在代码块底色上;
+   light 浅底 8% 几乎不可见,浓度提到 18%;dark 深底 8% 已清晰保持 */
+.article-content table tbody tr:hover td,
+.article-content table tbody td.table-col-hover {
+  background: color-mix(in srgb, var(--text-primary) 18%, var(--code-bg));
+}
+/* 交叉格(鼠标指向的单元格 = 行∩列交叉)文字变品牌色 + 边框内发光(inset 辉光,
+   在格子内缘一圈,不会被相邻格背景遮住;不用外发光 box-shadow 会被遮) */
+.article-content table tbody td:hover {
+  color: var(--brand);
+  box-shadow: inset 0 0 6px color-mix(in srgb, var(--brand) 50%, transparent);
+}
+:root[data-theme="dark"] .article-content table tbody tr:hover td,
+:root[data-theme="dark"] .article-content table tbody td.table-col-hover {
+  background: color-mix(in srgb, var(--text-primary) 8%, var(--code-bg));
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):not([data-theme="dark"]) .article-content table tbody tr:hover td,
+  :root:not([data-theme="light"]):not([data-theme="dark"]) .article-content table tbody td.table-col-hover {
+    background: color-mix(in srgb, var(--text-primary) 8%, var(--code-bg));
+  }
+}
+
+.article-content th {
+  /* 背景:light 琥珀橙 #744d25(饱和/亮度与 dark #732424 一致 52%/30%,深蓝的互补暖色) */
+  background-color: #744d25;
+  color: var(--surface); /* 前景:浅灰字,琥珀底上对比 5.83:1 清晰 */
+  border-top: 1px solid var(--border); /* 表头上缘 */
+  border-bottom: 1px solid var(--border); /* 表头下缘 */
+  border-right: 1px solid var(--border); /* 列线:与 td 一致(相邻格不叠双线:右格无左框) */
+  font-weight: 600; /* 字重区分表头 */
+}
+/* dark 主题:红褐 #732424 + 金色标题字(保持用户认可的组合) */
+:root[data-theme="dark"] .article-content th {
+  background-color: #732424;
+  color: var(--brand);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):not([data-theme="dark"]) .article-content th {
+    background-color: #732424;
+    color: var(--brand);
+  }
+}
+/* 表头固定:竖向滚动时 thead 钉在表格滚动容器顶部。
+   thead 只带背景盖住滚动上来的行,边框由 th 承担(th 的 border 渲染稳定) */
+.article-content thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--code-gutter-bg);
+}
+
+/* 图片默认:行内小图(原尺寸不拉满,直角方形,inline 跟文字同行)。
+   注:Tailwind preflight 把 img 统一设 display:block,必须显式改回 inline;
+   小图/浮动/flex 等场景会自行 blockify(display:block / float / flex item) */
+.article-content img {
+  display: inline;
+  max-width: 100%;
+  height: auto;
+  vertical-align: middle;
+  border-radius: 0;
+}
+/* 大图(独立段自动或 #wide):铺满所在容器 */
+.article-content img.image-figure,
+.article-content > img {
+  width: 100%;
+}
+
+/* 图片不可选中(避免蓝色选中底)、不可拖拽 */
+.post-hero img,
+.article-content img {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* 破格元素已顶格到纸张边缘:去掉圆角;引用保留左竖线(border:none 会抹掉顶层竖线),仅去圆角 */
+.article-content > pre,
+.article-content > figure {
+  border: none;
+  border-radius: 0;
+}
+.article-content > blockquote {
+  border-radius: 0;
+}
+/* 图片直角方形(无圆角):破格大图顶到纸张边缘;小图/浮动/pair/row 同样直角 */
+.article-content > p:has(> img.image-figure) img {
+  border-radius: 0;
+}
+
+/* 小图(#small):独立段居中,原尺寸或受限宽度 */
+.article-content img.image-small {
+  display: block;
+  margin-inline: auto;
+}
+/* 不顶格图片(行内/小图/浮动/图文对):轻阴影增加立体感;
+   破格大图(image-figure)与画廊(image-row)铺满纸张边缘,不加 */
+.article-content img.image-inline,
+.article-content img.image-small,
+.article-content img.image-left,
+.article-content img.image-right,
+.article-content .image-pair img.image-pair {
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.18), 0 1px 2px rgb(0 0 0 / 0.12);
+}
+/* 深色模式:图片投黑色阴影(亮图在暗底上轮廓更清晰);强度适中,
+   轻于 0.18 看不出、重于 0.6 显突兀 */
+:root[data-theme="dark"] .article-content img.image-inline,
+:root[data-theme="dark"] .article-content img.image-small,
+:root[data-theme="dark"] .article-content img.image-left,
+:root[data-theme="dark"] .article-content img.image-right,
+:root[data-theme="dark"] .article-content .image-pair img.image-pair {
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.5), 0 1px 2px rgb(0 0 0 / 0.4);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):not([data-theme="dark"]) .article-content img.image-inline,
+  :root:not([data-theme="light"]):not([data-theme="dark"]) .article-content img.image-small,
+  :root:not([data-theme="light"]):not([data-theme="dark"]) .article-content img.image-left,
+  :root:not([data-theme="light"]):not([data-theme="dark"]) .article-content img.image-right,
+  :root:not([data-theme="light"]):not([data-theme="dark"]) .article-content .image-pair img.image-pair {
+    box-shadow: 0 1px 3px rgb(0 0 0 / 0.5), 0 1px 2px rgb(0 0 0 / 0.4);
+  }
+}
+/* 浮动图文(#left/#right):图靠左/右,文字环绕(应写在文字段内) */
+.article-content img.image-left {
+  float: left;
+  margin: 0.25rem 1rem 0.5rem 0;
+  max-width: 45%;
+}
+.article-content img.image-right {
+  float: right;
+  margin: 0.25rem 0 0.5rem 1rem;
+  max-width: 45%;
+}
+/* 图文并排对(#pair):图 + 紧邻说明文字 flex 一行(窄屏自动换行)。列内显示,不顶格 */
+.article-content > .image-pair {
+  grid-column: 2;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.article-content .image-pair img.image-pair {
+  flex: 0 1 45%;
+  width: auto;
+  max-width: 100%;
+  margin: 0;
+}
+.article-content .image-pair p {
+  flex: 1 1 45%;
+  margin: 0;
+}
+/* 多图并排画廊(#row):同一段多个 #row 图排成一行 */
+.article-content > p:has(> img.image-row) {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 0.5rem;
+}
+.article-content img.image-row {
+  flex: 1 1 0;
+  min-width: 0;
+  width: auto;
+  max-width: 100%;
+  max-height: 24rem;
+  object-fit: cover;
+}
+
+.article-content hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 0.5rem 0; /* 约 8px */
+}
+
+/* 上标角标(脚注引用等数字):用等宽字体,与行号等数字对齐一致 */
+.article-content sup {
+  font-family: var(--font-mono);
+}
+
+/* KaTeX:display 公式在窄屏可横向滚动 */
+.article-content .katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.25rem 0;
+}
+
+/* ================= Shiki 代码高亮适配 ================= */
+/* 所有代码块(语言块 + plaintext)背景统一用站点默认代码底 --code-bg,
+   忽略 Shiki 主题自带背景(浅色内联底 / --shiki-dark-bg 均不采用);
+   token 配色仍随主题(浅色 solarized-light / 深色 solarized-dark 经 --shiki-dark 切换)。 */
+.astro-code {
+  background-color: var(--code-bg) !important;
+}
+/* 手动黑夜:仅 token 颜色切主题变量,背景不变 */
+:root[data-theme="dark"] .astro-code,
+:root[data-theme="dark"] .astro-code span {
+  color: var(--shiki-dark, var(--text-primary)) !important;
+}
+/* 自动黑夜(无 data-theme,跟随系统) */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):not([data-theme="dark"]) .astro-code,
+  :root:not([data-theme="light"]):not([data-theme="dark"]) .astro-code span {
+    color: var(--shiki-dark, var(--text-primary)) !important;
+  }
+}
+
+/* ============ 代码块增强(仅真语言块):行号列 + 顶部栏 + 行 hover ============
+   结构由 CodeBlockActions 组件 JS 生成(plaintext/无语言块不包装,保持原样):
+     <div class="code-block">                     ← 整体(破格/圆角/边框)
+       <div class="code-block-head">              ← 顶部栏:语言名右对齐(右上角,可点击复制)
+         <button class="code-block-lang">js</button>
+       </div>
+       <div class="code-block-scroll">            ← 横向滚动容器(整块宽,滚动条横贯)
+         <div class="code-block-gutter">          ← 行号列(sticky 钉左,不随滚动)
+           <span class="code-block-gutter-line">1</span>
+           …
+         </div>
+         <pre class="astro-code">…</pre>
+       </div>
+     </div>
+   行号替代代码块左内边距;语言名钉在顶部栏右端(常态水印,悬停代码块时实体化,
+   点击复制);行号列底色带从块顶贯穿到底(顶部栏左侧同色);
+   滚动条横贯整个块,滚动时行号列 sticky 钉左不跟动。 */
+.code-block {
+  --code-block-head-h: 0.75rem; /* 顶部栏高(0.875rem 再收窄) */
+  --code-block-gutter-w: 2.25rem; /* 行号列宽(2.75rem→2.25rem:随字号13px缩小,4位数字仍完整) */
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border: 1px solid var(--code-border);
+  border-radius: 0.5rem;
+  background: var(--code-bg);
+  overflow: hidden;
+  /* 代码块保持 LTR:在 RTL(阿拉伯文)文档里行号列仍在左、顶部栏不镜像 */
+  direction: ltr;
+}
+/* 破格(直接子是 article-content 的块):平移原 pre 破格规则,无边框无圆角 */
+.article-content > .code-block {
+  grid-column: 1 / -1;
+}
+.code-block--bleed {
+  border: none;
+  border-radius: 0;
+}
+/* 顶部栏:语言名右对齐(右上角)且下沉贴近代码(不贴顶线),不随横向滚动;
+   左侧行号列宽区域铺行号底色,分割线由 ::before 伪元素提供(叠在行号底色上,
+   与行号列 border-inline-end 观感一致,从块顶贯穿到底) */
+.code-block-head {
+  flex: 0 0 auto;
+  height: var(--code-block-head-h);
+  position: relative;
+  display: flex;
+  align-items: flex-end; /* 语言名贴底 + 负 margin 下沉 */
+  justify-content: flex-end;
+  padding-inline: 0.75rem;
+  background: linear-gradient(
+    90deg,
+    var(--code-gutter-bg) 0 var(--code-block-gutter-w),
+    var(--code-bg) var(--code-block-gutter-w)
+  );
+}
+.code-block-head::before {
+  content: "";
+  position: absolute;
+  left: calc(var(--code-block-gutter-w) - 1px);
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--border);
+}
+/* 语言名 = 复制按钮:常态低透明度水印,悬停代码块/聚焦时实体化,
+   点击复制,鼠标为手形;下沉使其不贴顶线 */
+.code-block-lang {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: 1;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin-bottom: -0.375rem; /* 下沉一半高度到行号区下方,仍不遮代码 */
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  opacity: 0.55; /* 水印常态 */
+  transition: opacity 0.15s ease;
+}
+.code-block:hover .code-block-lang,
+.code-block-lang:focus-visible {
+  opacity: 1;
+}
+.code-block-lang.copied {
+  color: var(--action);
+}
+/* 横向滚动容器:整块宽度(head 以下),滚动条横贯整个块;行号列 sticky 钉左 */
+.code-block-scroll {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: stretch;
+  overflow-x: auto;
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: color-mix(in srgb, var(--text-muted, #888) 45%, transparent) transparent;
+  background: var(--code-bg);
+}
+.code-block-scroll::-webkit-scrollbar {
+  height: var(--scrollbar-thickness);
+}
+.code-block-scroll::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--text-muted, #888) 45%, transparent);
+  border-radius: 0.125rem;
+}
+.code-block-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+/* 行号列:全高独立底色带(从块顶贯穿到底);sticky 钉在滚动容器左缘,横向滚动不移动;
+   顶部留白 = 代码上 padding,行号 1 与代码第一行对齐。右 padding 由 gutter-line
+   承担(数字距分割线 0.25rem,且 hover 高亮能覆盖到分割线) */
+.code-block-gutter {
+  position: sticky;
+  left: 0;
+  z-index: 2; /* 盖住滚到其下的代码 */
+  flex: 0 0 auto;
+  width: var(--code-block-gutter-w);
+  padding: 0.667rem 0;
+  background: var(--code-gutter-bg);
+  border-inline-end: 1px solid var(--border);
+  text-align: right;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem; /* 行号字号 13px(原14px):列宽收窄后4位数字仍完整呈现 */
+  line-height: 1.4; /* 13px×1.4=18.2px,与代码行高(0.875rem×1.3)保持一致,保证行号对齐 */
+  color: var(--text-muted);
+  user-select: none;
+  -webkit-user-select: none;
+}
+.code-block-gutter-line {
+  display: block;
+  /* 数字右缘距分割线 0.25rem(原 0.5rem 减半);背景随行盒延伸到分割线 */
+  padding-inline-end: 0.25rem;
+}
+/* 行号与代码行 hover 联动(JS 同步 .hovered):整行(行号+代码)一起高亮 */
+.code-block-gutter-line.hovered {
+  background: var(--code-line-hover);
+}
+/* pre 在滚动容器内:不再自带滚动/边框/圆角(背景由主题规则与滚动容器提供),
+   行号替代左内边距;左 padding 由 .line 提供,保证代码与行号列分隔线有边距,
+   且 hover 条能覆盖到该 padding 区。
+   flex:1 1 auto → 短行时撑满滚动容器(去 gutter)剩余宽,让行盒覆盖到块右缘,
+   hover 整行高亮到右边缘;min-width:max-content → 长行不被压缩,撑开横向滚动 */
+.code-block .astro-code {
+  overflow: visible;
+  border: none;
+  border-radius: 0;
+  /* 清掉 Shiki 内联 padding:左侧由 .line 承担;右侧必须清零,
+     否则行盒右缘停在 pre 右内边距处,hover 盖不满容器右缘 */
+  padding-inline: 0;
+  flex: 1 1 auto;
+  min-width: max-content;
+}
+/* code 块级化:行盒(.line)的包含块宽 = pre 宽(而非最长行内容宽),
+   否则短行时行盒只包到内容,右侧到块边缘无 hover 背景 */
+.code-block .astro-code code {
+  display: block;
+}
+/* 行:块级化撑满整行(JS 已移除行间换行文本节点,避免 white-space:pre 空行),
+   hover 显示整行强调条(含左右 padding);min-height 保底空行(shiki 空行 span 无内容,
+   block 后高度为 0,否则后续行号与代码行错位) */
+.code-block .line {
+  display: block;
+  min-height: 1.3em;
+  padding-inline: 0.833rem;
+}
+.code-block .line:hover,
+.code-block .line.hovered {
+  background: var(--code-line-hover);
+}

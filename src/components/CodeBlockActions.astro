@@ -1,0 +1,156 @@
+---
+// 编程语言代码块增强(仅真语言块,plaintext/无语言块不处理):
+//   JS 将 pre 包装为上下结构:
+//     .code-block
+//       ├─ .code-block-head    顶部栏:语言名(右上角,可点击复制)
+//       └─ .code-block-scroll  横向滚动容器(整块宽,滚动条横贯;行号列 sticky 钉左不随滚动)
+//            ├─ .code-block-gutter  行号列
+//            └─ pre.astro-code
+//   行号替代代码块左内边距;代码行 hover 时行号列对应行同步高亮(JS 联动,单一高亮)。
+//   View Transitions 导航后 pre 被替换,监听 astro:page-load 重新扫描。
+---
+
+<script>
+  (function () {
+    if (window.__codeBlockActionsBound__) return;
+    window.__codeBlockActionsBound__ = true;
+
+    const selector =
+      '.astro-code[data-language]:not([data-language="plaintext"]):not([data-language="mermaid"])';
+
+    function enhance() {
+      document.querySelectorAll(selector).forEach((pre) => {
+        if (pre.dataset.codeBlockDone || pre.closest(".code-block")) return;
+        pre.dataset.codeBlockDone = "1";
+
+        const code = pre.querySelector("code");
+        const lines = code ? [...code.querySelectorAll(".line")] : [];
+
+        // 移除 span.line 之间的换行文本节点:行块级化后 white-space:pre 会生成空行
+        if (code) {
+          [...code.childNodes].forEach((n) => {
+            if (n.nodeType === Node.TEXT_NODE && !n.textContent.trim()) {
+              n.remove();
+            }
+          });
+        }
+
+        const lang = pre.dataset.language || "";
+        // Astro/Shiki 在 pre 上输出内联 overflow-x:auto(内联优先于 CSS),
+        // 横向滚动改由外层 .code-block-scroll 承担
+        pre.style.overflowX = "visible";
+        // 破格判断:pre 直接子是文章容器 → 无边框无圆角
+        const bleed =
+          pre.parentElement &&
+          pre.parentElement.classList.contains("article-content");
+
+        const block = document.createElement("div");
+        block.className = "code-block" + (bleed ? " code-block--bleed" : "");
+
+        // 顶部栏:语言名(右上角,可点击复制,常态水印)
+        const head = document.createElement("div");
+        head.className = "code-block-head";
+        const label = document.createElement("button");
+        label.type = "button";
+        label.className = "code-block-lang";
+        label.setAttribute("aria-label", "复制代码");
+        label.textContent = lang;
+        head.appendChild(label);
+
+        // 横向滚动容器 + 行号列(sticky,不随横向滚动)
+        const scroll = document.createElement("div");
+        scroll.className = "code-block-scroll";
+        const gutter = document.createElement("div");
+        gutter.className = "code-block-gutter";
+        gutter.setAttribute("aria-hidden", "true");
+        const gutterLines = [];
+        for (let i = 1; i <= lines.length; i++) {
+          const ln = document.createElement("span");
+          ln.className = "code-block-gutter-line";
+          ln.textContent = i;
+          gutter.appendChild(ln);
+          gutterLines.push(ln);
+        }
+
+        // 复制(行间换行符已被移除,按 .line 逐行拼回原文)
+        const copy = () => {
+          const text = lines.map((l) => l.textContent).join("\n");
+          const done = () => {
+            label.classList.add("copied");
+            label.setAttribute("aria-label", "已复制");
+            setTimeout(() => {
+              label.classList.remove("copied");
+              label.setAttribute("aria-label", "复制代码");
+            }, 1500);
+          };
+          const fallback = () => {
+            // 降级:clipboard API 不可用时用 execCommand
+            const ta = document.createElement("textarea");
+            ta.value = text;
+            ta.style.position = "fixed";
+            ta.style.opacity = "0";
+            document.body.appendChild(ta);
+            ta.select();
+            try {
+              document.execCommand("copy");
+              done();
+            } catch {
+              /* noop */
+            }
+            ta.remove();
+          };
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(done).catch(fallback);
+          } else {
+            fallback();
+          }
+        };
+        label.addEventListener("click", copy);
+
+        // 组装:block > (head + scroll(gutter + pre))
+        pre.parentNode.insertBefore(block, pre);
+        block.appendChild(head);
+        block.appendChild(scroll);
+        scroll.appendChild(gutter);
+        scroll.appendChild(pre);
+
+        // hover 联动:代码行 ↔ 行号行同步高亮。
+        // 单一高亮模式:mouseover 先清空再加当前行,鼠标移出所有行区域时清空,
+        // 避免行间移动时残留旧高亮。
+        const lineIndex = (el) => {
+          const l = el && el.closest && el.closest(".line");
+          return l ? lines.indexOf(l) : -1;
+        };
+        const gutterIndex = (el) => {
+          const g = el && el.closest && el.closest(".code-block-gutter-line");
+          return g ? gutterLines.indexOf(g) : -1;
+        };
+        const clearAll = () => {
+          gutterLines.forEach((g) => g.classList.remove("hovered"));
+          lines.forEach((l) => l.classList.remove("hovered"));
+        };
+        scroll.addEventListener("mouseover", (e) => {
+          const li = lineIndex(e.target);
+          const gi = gutterIndex(e.target);
+          // 鼠标在代码行或行号行:统一取索引,代码行与对应行号行都加 .hovered
+          const idx = li >= 0 ? li : gi;
+          if (idx < 0) return;
+          clearAll();
+          gutterLines[idx].classList.add("hovered");
+          lines[idx].classList.add("hovered");
+        });
+        scroll.addEventListener("mouseout", (e) => {
+          const rel = e.relatedTarget;
+          const inRow =
+            rel &&
+            rel.closest &&
+            (rel.closest(".line") || rel.closest(".code-block-gutter-line"));
+          if (!inRow) clearAll();
+        });
+      });
+    }
+
+    document.addEventListener("astro:page-load", enhance);
+    enhance();
+  })();
+</script>

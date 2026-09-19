@@ -1,0 +1,283 @@
+---
+import "../styles/global.css";
+import Toc from "../components/Toc.astro";
+import ScrollbarOverlay from "../components/ScrollbarOverlay.astro";
+import CodeBlockActions from "../components/CodeBlockActions.astro";
+import BackToTop from "../components/BackToTop.astro";
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+import ThemeScript from "../components/ThemeScript.astro";
+import VideoEmbed from "../components/VideoEmbed.astro";
+import CalendarArrowUp from "../components/icons/CalendarArrowUp.astro";
+import CalendarSync from "../components/icons/CalendarSync.astro";
+import Folder from "../components/icons/Folder.astro";
+import TagChip from "../components/TagChip.astro";
+import { ClientRouter } from "astro:transitions";
+import { codeFromPath, intlLocale, langPath, languages, t } from "../i18n";
+import type { Locale } from "../i18n";
+import { tagLabels, categoryLabels, taxonomyLabel } from "../taxonomy";
+import { postUpdatedAt } from "../lib/post-meta";
+
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+interface Props {
+  title: string;
+  description?: string;
+  pubDate?: Date;
+  tags?: string[];
+  /** 内容大类(映射表 key,标题区显示) */
+  category?: string;
+  /** 最后修改时间(可选);缺省回退首次发布 */
+  updated?: Date;
+  /** 正文摘要(可选),标题区显示 */
+  excerpt?: string;
+  image?: { url: string; alt: string };
+  lang: string;
+  headings: Heading[];
+  /** Post slug used to build per-language article URLs. */
+  slug?: string;
+  /** Languages that have an article with the same slug in this build. */
+  availableIn?: Set<Locale>;
+  /** Video reference from frontmatter (bilibili / youtube ids). */
+  video?: { bilibili?: string; youtube?: string };
+}
+const {
+  title,
+  description,
+  pubDate,
+  tags,
+  category,
+  updated,
+  excerpt,
+  image,
+  lang,
+  headings,
+  slug,
+  availableIn = new Set<Locale>(),
+  video,
+} = Astro.props;
+const code = codeFromPath(lang);
+const htmlLang = languages.find((l) => l.code === code)?.htmlLang ?? "zh-CN";
+const dateLabel = pubDate
+  ? new Intl.DateTimeFormat(intlLocale(lang), {
+      dateStyle: "medium",
+    }).format(pubDate)
+  : "";
+// 最后修改时间:显式 updated 用之,否则回退首次发布(用户定的 fallback 规则)
+const updatedAt = pubDate ? postUpdatedAt({ data: { updated, pubDate } }) : null;
+const updatedLabel = updatedAt
+  ? new Intl.DateTimeFormat(intlLocale(lang), {
+      dateStyle: "medium",
+    }).format(updatedAt)
+  : "";
+const categoryLabel = category ? taxonomyLabel(categoryLabels, category, lang) : "";
+const tocTitle = t(lang, "tocTitle");
+
+// 目录有效性:仅插件分配的 s+5位数字 锚点 id 计入(排除 sr-only/脚注自动标题等);
+// 有 h1/h2 才算有目录(起始级别逻辑见 Toc.astro),否则整页不展示目录。
+const tocHeadings = headings.filter((h) => /^s\d{5}$/.test(h.slug));
+const hasToc = tocHeadings.length > 0 && tocHeadings.some((h) => h.depth === 1 || h.depth === 2);
+
+const pathname = Astro.url.pathname;
+const site = new URL(Astro.site ?? "https://luoyuhao.nettix.top");
+const canonical = new URL(pathname, site).href;
+
+// Per-language target URLs, matched by parallel slug: when the target language has an
+// article with the same slug it links to that exact article, otherwise it falls back to
+// the language home (never a 404). translationOf is no longer consulted for matching.
+const targets = {} as Record<Locale, string>;
+for (const langEntry of languages) {
+  targets[langEntry.code] =
+    slug && availableIn.has(langEntry.code)
+      ? `/${langPath(langEntry.code)}/posts/${slug}/`
+      : `/${langPath(langEntry.code)}/`;
+}
+---
+
+<html lang={htmlLang} dir={htmlLang === "ar" ? "rtl" : "ltr"}>
+  <head>
+    <ThemeScript />
+    <ClientRouter />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="description" content={description} />
+    <link rel="icon" href="/favicon.svg" />
+    <link rel="canonical" href={canonical} />
+    <link rel="alternate" hreflang="x-default" href={new URL("/zh/", site).href} />
+    {
+      languages.map((langEntry) => (
+        <link
+          rel="alternate"
+          hreflang={langEntry.code}
+          href={new URL(targets[langEntry.code], site).href}
+        />
+      ))
+    }
+    <title>{title}</title>
+  </head>
+  <body
+    class="post-page flex min-h-dvh flex-col bg-surface text-text-primary antialiased"
+    data-has-toc={hasToc ? "true" : undefined}
+  >
+    <Header lang={code} targets={targets} title={title} />
+
+    <main id="top" class="flex-1">
+      <!-- 手机端目录浮动面板(导航条"目录"按钮展开,覆盖式 fixed;见 post-toc.js) -->
+      <div id="mobile-toc-panel" class="mobile-toc-panel" aria-label={tocTitle}>
+        <Toc headings={tocHeadings} lang={lang} showHeading={false} />
+      </div>
+      <div class={`post-grid ${image ? "has-hero" : ""}`}>
+        <!-- 桌面右栏:sticky TOC(>=1152px 显示,与三栏网格同断点) -->
+        <aside class="post-toc hidden min-w-0 px-4 py-10" aria-label={tocTitle}>
+          <Toc headings={tocHeadings} lang={lang} />
+        </aside>
+
+        <!-- 中栏:文章 -->
+        <article class="post-article">
+          {image && (
+            <div class="post-hero overflow-hidden">
+              {/* 容器固定 16:9 比例占位(见 layout.css):页面加载期间高度稳定,
+                  标题位置从初始就正确、不跳位;图片加载成功后淡入填充。
+                  失败时 onerror 静默:整体隐藏 + 移除 grid 的 has-hero(回退无题图布局)。 */}
+              <img
+                src={image.url}
+                alt={image.alt}
+                draggable="false"
+                class="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-500 [mask-image:linear-gradient(to_bottom,black_85%,transparent_100%)]"
+                onload={`this.classList.remove("opacity-0");`}
+                onerror={`this.closest(".post-hero")?.classList.add("hidden");this.closest(".post-grid")?.classList.remove("has-hero");this.setAttribute("alt","");window.dispatchEvent(new Event("toc-realign"));`}
+              />
+            </div>
+          )}
+
+          <h1
+            id="post-title"
+            class="text-3xl font-bold tracking-tight text-brand sm:text-4xl"
+          >
+            {title}
+          </h1>
+          <div class="post-meta-inset mt-[25px] flex flex-wrap items-center gap-x-[0.667rem] gap-y-1.5 font-mono text-[14px] text-text-muted">
+            {categoryLabel && (
+              <a
+                href={`/${langPath(lang)}/category/${category}/`}
+                class="inline-flex items-center gap-1 font-medium text-text-secondary transition-colors hover:text-brand"
+              >
+                <Folder class="h-4 w-4 post-meta-icon-category" />
+                {categoryLabel}
+              </a>
+            )}
+            {dateLabel && (
+              <time
+                datetime={pubDate?.toISOString()}
+                class="group relative inline-flex items-center gap-1 text-text-secondary"
+                aria-label={t(lang, "byPrefix")}
+              >
+                <CalendarArrowUp class="h-4 w-4 post-meta-icon-publish" />
+                {dateLabel}
+                <span
+                  role="tooltip"
+                  class="pointer-events-none absolute bottom-[calc(100%+6px)] left-1/2 -translate-x-1/2 rounded-md border border-border bg-surface-raised px-2 py-1 text-xs whitespace-nowrap text-text-secondary opacity-0 shadow-md transition-opacity duration-150 group-hover:opacity-100"
+                >
+                  {t(lang, "byPrefix")}
+                </span>
+              </time>
+            )}
+            {pubDate && updatedAt && (
+              <time
+                datetime={updatedAt.toISOString()}
+                class="group relative inline-flex items-center gap-1 text-text-secondary"
+                aria-label={t(lang, "updatedPrefix")}
+              >
+                <CalendarSync class="h-4 w-4 post-meta-icon-updated" />
+                {updatedLabel}
+                <span
+                  role="tooltip"
+                  class="pointer-events-none absolute bottom-[calc(100%+6px)] left-1/2 -translate-x-1/2 rounded-md border border-border bg-surface-raised px-2 py-1 text-xs whitespace-nowrap text-text-secondary opacity-0 shadow-md transition-opacity duration-150 group-hover:opacity-100"
+                >
+                  {t(lang, "updatedPrefix")}
+                </span>
+              </time>
+            )}
+            {/* 标签:追加到分类/日期同一行,一行放不下自动折行。
+               间距逻辑见 layout.css(额外 8px 加在前一个 time 上,
+               避免折行时标签首项缩进) */}
+            {tags && tags.length > 0 && (
+              <span class="inline-flex flex-wrap items-center gap-1.5">
+                {tags.map((tag) => (
+                  <TagChip
+                    name={tag}
+                    label={taxonomyLabel(tagLabels, tag, lang)}
+                    href={`/${langPath(lang)}/tags/${encodeURIComponent(tag)}/`}
+                  />
+                ))}
+              </span>
+            )}
+          </div>
+          {/* 分割线:标题区与正文分隔(上距与标签组收紧) */}
+          <hr class="post-meta-divider mt-3" />
+
+          <!-- 平板(640-1151px)折叠目录:吸顶留隙;手机(<640px)隐藏,改用导航条目录按钮 + 浮动面板。 -->
+          <details class="post-toc-mobile mt-6 rounded-lg border border-border bg-surface-raised">
+            <summary class="cursor-pointer select-none px-4 py-3 text-sm font-semibold text-text-secondary">
+              {tocTitle}
+            </summary>
+            <div class="toc-body px-4 py-3">
+              <Toc headings={tocHeadings} lang={lang} showHeading={false} />
+            </div>
+          </details>
+
+          {/* 摘要:卡片式包裹,位于目录之后;角标骑在边框线上(纸片底色挖空);正文楷体,次强色保证可读 */}
+          {excerpt && (
+            <aside class="post-summary-card relative mx-[var(--indent)] mt-6 bg-surface-raised px-6 py-4">
+              <span class="absolute -top-2.5 left-4 bg-[var(--article-bg)] px-1.5 font-mono text-xs">
+                {t(lang, "summaryBadge")}
+              </span>
+              <p class="font-[family-name:var(--font-kai)] text-sm leading-relaxed">{excerpt}</p>
+            </aside>
+          )}
+
+          <div class="article-content mt-8">
+            {video && (
+              <VideoEmbed
+                lang={lang}
+                bilibili={video.bilibili}
+                youtube={video.youtube}
+              />
+            )}
+            <slot />
+          </div>
+
+          <!-- 移动端广告位(留空,槽位预留) -->
+          <aside class="post-ad-mobile mt-10 lg:hidden" data-slot="ad-mobile" aria-hidden="true"></aside>
+
+          <!-- 评论区:预留区域,默认隐藏,不加载任何评论脚本 -->
+          <section id="comments" class="mt-12 hidden" aria-hidden="true" data-reserved="comments"></section>
+        </article>
+
+        <!-- 桌面左栏:广告位(留空,槽位预留) -->
+        <aside class="post-ad hidden min-w-0 py-10 lg:block xl:block" aria-label="Ad">
+          <div class="mb-4" data-slot="ad-1"></div>
+          <div data-slot="ad-2"></div>
+        </aside>
+      </div>
+    </main>
+
+    <Footer lang={code} />
+
+    <!-- Mermaid 已在构建期渲染为静态 SVG 内嵌页面(见 rehype-mermaid-ssr.mjs),
+         客户端不再引入运行时 -->
+
+    <!-- 手机端目录按钮/平板端定住玻璃质感 -->
+    <script src="../scripts/post-toc.js"></script>
+    <!-- 表格十字交叉 hover 高亮(行+列) -->
+    <script src="../scripts/table-hover.js"></script>
+    <ScrollbarOverlay />
+    <CodeBlockActions />
+    <BackToTop lang={lang} />
+  </body>
+</html>

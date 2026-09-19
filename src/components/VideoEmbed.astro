@@ -1,0 +1,174 @@
+---
+import { t } from "../i18n";
+
+interface Props {
+  lang: string;
+  bilibili?: string;
+  youtube?: string;
+}
+const { lang, bilibili, youtube } = Astro.props;
+const hasBoth = Boolean(bilibili && youtube);
+
+// 单平台:服务端直接渲染静态 iframe(无 JS 也可观看)
+const bilibiliEmbed = bilibili
+  ? `https://player.bilibili.com/player.html?bvid=${encodeURIComponent(bilibili)}&page=1`
+  : "";
+const youtubeEmbed = youtube
+  ? `https://www.youtube.com/embed/${encodeURIComponent(youtube)}`
+  : "";
+const bilibiliLink = bilibili ? `https://www.bilibili.com/video/${bilibili}` : "";
+const youtubeLink = youtube ? `https://www.youtube.com/watch?v=${youtube}` : "";
+
+const iframeAttrs = {
+  class: "h-full w-full",
+  loading: "lazy",
+  allow: "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share",
+  allowfullscreen: true,
+  referrerpolicy: "strict-origin-when-cross-origin",
+  title: youtube ? "YouTube video player" : "bilibili video player",
+};
+---
+
+<div class="video-embed my-6">
+  {!hasBoth && (
+    <div class="aspect-video w-full overflow-hidden border border-border bg-surface-raised">
+      {bilibili && <iframe src={bilibiliEmbed} {...iframeAttrs}></iframe>}
+      {youtube && <iframe src={youtubeEmbed} {...iframeAttrs}></iframe>}
+    </div>
+  )}
+
+  {
+    hasBoth && (
+      <div data-video-config data-bilibili={bilibiliEmbed} data-youtube={youtubeEmbed}>
+        <div class="aspect-video w-full overflow-hidden border border-border bg-surface-raised">
+          <!-- 双平台:iframe 由客户端脚本按环境注入;无 JS 时此容器保持空,
+               下方始终渲染两个平台文字链接作为回退 -->
+          <div data-video-player class="flex h-full w-full items-center justify-center text-text-muted">
+            <span>Video loading…</span>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  {hasBoth && (
+    <div
+      data-video-switcher
+      hidden
+      class="mt-3 flex items-center justify-center gap-2"
+      aria-label={t(lang, "videoSwitchAria")}
+    >
+      {bilibili && (
+        <button
+          type="button"
+          data-platform="bilibili"
+          aria-pressed="false"
+          class="inline-flex items-center rounded-full border border-border px-4 py-1.5 text-sm text-text-secondary transition-colors hover:border-brand hover:text-brand"
+        >
+          B站
+        </button>
+      )}
+      {youtube && (
+        <button
+          type="button"
+          data-platform="youtube"
+          aria-pressed="false"
+          class="inline-flex items-center rounded-full border border-border px-4 py-1.5 text-sm text-text-secondary transition-colors hover:border-brand hover:text-brand"
+        >
+          YouTube
+        </button>
+      )}
+    </div>
+  )}
+
+  {/* 无 JS 回退:两个平台的文字链接,始终渲染 */}
+  <div class="mt-3 flex flex-wrap items-center justify-center gap-3 text-sm">
+    {bilibili && (
+      <a
+        href={bilibiliLink}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="text-brand underline underline-offset-3 hover:opacity-80"
+      >
+        {t(lang, "videoLabelBilibili")}
+      </a>
+    )}
+    {youtube && (
+      <a
+        href={youtubeLink}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="text-brand underline underline-offset-3 hover:opacity-80"
+      >
+        {t(lang, "videoLabelYoutube")}
+      </a>
+    )}
+  </div>
+</div>
+
+<script>
+  // 双平台分流:按访问者环境默认选平台,手动选择用 localStorage 记忆并优先。
+  (function () {
+    const KEY = "nettix-video-platform";
+
+    function defaultPlatform(): "bilibili" | "youtube" {
+      try {
+        const saved = localStorage.getItem(KEY);
+        if (saved === "bilibili" || saved === "youtube") return saved;
+      } catch {
+        /* localStorage unavailable; fall through to auto detection. */
+      }
+      const lang = (navigator.language || "").toLowerCase();
+      let tz = "";
+      try {
+        tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+      } catch {
+        /* Intl unavailable. */
+      }
+      return lang.startsWith("zh") || tz.startsWith("Asia/") ? "bilibili" : "youtube";
+    }
+
+    function frameHtml(url: string): string {
+      return `<iframe src="${url}" class="h-full w-full" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" title="video player"></iframe>`;
+    }
+
+    function syncSwitcher(root: HTMLElement, platform: string) {
+      const switcher = root.querySelector<HTMLElement>("[data-video-switcher]");
+      if (!switcher) return;
+      switcher.hidden = false;
+      switcher.querySelectorAll("button").forEach((btn) => {
+        btn.setAttribute(
+          "aria-pressed",
+          btn.getAttribute("data-platform") === platform ? "true" : "false",
+        );
+      });
+    }
+
+    function renderPlatform(root: HTMLElement, platform: string) {
+      const player = root.querySelector<HTMLElement>("[data-video-player]");
+      const url = root.dataset[platform];
+      if (player && url) player.innerHTML = frameHtml(url);
+      syncSwitcher(root, platform);
+    }
+
+    document.querySelectorAll<HTMLElement>("[data-video-config]").forEach((root) => {
+      renderPlatform(root, defaultPlatform());
+    });
+
+    document.addEventListener("click", (e) => {
+      const btn = (e.target as Element | null)?.closest?.(
+        "[data-video-switcher] button",
+      );
+      if (!btn) return;
+      const root = btn.closest<HTMLElement>("[data-video-config]");
+      const platform = btn.getAttribute("data-platform");
+      if (!root || !platform) return;
+      try {
+        localStorage.setItem(KEY, platform);
+      } catch {
+        /* ignore */
+      }
+      renderPlatform(root, platform);
+    });
+  })();
+</script>

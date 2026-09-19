@@ -1,0 +1,113 @@
+/* ==========================================================================
+ * 站点级基础:博客私有变量与 html/body 全局样式
+ * 品牌/语义令牌见 tokens.css(共享,不可改);此处仅博客自己的布局/纸片变量。
+ * ========================================================================== */
+
+:root {
+  --content-width: 664px; /* 纸张宽:正文 ≈ 664 − 2×0.5rem(16px) ≈ 648px */
+  --indent: 0.5rem; /* 非顶格元素左右边距;rem 基准不随标题字号漂移(顶格元素贴纸片边) */
+  --article-bg: #f7f7f7; /* 纸片底:中性近白(无色相,降亮度) */
+  --hero-h: 23.34rem; /* 题图高(16:9,桌面 664 宽 ≈ 373px);has-hero 目录兜底对齐用 */
+  --hero-gap: 1.5rem; /* 题图与标题间距(同时用于目录对齐偏移) */
+  /* 单层柔和阴影:与深色同结构(0 5px 13px),灰调柔化版(参考 ninojay.top 浅色 #616161 阴影) */
+  --paper-shadow: 0 5px 13px rgb(97 97 97 / 0.4);
+  /* 纸片边框:独立于全局 --border,单独控制纸边可见度(深色降 alpha 至几乎不可见) */
+  --paper-border: rgb(0 0 0 / 0.14);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):not([data-theme="dark"]) {
+    /* 纸面恢复抬升面色,不提亮底色 */
+    --article-bg: var(--surface-raised);
+    /* 单层柔和阴影:照搬 ninojay.top 暗色实测(0 5px 13px rgba(0,0,0,.35))。
+       层数越少,浏览器非整数倍缩放的波纹伪影越不可见 */
+    --paper-shadow: 0 5px 13px rgb(0 0 0 / 0.35);
+    /* 纸片边框:深色取纸片(#242424)与页面底(#333333)的中间过渡色,无缝融入 */
+    --paper-border: color-mix(in srgb, var(--article-bg) 50%, var(--surface));
+  }
+}
+/* 手动深色时纸张底色与阴影跟随抬升面 */
+:root[data-theme="dark"] {
+  --article-bg: var(--surface-raised);
+  /* 单层柔和阴影:照搬 ninojay.top 暗色实测(0 5px 13px rgba(0,0,0,.35)) */
+  --paper-shadow: 0 5px 13px rgb(0 0 0 / 0.35);
+  /* 纸片边框:深色取纸片与页面底的中间过渡色,无缝融入 */
+  --paper-border: color-mix(in srgb, var(--article-bg) 50%, var(--surface));
+}
+
+html {
+  scroll-behavior: smooth;
+  /* 原生滚动条隐藏(改用浮层指示条,见 ScrollbarOverlay 组件),
+     消除列表长短切换时滚动条占位引发的元素左右跳动。
+     Firefox 用 scrollbar-width:none(Chrome 121+ 也支持),旧 WebKit 用 ::-webkit-scrollbar 兼容。 */
+  scrollbar-width: none;
+}
+html::-webkit-scrollbar {
+  display: none;
+}
+
+[id] {
+  scroll-margin-top: calc(3.5rem + 1rem);
+}
+
+/* 角色体系:UI 界面元素默认等宽(终端感);正文(文章阅读)衬线(经典排版);标题/logo 无衬线(现代)。
+   全语言一致,各语言经 tokens.css html[lang] 块取本地字体族。 */
+body {
+  font-family: var(--font-mono);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-sans);
+}
+
+/* ================= View Transitions 平滑化 ================= */
+/* SPA 式切换:旧页极快让位 + 新页快速淡入(无位移),总时长短,
+   结构差异大的页面间(列表 <-> 文章)也不会有"闪一下"的割裂感。 */
+::view-transition-old(root) {
+  animation: vt-fade-out 90ms ease both;
+}
+::view-transition-new(root) {
+  animation: vt-fade-in 180ms ease-out both;
+}
+@keyframes vt-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes vt-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+  }
+}
+
+/* 导航条整体作为独立 view-transition group 瞬时替换:不参与 root 淡入淡出,
+   导航时 header(背景/边框/按钮)单帧替换,消除肉眼可见的刷新。
+   同语言页面间 header 内容相同 → 瞬换无感知;语言切换走整页加载(SSR 重渲)。
+   语言切换器同理(.lang-switcher,位于 header 内,嵌套 group 各自瞬换)。 */
+.site-header-root {
+  view-transition-name: site-header;
+}
+::view-transition-old(site-header),
+::view-transition-new(site-header) {
+  animation: none;
+}
+.lang-switcher {
+  view-transition-name: lang-switcher;
+}
+::view-transition-old(lang-switcher),
+::view-transition-new(lang-switcher) {
+  animation: none;
+}

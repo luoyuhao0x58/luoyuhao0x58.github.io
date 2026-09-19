@@ -1,0 +1,48 @@
+---
+import { intlLocale, langPath } from "../i18n";
+import type { CollectionEntry } from "astro:content";
+import { tagLabels, taxonomyLabel } from "../taxonomy";
+import TagChip from "./TagChip.astro";
+
+interface Props {
+  post: CollectionEntry<"blog">;
+  lang: string;
+}
+const { post, lang } = Astro.props;
+const slug = post.id.split("/")[1];
+const href = `/${langPath(lang)}/posts/${slug}/`;
+---
+
+<li class="px-4 py-5">
+  <a href={href} class="group block">
+    <div class="flex items-baseline justify-between gap-4">
+      <h2 class="text-lg font-semibold group-hover:text-brand">
+        {post.data.title}
+      </h2>
+      <time
+        datetime={post.data.pubDate.toISOString()}
+        class="shrink-0 text-sm text-text-muted"
+      >
+        {
+          new Intl.DateTimeFormat(intlLocale(lang), {
+            dateStyle: "medium",
+          }).format(post.data.pubDate)
+        }
+      </time>
+    </div>
+    <p class="mt-1.5 text-sm leading-relaxed text-text-secondary">
+      {post.data.excerpt ?? post.data.description}
+    </p>
+    {post.data.tags.length > 0 && (
+      <div class="mt-2.5 flex flex-wrap gap-1.5">
+        {post.data.tags.map((tag) => (
+          <TagChip
+            name={tag}
+            label={taxonomyLabel(tagLabels, tag, lang)}
+            href={`/${langPath(lang)}/tags/${encodeURIComponent(tag)}/`}
+          />
+        ))}
+      </div>
+    )}
+  </a>
+</li>

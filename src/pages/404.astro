@@ -1,0 +1,17 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { t } from "../i18n";
+---
+
+<BaseLayout lang="zh" title="404" noindex>
+  <div class="page-container flex min-h-80 flex-col items-center justify-center px-4 text-center">
+    <p class="text-5xl font-bold text-text-muted">404</p>
+    <h1 class="mt-4 text-xl font-semibold">{t("zh", "notFoundTitle")}</h1>
+    <a
+      href="/zh/"
+      class="mt-6 inline-flex h-10 items-center justify-center rounded-full bg-action px-5 text-base font-medium text-action-contrast transition-colors hover:bg-action-hover"
+    >
+      {t("zh", "navHome")}
+    </a>
+  </div>
+</BaseLayout>

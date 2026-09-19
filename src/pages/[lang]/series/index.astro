@@ -1,0 +1,61 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import { codeFromPath, langPath, languages, t } from "../../../i18n";
+import { seriesLabels, taxonomyLabel } from "../../../taxonomy";
+
+export async function getStaticPaths() {
+  return languages.map((lang) => ({ params: { lang: langPath(lang.code) } }));
+}
+
+const lang = codeFromPath(Astro.params.lang ?? "zh");
+const prefix = `/${langPath(lang)}`;
+const posts = (await getCollection("blog")).filter(
+  (post) => post.data.lang === lang,
+);
+// 聚合当前语言的专栏:series id -> 显示名(由映射表按语言提供) + 篇数
+const seriesMap = new Map<string, { title: string; count: number }>();
+for (const post of posts) {
+  if (!post.data.series) continue;
+  const existing = seriesMap.get(post.data.series) ?? {
+    title: taxonomyLabel(seriesLabels, post.data.series, lang),
+    count: 0,
+  };
+  existing.count += 1;
+  seriesMap.set(post.data.series, existing);
+}
+const series = [...seriesMap.entries()].sort((a, b) =>
+  a[1].title.localeCompare(b[1].title, lang),
+);
+---
+
+<BaseLayout
+  lang={lang}
+  title={t(lang, "navSeries")}
+  description={t(lang, "navSeries")}
+>
+  <div class="page-container w-full px-4 py-12 sm:py-16">
+    <h1 class="text-3xl font-bold tracking-tight sm:text-4xl">
+      {t(lang, "navSeries")}
+    </h1>
+    {series.length === 0 ? (
+      <p class="mt-10 text-text-muted">{t(lang, "listEmpty")}</p>
+    ) : (
+      <ul class="mt-10 grid gap-4 sm:grid-cols-2">
+        {series.map(([id, item]) => (
+          <li>
+            <a
+              href={`${prefix}/series/${encodeURIComponent(id)}/`}
+              class="flex items-center justify-between gap-4 rounded-lg border border-border px-5 py-4 transition-colors hover:border-brand hover:text-brand"
+            >
+              <span class="font-medium">{item.title}</span>
+              <span class="text-sm tabular-nums text-text-muted">
+                {item.count} {t(lang, "navPosts")}
+              </span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    )}
+  </div>
+</BaseLayout>

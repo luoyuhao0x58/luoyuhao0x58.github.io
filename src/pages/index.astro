@@ -1,0 +1,64 @@
+---
+// Root path: negotiate the user's preferred language and redirect with a minimal
+// no-theme page (no BaseLayout) so it loads before any theme/global CSS.
+import { languages, langPath } from "../i18n";
+
+// Non-zh families drive the generic prefix negotiation; zh itself is handled
+// explicitly (simplified vs traditional) before this generic pass.
+const redirectTargets = languages
+  .filter((lang) => lang.family !== "zh")
+  .map((lang) => ({ prefix: lang.family, path: `/${langPath(lang.code)}/` }));
+---
+
+<!doctype html>
+<html lang="zh">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <link rel="canonical" href="/zh/" />
+    <meta http-equiv="refresh" content="1;url=/zh/" />
+    <title>羽皓のBlog</title>
+  </head>
+  <body>
+    <!-- Fallback for when neither JS nor meta refresh work: nearly invisible link into the default locale. -->
+    <a
+      href="/zh/"
+      style="position: fixed; right: 8px; bottom: 8px; font-size: 12px; color: rgba(128, 128, 128, 0.18); text-decoration: none;"
+    >进入简体中文站</a>
+    <script is:inline define:vars={{ redirectTargets }}>
+      (function () {
+        const navLang = (
+          (navigator.languages && navigator.languages[0]) ||
+          navigator.language ||
+          "zh"
+        ).toLowerCase();
+
+        // zh family first: resolve traditional variants before the generic "zh" prefix match.
+        if (
+          navLang.startsWith("zh-tw") ||
+          navLang.startsWith("zh-hk") ||
+          navLang.startsWith("zh-mo") ||
+          navLang.startsWith("zh-hant")
+        ) {
+          location.replace("/zh-hant/");
+          return;
+        }
+        if (navLang.startsWith("zh")) {
+          location.replace("/zh/");
+          return;
+        }
+
+        // Generic prefix match against other language families (en for now).
+        for (const target of redirectTargets) {
+          if (navLang.startsWith(target.prefix)) {
+            location.replace(target.path);
+            return;
+          }
+        }
+
+        location.replace("/zh/");
+      })();
+    </script>
+  </body>
+</html>

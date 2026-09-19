@@ -1,0 +1,416 @@
+/* ==========================================================================
+ * 文章页布局:标题锚点 + 纸片/三栏/目录/题图 + 响应式
+ * ========================================================================== */
+
+/* ================= 内容列容器(列表页/首页) ================= */
+
+/* 内容列:宽度与文章纸片一致(--content-width),列表页/分类/标签/系列与正文
+   切换时列宽连续,不因页面类型变化而跳宽。 */
+.page-container {
+  width: 100%;
+  max-width: var(--content-width);
+  margin-inline: auto;
+}
+
+/* ================= 标题锚点链接 ================= */
+
+.article-content :is(h1, h2, h3, h4, h5, h6) {
+  position: relative; /* 正文所有标题:锚点 absolute 相对标题框定位 */
+}
+/* 链接图标:位于纸张左侧之外,默认隐藏,悬停/聚焦时浮现。无框无底色。
+   # 由 ::before 渲染(锚点本身为空元素)。 */
+.heading-anchor {
+  position: absolute;
+  top: 50%;
+  inset-inline-end: 100%;
+  margin-inline-end: 3px; /* 统一离纸片边缘 3px(LTR 左 / RTL 右,逻辑属性自动镜像) */
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9em;
+  line-height: 1;
+  color: var(--text-muted);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.heading-anchor::before {
+  content: "§"; /* section 分节符图标 */
+}
+.heading-anchor:hover {
+  color: var(--brand);
+}
+/* 覆盖 .article-content a 的链接样式(蓝字+下划线),锚点图标不受其影响:
+   出现时是弱色,鼠标移到图标上才高亮 */
+.article-content a.heading-anchor {
+  color: var(--text-muted);
+  text-decoration: none;
+}
+.article-content a.heading-anchor:hover {
+  color: var(--brand);
+}
+/* 标题文本整体可点击(点击跳锚点,方便手机端);但指针保持默认手型,
+   颜色/下划线/悬停均继承标题本身,不呈现链接感 */
+.article-content a.heading-link {
+  cursor: default;
+  color: inherit;
+  text-decoration: none;
+}
+.article-content a.heading-link:hover {
+  color: inherit;
+  text-decoration: none;
+}
+/* 锚点定位统一:按钮右缘 = 纸片边缘外 3px(LTR)/左缘 = 纸片右缘外 3px(RTL)。
+   标题边框盒分两类:h1/h2 贴纸边但有 2.5px 左竖线(border 使 padding box 内移 2.5px,
+   补偿 = 2.5+3 = 5.5px);h3-h6 边框盒在 --indent 处(补偿 = --indent+3px)。 */
+/* h1/h2 贴纸边但有左竖线(border-inline-start 2.5px,渲染取整约 2px 使 padding box 内移),
+   补偿 = 2 + 3 = 5px */
+.article-content h1 > .heading-anchor,
+.article-content h2 > .heading-anchor {
+  margin-inline-end: 5px;
+}
+.article-content h3 > .heading-anchor,
+.article-content h4 > .heading-anchor,
+.article-content h5 > .heading-anchor,
+.article-content h6 > .heading-anchor {
+  margin-inline-end: calc(var(--indent) + 3px);
+}
+/* 所有正文标题(h1-h6)悬停/聚焦时浮现锚点图标;文章主标题无锚点不再匹配 */
+.article-content :is(h1, h2, h3, h4, h5, h6):hover > .heading-anchor,
+.article-content :is(h1, h2, h3, h4, h5, h6):focus-within > .heading-anchor {
+  opacity: 1;
+}
+
+/* ================= 文章页布局网格 ================= */
+
+.post-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "toc" "article" "ad" "comments";
+  width: 100%;
+}
+.post-toc {
+  grid-area: toc;
+}
+/* 目录用无衬线(用户改调:原衬线改为无衬线,与标题/logo 一致;正文才用衬线)。 */
+.toc,
+.post-toc,
+.post-toc-mobile,
+.toc-body,
+.mobile-toc-panel {
+  font-family: var(--font-sans);
+}
+/* 纸片:全视口存在。纸张贴边(视口 ≤ 664px,即 --content-width)时四周边框、
+   圆角、阴影全部消失(底色保留);两侧出现空隙后恢复纸片质感。
+   所有切换统一在 665px 断点(视口 > 664 才有空隙),
+   避免出现"两侧还有空隙顶部已贴导航条"或"已贴边还带圆角"的错位状态。 */
+.post-article {
+  --paper-pad-y: 2rem;
+  grid-area: article;
+  width: 100%;
+  max-width: var(--content-width);
+  margin-inline: auto;
+  background: var(--article-bg);
+  border: none; /* 贴边去四周边框(含底部) */
+  border-radius: 0;
+  box-shadow: none; /* 贴边去阴影 */
+  padding: var(--paper-pad-y) 0;
+}
+/* 短文章纸片最小高度(PC/平板):header(3.5rem) + 上边距(1rem) + 纸片 +
+   下边距(2rem) 正好等于一屏 → 纸片底与 footer 的边距留在视窗内(整张纸片的
+   悬浮感),footer 顶部分割线刚好顶到视窗底。文章内容超过时自然撑开。
+   手机贴边状态(≤664px)无需 */
+@media (min-width: 665px) {
+  .post-article {
+    min-height: calc(100svh - 3.5rem - 1rem - 2rem);
+  }
+}
+/* 无题图:纸片上下内边距 1.5em(左右由 grid --indent 0.5em 承担)。
+   has-hero 由 SSR 设置、题图加载失败时 onerror 移除,此规则实时响应。 */
+.post-grid:not(.has-hero) .post-article {
+  padding: 1.5em 0;
+}
+/* 纸张直接子元素(标题/元信息等)与正文同缩进(--indent);折叠目录盒子用外边距内缩。
+   标题区附属行(.post-meta-inset)额外内缩 0.25rem,与顶格标题形成层次。 */
+.post-article > *:not(.article-content):not(.post-hero):not(.post-toc-mobile):not(.post-meta-inset):not(.post-summary-card):not(.post-meta-divider) {
+  padding-inline: var(--indent);
+}
+.post-article > .post-meta-inset {
+  padding-inline: calc(var(--indent) + 0.25rem);
+}
+/* 摘要卡片:虚线边框 + 正文文字同色(浅红褐 #9d2933 / 深蓝白 #d6ecf0);角标纸片色挖空不变 */
+.post-summary-card {
+  border: 1px dashed #664757; /* 小横线虚线 */
+}
+.post-summary-card p {
+  color: #664757;
+}
+.post-summary-card > span {
+  color: #664757; /* 角标"摘要"与边框/正文同色 */
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):not([data-theme="dark"]) .post-summary-card {
+    border-color: #d6ecf0;
+  }
+  :root:not([data-theme="light"]):not([data-theme="dark"]) .post-summary-card p {
+    color: #d6ecf0;
+  }
+  :root:not([data-theme="light"]):not([data-theme="dark"]) .post-summary-card > span {
+    color: #d6ecf0;
+  }
+}
+:root[data-theme="dark"] .post-summary-card {
+  border-color: #d6ecf0;
+}
+:root[data-theme="dark"] .post-summary-card p {
+  color: #d6ecf0;
+}
+:root[data-theme="dark"] .post-summary-card > span {
+  color: #d6ecf0;
+}
+/* 元信息行图标:分类/发布/更新三色区分。浊色系(饱和≈40%,大地色)与蓝色主题
+   低对比协调;dark 下主题色为金,分类用品牌蓝避免撞色,其余同风格提亮 */
+.post-meta-icon-category {
+  color: #c2ac70; /* 浊金:内容归属 */
+}
+.post-meta-icon-publish {
+  color: #54ab82; /* 灰绿:开始/发布 */
+}
+.post-meta-icon-updated {
+  color: #ba6d7a; /* 藕粉:循环/更新 */
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):not([data-theme="dark"]) .post-meta-icon-category {
+    color: #4994c4; /* 品牌浅蓝(dark 主题金,分类避免同色系) */
+  }
+  :root:not([data-theme="light"]):not([data-theme="dark"]) .post-meta-icon-publish {
+    color: #87c4a8;
+  }
+  :root:not([data-theme="light"]):not([data-theme="dark"]) .post-meta-icon-updated {
+    color: #cb909a;
+  }
+}
+:root[data-theme="dark"] .post-meta-icon-category {
+  color: #4994c4;
+}
+:root[data-theme="dark"] .post-meta-icon-publish {
+  color: #87c4a8;
+}
+:root[data-theme="dark"] .post-meta-icon-updated {
+  color: #cb909a;
+}
+/* 元信息区:标签组前间距 24px(gap 10.67px + 额外 13.33px)。额外间距加在标签组
+   前一个 time 上而不是标签组自身——标签折行时首项无缩进,与分类左缘对齐 */
+.post-meta-inset > time:has(+ span) {
+  margin-inline-end: 0.833rem;
+}
+/* 标题区分割线:分隔元信息区与正文(缩进跟随 --indent,两端留白) */
+.post-meta-divider {
+  border: none;
+  height: 3px;
+  background: var(--brand); /* 单实线加粗(原 1px → 3px) */
+}
+.post-toc-mobile {
+  /* 平板:滚动到顶部时定住在导航条下方(玻璃质感见 .is-stuck) */
+  position: sticky;
+  top: 3.5rem; /* 导航条高度 h-14 */
+  z-index: 5;
+  margin-inline: var(--indent);
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+/* 定住时:像导航条一样的半透明玻璃质感 */
+.post-toc-mobile.is-stuck {
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  backdrop-filter: blur(8px);
+  box-shadow: var(--ntx-shadow-sm);
+}
+/* 手机(<640px):导航条目录按钮显示(仅文章页 body[data-has-toc]),
+   正文折叠目录隐藏(改用导航条按钮 + 浮动面板);平板/桌面按钮隐藏。 */
+.toc-nav-btn {
+  display: none;
+}
+@media (max-width: 639px) {
+  body[data-has-toc] .toc-nav-btn {
+    display: inline-flex;
+    /* ≡ 与 ⋮ 之间去 gap(外层 gap-2 = 0.5rem):两图标按钮紧邻,
+       视觉间距由各自 p-2 内边距承担 */
+    margin-inline-end: -0.5rem;
+  }
+  .post-toc-mobile {
+    display: none;
+  }
+}
+
+/* 手机端目录浮动面板(导航条"目录"按钮展开):覆盖式 fixed,与导航条留 0.5rem 间隙 */
+.mobile-toc-panel {
+  display: none;
+  position: fixed;
+  top: calc(3.5rem + 0.5rem);
+  left: 0.75rem;
+  right: 0.75rem;
+  z-index: 9; /* 低于导航条(10),高于正文 */
+  max-height: 65vh;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  background: color-mix(in srgb, var(--surface) 95%, transparent);
+  backdrop-filter: blur(8px);
+  box-shadow: var(--ntx-shadow-md);
+  /* 竖向滚动条与全站自定义样式一致(细条圆角半透明,同代码块横向条) */
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: color-mix(in srgb, var(--text-muted, #888) 45%, transparent) transparent;
+}
+.mobile-toc-panel::-webkit-scrollbar {
+  width: var(--scrollbar-thickness);
+}
+.mobile-toc-panel::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--text-muted, #888) 45%, transparent);
+  border-radius: 0.125rem;
+}
+.mobile-toc-panel::-webkit-scrollbar-track {
+  background: transparent;
+}
+.mobile-toc-panel.is-open {
+  display: block;
+}
+@media (min-width: 640px) {
+  .mobile-toc-panel {
+    display: none !important;
+  }
+}
+
+/* 手机贴边(≤664px):纸片无边框直通页面,中间区域(main)背景改用纸片色,
+   短文章时纸片下方与纸片无缝衔接,不露页面底色形成割裂带;
+   宽屏(≥665px)恢复纸片悬浮效果,页面底色不变。黑夜模式 --article-bg
+   由令牌翻转自动跟随。 */
+@media (max-width: 664px) {
+  body.post-page main {
+    background-color: var(--article-bg);
+  }
+}
+
+/* 平板折叠目录(640-1151px):正文顶部吸顶,展开时内容浮层覆盖(toc-body),不顶开文章。
+   吸顶/浮层背景用纸片色(--article-bg):与未吸顶(透明透纸片)视觉一致,消除深浅跳变。 */
+/* 目录链接 display 按容器区分:桌面右栏 sticky 目录链接收缩到文字宽度
+   (避免整列空白成为点击区);平板折叠目录/手机浮动面板区域本身受限,
+   链接撑满整行方便点按。 */
+.post-toc .toc a {
+  display: inline-block;
+}
+.post-toc-mobile .toc a,
+.mobile-toc-panel .toc a {
+  display: block;
+}
+/* 目录滚动高亮:当前章节对应项文字高亮(品牌色 + 半粗)+ 轻微发光,
+   post-toc.js 滚动时切换。发光用同色半透明光晕,深浅主题跟随 --brand */
+.toc a.is-active {
+  color: var(--brand);
+  font-weight: 600;
+  text-shadow: 0 0 4px color-mix(in srgb, var(--brand) 35%, transparent);
+}
+
+.post-toc-mobile .toc-body {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  max-height: 60vh;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--article-bg);
+  box-shadow: var(--ntx-shadow-md);
+  /* 竖向滚动条与全站自定义样式一致(细条圆角半透明,同代码块横向条) */
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: color-mix(in srgb, var(--text-muted, #888) 45%, transparent) transparent;
+}
+.post-toc-mobile .toc-body::-webkit-scrollbar {
+  width: var(--scrollbar-thickness);
+}
+.post-toc-mobile .toc-body::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--text-muted, #888) 45%, transparent);
+  border-radius: 0.125rem;
+}
+.post-toc-mobile .toc-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+.post-toc-mobile.is-stuck {
+  background: color-mix(in srgb, var(--article-bg) 92%, transparent);
+  backdrop-filter: blur(8px);
+  box-shadow: var(--ntx-shadow-md);
+}
+
+/* 题图:负 margin 顶格覆盖纸片顶部 padding 区(无边框可覆盖,顶到纸片边缘),
+   底部留 --hero-gap 与标题拉开距离——与无题图时"标题距纸片顶 1.5em"间距一致。
+   aspect-ratio 固定 16:9 占位:加载期间高度稳定、标题不跳位,图片加载后淡入填充。 */
+.post-hero {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  margin: calc(-1 * var(--paper-pad-y)) 0 var(--hero-gap);
+  border-radius: 0;
+}
+.post-ad {
+  grid-area: ad;
+}
+.post-comments {
+  grid-area: comments;
+  width: 100%;
+  max-width: var(--content-width);
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+
+/* 两侧出现空隙(视口 > 664):恢复纸片——边框/阴影/加大留白/顶部空隙(无圆角),
+   与 .post-article 贴边规则在同一点切换。 */
+@media (min-width: 665px) {
+  .post-article {
+    --paper-pad-y: 3rem;
+    border: none; /* 去掉文章纸片四周边框(看效果) */
+    border-radius: 0;
+    box-shadow: var(--paper-shadow);
+  }
+  .post-hero {
+    margin: calc(-1 * var(--paper-pad-y)) 0 var(--hero-gap); /* 题图顶格覆盖纸片顶部 */
+    border-radius: 0;
+  }
+  .post-grid {
+    margin-top: 1em;
+    /* 纸片底部空隙 = 顶部 2 倍(避免长文时纸片紧贴页脚) */
+    margin-bottom: 2em;
+  }
+  .post-toc-mobile {
+    top: calc(3.5rem + 1em);
+  }
+}
+
+@media (min-width: 1152px) {
+  .post-grid {
+    /* 中列固定 664px(文章不缩小);左右列 1fr 均分剩余空间,
+       使纸片绝对居中于视口(而非三列整体居中——那样右列目录会推偏纸片)。
+       注意左列 area 名必须与 .post-ad 的 grid-area 一致(ad),
+       否则 ad 掉入隐式轨道会多出 0px 列,fr 按多一个 gap 分配导致纸片偏左 */
+    grid-template-columns: minmax(0, 1fr) var(--content-width) minmax(0, 1fr);
+    column-gap: 1rem; /* 2rem 减半:目录/广告与纸片间距收窄 */
+    grid-template-areas: "ad article toc";
+    align-items: start;
+  }
+  .post-toc {
+    display: block;
+    position: sticky;
+    top: calc(3.5rem + 1em);
+    margin-top: 74px; /* 无题图:下移使目录"目录"文字中线对齐文章分割线(has-hero 时被更高优先级规则覆盖) */
+  }
+  /* 有题图时:目录下移,顶部与标题对齐(题图破格到视窗也不会盖住目录) */
+  .post-grid.has-hero .post-toc {
+    margin-top: calc(var(--hero-h) + var(--hero-gap));
+  }
+  .post-ad {
+    position: sticky;
+    top: calc(3.5rem + 1em);
+  }
+  .post-toc-mobile {
+    display: none;
+  }
+}

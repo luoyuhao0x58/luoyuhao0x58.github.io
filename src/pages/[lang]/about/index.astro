@@ -1,0 +1,91 @@
+---
+import { getCollection, render } from "astro:content";
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import { codeFromPath, langPath, languages, t } from "../../../i18n";
+
+export async function getStaticPaths() {
+  return languages.map((lang) => ({ params: { lang: langPath(lang.code) } }));
+}
+
+const lang = codeFromPath(Astro.params.lang ?? "zh");
+const entry = (await getCollection("about")).find((e) => e.data.lang === lang);
+const { Content } = entry ? await render(entry) : { Content: undefined };
+const data = entry?.data;
+---
+
+<BaseLayout lang={lang} title={data?.title ?? t(lang, "navAbout")}>
+  <div class="page-container w-full px-4 py-12 sm:py-16">
+    <h1 class="text-3xl font-bold tracking-tight sm:text-4xl">
+      {data?.title ?? t(lang, "navAbout")}
+    </h1>
+    {data?.intro && <p class="mt-4 leading-relaxed text-text-secondary">{data.intro}</p>}
+
+    <div class="mt-10 space-y-10">
+      {data?.skills.length ? (
+        <section>
+          <h2 class="text-xl font-semibold">{t(lang, "skillsTitle")}</h2>
+          <ul class="mt-3 flex flex-wrap gap-2">
+            {data.skills.map((skill) => (
+              <li class="rounded-full bg-surface-alt px-3 py-1 text-sm text-text-secondary">
+                {skill}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      {data?.interests.length ? (
+        <section>
+          <h2 class="text-xl font-semibold">{t(lang, "interestsTitle")}</h2>
+          <ul class="mt-3 flex flex-wrap gap-2">
+            {data.interests.map((interest) => (
+              <li class="rounded-full bg-surface-alt px-3 py-1 text-sm text-text-secondary">
+                {interest}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      {data?.socials.length ? (
+        <section>
+          <h2 class="text-xl font-semibold">{t(lang, "socialsTitle")}</h2>
+          <ul class="mt-3 flex flex-wrap gap-2">
+            {data.socials.map((social) => (
+              <li>
+                <a
+                  href={social.url}
+                  rel="me noopener noreferrer"
+                  target="_blank"
+                  class="inline-flex items-center rounded-full border border-border px-4 py-1.5 text-sm text-text-secondary transition-colors hover:border-brand hover:text-brand"
+                >
+                  {social.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      {data?.douban && (
+        <section>
+          <h2 class="text-xl font-semibold">{t(lang, "doubanTitle")}</h2>
+          <a
+            href={data.douban.url}
+            rel="me noopener noreferrer"
+            target="_blank"
+            class="mt-3 inline-flex items-center rounded-full border border-border px-4 py-1.5 text-sm text-text-secondary transition-colors hover:border-brand hover:text-brand"
+          >
+            {data.douban.label}
+          </a>
+        </section>
+      )}
+
+      {Content && (
+        <section class="article-content mt-10 border-t border-border pt-8">
+          <Content />
+        </section>
+      )}
+    </div>
+  </div>
+</BaseLayout>

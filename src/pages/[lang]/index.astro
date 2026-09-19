@@ -1,0 +1,100 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import PostCard from "../../components/PostCard.astro";
+import { codeFromPath, langPath, languages, t } from "../../i18n";
+import { categoryLabels, taxonomyLabel } from "../../taxonomy";
+
+export async function getStaticPaths() {
+  return languages.map((lang) => ({ params: { lang: langPath(lang.code) } }));
+}
+
+const lang = codeFromPath(Astro.params.lang ?? "zh");
+const prefix = `/${langPath(lang)}`;
+
+// 精选文章:当前语言最新前 5 篇(完整列表见 /posts/ 导航)
+const posts = (await getCollection("blog"))
+  .filter((post) => post.data.lang === lang)
+  .sort((a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime());
+const featured = posts.slice(0, 5);
+
+// 社交链接:复用 about 集合的 socials
+const about = (await getCollection("about")).find((e) => e.data.lang === lang);
+const socials = about?.data.socials ?? [];
+
+// 分类入口由映射表驱动,显示名按当前语言翻译
+const entries = Object.keys(categoryLabels).map((id) => ({
+  href: `${prefix}/category/${id}/`,
+  label: taxonomyLabel(categoryLabels, id, lang),
+}));
+const chipClass =
+  "inline-flex items-center rounded-full border border-border px-4 py-1.5 text-sm text-text-secondary transition-colors hover:border-brand hover:text-brand";
+---
+
+<BaseLayout lang={lang} title={t(lang, "siteName")} description={t(lang, "heroSubtitle")}>
+  <div class="page-container w-full px-4 py-12 sm:py-16">
+    <!-- Hero:头像 + 自我介绍 -->
+    <section class="flex flex-col items-center text-center">
+      <img
+        src="/avatar.png"
+        alt={t(lang, "avatarAlt")}
+        width={128}
+        height={128}
+        draggable="false"
+        class="h-32 w-32 rounded-full border border-border object-cover shadow-md"
+      />
+      <h1 class="mt-6 text-3xl font-bold tracking-tight sm:text-4xl">
+        {t(lang, "heroTitle")}
+      </h1>
+      <p class="mt-3 max-w-md leading-relaxed text-text-secondary">
+        {t(lang, "heroSubtitle")}
+      </p>
+      {socials.length > 0 && (
+        <div class="mt-6 flex flex-wrap justify-center gap-2">
+          {socials.map((social) => (
+            <a
+              href={social.url}
+              rel="me noopener noreferrer"
+              target="_blank"
+              class={chipClass}
+            >
+              {social.label}
+            </a>
+          ))}
+        </div>
+      )}
+      <nav
+        aria-label={t(lang, "navHome")}
+        class="mt-3 flex flex-wrap justify-center gap-2"
+      >
+        {entries.map((entry) => (
+          <a href={entry.href} class={chipClass}>
+            {entry.label}
+          </a>
+        ))}
+      </nav>
+    </section>
+
+    <!-- 内容分区(可扩展):此处可继续追加相册/播客/漫画等分区 -->
+    <section class="mt-14 border-t border-border pt-8">
+      <h2 class="text-xl font-semibold">{t(lang, "latestPosts")}</h2>
+      {featured.length === 0 ? (
+        <div class="mt-6 rounded-lg border border-dashed border-border px-6 py-10 text-center">
+          <p class="text-text-muted">{t(lang, "writingPlaceholder")}</p>
+          <a
+            href={`${prefix}/about/`}
+            class={`${chipClass} mt-5`}
+          >
+            {t(lang, "navAbout")}
+          </a>
+        </div>
+      ) : (
+        <ul class="-mx-4 mt-6 divide-y divide-border">
+          {featured.map((post) => (
+            <PostCard post={post} lang={lang} />
+          ))}
+        </ul>
+      )}
+    </section>
+  </div>
+</BaseLayout>

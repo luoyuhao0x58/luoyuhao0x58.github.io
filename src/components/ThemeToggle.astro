@@ -1,0 +1,56 @@
+---
+// 三态切换:白天(sun) → 黑夜(moon) → 自动(sun-moon),点击循环。逻辑在 ThemeScript.astro(head 内)。
+// 图标由 CSS 按 data-theme-state 属性切换(ThemeScript 维护该属性,无需改 DOM);
+// 悬停 tooltip 显示当前状态。图标大小/颜色与页脚版权文字(text-sm/text-muted)一致。
+import Sun from "./icons/Sun.astro";
+import Moon from "./icons/Moon.astro";
+import SunMoon from "./icons/SunMoon.astro";
+import { codeFromPath, t } from "../i18n";
+
+interface Props {
+  lang: string;
+}
+const { lang } = Astro.props;
+const code = codeFromPath(lang);
+---
+
+<button
+  id="theme-toggle"
+  type="button"
+  data-theme-state="auto"
+  data-label-light={t(code, "themeLight")}
+  data-label-dark={t(code, "themeDark")}
+  data-label-auto={t(code, "themeAuto")}
+  class="group relative inline-flex cursor-pointer items-center rounded-full p-1.5 text-text-muted transition-colors hover:bg-surface-alt hover:text-text-primary"
+  aria-label={t(code, "themeToggleAria")}
+>
+  <Sun class="icon-light h-3.5 w-3.5" />
+  <Moon class="icon-dark h-3.5 w-3.5" />
+  <SunMoon class="icon-auto h-3.5 w-3.5" />
+  <span
+    data-theme-label
+    role="tooltip"
+    class="pointer-events-none absolute bottom-[calc(100%+6px)] left-1/2 -translate-x-1/2 rounded-md border border-border bg-surface-raised px-2 py-1 text-xs whitespace-nowrap text-text-secondary opacity-0 shadow-md transition-opacity duration-150 group-hover:opacity-100"
+  >
+    {t(code, "themeAuto")}
+  </span>
+</button>
+
+<style is:global>
+  /* 三态图标互斥显示:ThemeScript 在按钮上维护 data-theme-state(light/dark/auto)。
+   三个图标默认全部隐藏,再按状态显示对应的一个(缺一不可,否则会多个同时显示)。 */
+  #theme-toggle .icon-light,
+  #theme-toggle .icon-dark,
+  #theme-toggle .icon-auto {
+    display: none;
+  }
+  #theme-toggle[data-theme-state="light"] .icon-light {
+    display: block;
+  }
+  #theme-toggle[data-theme-state="dark"] .icon-dark {
+    display: block;
+  }
+  #theme-toggle[data-theme-state="auto"] .icon-auto {
+    display: block;
+  }
+</style>

@@ -1,0 +1,53 @@
+---
+import { getCollection } from "astro:content";
+import type { GetStaticPaths } from "astro";
+import BaseLayout from "../../../../../layouts/BaseLayout.astro";
+import Pagination from "../../../../../components/Pagination.astro";
+import PostCard from "../../../../../components/PostCard.astro";
+import { codeFromPath, langPath, languages } from "../../../../../i18n";
+import { PAGE_SIZE } from "../../../../../lib/pagination";
+import { tagLabels, taxonomyLabel } from "../../../../../taxonomy";
+
+// 标签分页:第 2 页起在此生成(/zh/tags/<tag>/page/2/ ...);第 1 页由 index.astro 承担。
+export const getStaticPaths: GetStaticPaths = async ({ paginate }) => {
+  const posts = await getCollection("blog");
+  const paths = [];
+  for (const lang of languages) {
+    const tagSet = new Set<string>();
+    for (const post of posts) {
+      if (post.data.lang !== lang.code) continue;
+      for (const tag of post.data.tags) tagSet.add(tag);
+    }
+    for (const tag of tagSet) {
+      paths.push(
+        ...paginate(
+          posts
+            .filter(
+              (post) => post.data.lang === lang.code && post.data.tags.includes(tag),
+            )
+            .sort((a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime()),
+          { pageSize: PAGE_SIZE, params: { lang: langPath(lang.code), tag } },
+        ).filter((item) => item.params.page !== undefined),
+      );
+    }
+  }
+  return paths;
+};
+
+const { page } = Astro.props;
+const lang = codeFromPath(Astro.params.lang ?? "zh");
+const tag = Astro.params.tag ?? "";
+const tagTitle = `#${taxonomyLabel(tagLabels, tag, lang)}`;
+---
+
+<BaseLayout lang={lang} title={tagTitle} description={tagTitle}>
+  <div class="page-container w-full px-4 py-12 sm:py-16">
+    <h1 class="text-3xl font-bold tracking-tight sm:text-4xl">{tagTitle}</h1>
+    <ul class="-mx-4 mt-10 divide-y divide-border">
+      {page.data.map((post) => (
+        <PostCard post={post} lang={lang} />
+      ))}
+    </ul>
+    <Pagination lang={lang} page={page} firstPageUrl={`/${langPath(lang)}/tags/${encodeURIComponent(tag)}/`} />
+  </div>
+</BaseLayout>

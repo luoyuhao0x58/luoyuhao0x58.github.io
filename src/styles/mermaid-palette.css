@@ -1,0 +1,100 @@
+/* 自动生成:scripts/extract-mermaid-palette.mjs 从 mermaid redux 主题渲染结果
+ * 提取实际渲染色(用户所见),勿手改。svg 以 base 主题渲染,mermaid.css 用变量覆盖。
+ * actor 色轮:redux 官方时序 actor 多彩分配,插件按 name 编 data-mmd-actor 序号。 */
+:root {
+  --mmd-nodeFill: rgb(255, 255, 255);
+  --mmd-nodeStroke: rgb(40, 37, 61);
+  --mmd-edge: rgb(0, 0, 0);
+  --mmd-nodeText: rgb(40, 37, 61);
+  --mmd-actorFill: rgb(240, 253, 250);
+  --mmd-actorStroke: rgb(45, 212, 191);
+  --mmd-actorText: rgb(255, 255, 255);
+  --mmd-actorTextStroke: rgb(40, 37, 61);
+  --mmd-activation: hsl(240 0% 80%);
+  --mmd-noteFill: #fff5ad;
+  --mmd-noteStroke: #FACC15;
+  --mmd-noteText: #28253D;
+  --mmd-edgeLabelBkg: hsl(240 0% 80%);
+  --mmd-actor0Fill: rgb(253, 244, 255);
+  --mmd-actor0Stroke: rgb(232, 121, 249);
+  --mmd-actor1Fill: rgb(240, 253, 250);
+  --mmd-actor1Stroke: rgb(45, 212, 191);
+  --mmd-actor2Fill: rgb(255, 247, 237);
+  --mmd-actor2Stroke: rgb(251, 146, 60);
+  --mmd-actor3Fill: rgb(236, 254, 255);
+  --mmd-actor3Stroke: rgb(34, 211, 238);
+  --mmd-actor4Fill: rgb(240, 253, 244);
+  --mmd-actor4Stroke: rgb(74, 222, 128);
+  --mmd-actor5Fill: rgb(245, 243, 255);
+  --mmd-actor5Stroke: rgb(167, 139, 250);
+  --mmd-actor6Fill: rgb(254, 242, 242);
+  --mmd-actor6Stroke: rgb(248, 113, 113);
+  --mmd-actor7Fill: rgb(254, 252, 232);
+  --mmd-actor7Stroke: rgb(250, 204, 21);
+}
+
+:root[data-theme="dark"] {
+  --mmd-nodeFill: rgb(17, 17, 19);
+  --mmd-nodeStroke: rgb(255, 255, 255);
+  --mmd-edge: rgb(204, 204, 204);
+  --mmd-nodeText: rgb(224, 223, 223);
+  --mmd-actorFill: rgb(17, 17, 19);
+  --mmd-actorStroke: rgb(45, 212, 191);
+  --mmd-actorText: rgb(17, 17, 19);
+  --mmd-actorTextStroke: rgb(255, 255, 255);
+  --mmd-activation: hsl(180 1.6% 28%);
+  --mmd-noteFill: #FEF9C3;
+  --mmd-noteStroke: #FACC15;
+  --mmd-noteText: #28253D;
+  --mmd-edgeLabelBkg: hsl(180 1.6% 28%);
+  --mmd-actor0Fill: rgb(17, 17, 19);
+  --mmd-actor0Stroke: rgb(232, 121, 249);
+  --mmd-actor1Fill: rgb(17, 17, 19);
+  --mmd-actor1Stroke: rgb(45, 212, 191);
+  --mmd-actor2Fill: rgb(17, 17, 19);
+  --mmd-actor2Stroke: rgb(251, 146, 60);
+  --mmd-actor3Fill: rgb(17, 17, 19);
+  --mmd-actor3Stroke: rgb(34, 211, 238);
+  --mmd-actor4Fill: rgb(17, 17, 19);
+  --mmd-actor4Stroke: rgb(74, 222, 128);
+  --mmd-actor5Fill: rgb(17, 17, 19);
+  --mmd-actor5Stroke: rgb(167, 139, 250);
+  --mmd-actor6Fill: rgb(17, 17, 19);
+  --mmd-actor6Stroke: rgb(248, 113, 113);
+  --mmd-actor7Fill: rgb(17, 17, 19);
+  --mmd-actor7Stroke: rgb(250, 204, 21);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --mmd-nodeFill: rgb(17, 17, 19);
+    --mmd-nodeStroke: rgb(255, 255, 255);
+    --mmd-edge: rgb(204, 204, 204);
+    --mmd-nodeText: rgb(224, 223, 223);
+    --mmd-actorFill: rgb(17, 17, 19);
+    --mmd-actorStroke: rgb(45, 212, 191);
+    --mmd-actorText: rgb(17, 17, 19);
+    --mmd-actorTextStroke: rgb(255, 255, 255);
+    --mmd-activation: hsl(180 1.6% 28%);
+    --mmd-noteFill: #FEF9C3;
+    --mmd-noteStroke: #FACC15;
+    --mmd-noteText: #28253D;
+    --mmd-edgeLabelBkg: hsl(180 1.6% 28%);
+    --mmd-actor0Fill: rgb(17, 17, 19);
+    --mmd-actor0Stroke: rgb(232, 121, 249);
+    --mmd-actor1Fill: rgb(17, 17, 19);
+    --mmd-actor1Stroke: rgb(45, 212, 191);
+    --mmd-actor2Fill: rgb(17, 17, 19);
+    --mmd-actor2Stroke: rgb(251, 146, 60);
+    --mmd-actor3Fill: rgb(17, 17, 19);
+    --mmd-actor3Stroke: rgb(34, 211, 238);
+    --mmd-actor4Fill: rgb(17, 17, 19);
+    --mmd-actor4Stroke: rgb(74, 222, 128);
+    --mmd-actor5Fill: rgb(17, 17, 19);
+    --mmd-actor5Stroke: rgb(167, 139, 250);
+    --mmd-actor6Fill: rgb(17, 17, 19);
+    --mmd-actor6Stroke: rgb(248, 113, 113);
+    --mmd-actor7Fill: rgb(17, 17, 19);
+    --mmd-actor7Stroke: rgb(250, 204, 21);
+  }
+}

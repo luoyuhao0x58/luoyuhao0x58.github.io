@@ -1,0 +1,47 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import { codeFromPath, langPath, languages, t } from "../../../i18n";
+import { categoryLabels, taxonomyLabel } from "../../../taxonomy";
+
+export async function getStaticPaths() {
+  return languages.map((lang) => ({ params: { lang: langPath(lang.code) } }));
+}
+
+const lang = codeFromPath(Astro.params.lang ?? "zh");
+const prefix = `/${langPath(lang)}`;
+const posts = (await getCollection("blog")).filter(
+  (post) => post.data.lang === lang,
+);
+// 分类列表由映射表驱动:显示名按当前语言翻译,链接用英文 key
+const categories = Object.keys(categoryLabels).map((id) => ({
+  id,
+  title: taxonomyLabel(categoryLabels, id, lang),
+  count: posts.filter((post) => post.data.category === id).length,
+}));
+---
+
+<BaseLayout
+  lang={lang}
+  title={t(lang, "navCategories")}
+  description={t(lang, "navCategories")}
+>
+  <div class="page-container w-full px-4 py-12 sm:py-16">
+    <h1 class="text-3xl font-bold tracking-tight sm:text-4xl">
+      {t(lang, "navCategories")}
+    </h1>
+    <ul class="mt-10 grid gap-4 sm:grid-cols-2">
+      {categories.map((category) => (
+        <li>
+          <a
+            href={`${prefix}/category/${category.id}/`}
+            class="flex items-center justify-between gap-4 rounded-lg border border-border px-5 py-4 transition-colors hover:border-brand hover:text-brand"
+          >
+            <span class="font-medium">{category.title}</span>
+            <span class="text-sm tabular-nums text-text-muted">{category.count}</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </div>
+</BaseLayout>

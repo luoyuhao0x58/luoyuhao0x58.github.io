@@ -1,0 +1,58 @@
+---
+import "../styles/global.css";
+import Footer from "../components/Footer.astro";
+import Header from "../components/Header.astro";
+import ScrollbarOverlay from "../components/ScrollbarOverlay.astro";
+import ThemeScript from "../components/ThemeScript.astro";
+import { ClientRouter } from "astro:transitions";
+import { codeFromPath, languages, langPath, stripLangPrefix } from "../i18n";
+
+interface Props {
+  title: string;
+  description?: string;
+  lang: string;
+  /** Emit <meta name="robots" content="noindex"> (e.g. for 404 pages). */
+  noindex?: boolean;
+}
+const { title, description, lang, noindex = false } = Astro.props;
+const code = codeFromPath(lang);
+const htmlLang = languages.find((l) => l.code === code)?.htmlLang ?? "zh-CN";
+
+const pathname = Astro.url.pathname;
+const site = new URL(Astro.site ?? "https://luoyuhao.nettix.top");
+const canonical = new URL(pathname, site).href;
+const rest = stripLangPrefix(pathname);
+---
+
+<html lang={htmlLang} dir={htmlLang === "ar" ? "rtl" : "ltr"}>
+  <head>
+    <ThemeScript />
+    <ClientRouter />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex" />}
+    <link rel="icon" href="/favicon.svg" />
+    <link rel="canonical" href={canonical} />
+    <link rel="alternate" hreflang="x-default" href={new URL("/zh/", site).href} />
+    {
+      languages.map((langEntry) => (
+        <link
+          rel="alternate"
+          hreflang={langEntry.code}
+          href={new URL(`/${langPath(langEntry.code)}${rest}`, site).href}
+        />
+      ))
+    }
+    <title>{title}</title>
+  </head>
+  <body class="flex min-h-dvh flex-col bg-surface text-text-primary antialiased">
+    <Header lang={code} />
+    <main class="flex-1">
+      <slot />
+    </main>
+    <Footer lang={code} />
+    <ScrollbarOverlay />
+  </body>
+</html>

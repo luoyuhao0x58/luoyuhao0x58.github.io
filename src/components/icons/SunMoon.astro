@@ -1,0 +1,32 @@
+---
+// Lucide `sun-moon` 图标(ISC 许可,内嵌)。自动(跟随系统)状态:日 + 月的组合图形。
+interface Props {
+  class?: string;
+}
+const { class: className = "h-4 w-4" } = Astro.props;
+---
+
+<svg
+  class={className}
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  aria-hidden="true"
+>
+  <path d="M12 8a2.83 2.83 0 0 0 4 4 4 4 0 1 1-4-4"></path>
+  <path d="M12 2v2"></path>
+  <path d="M12 20v2"></path>
+  <path d="m4.93 4.93 1.41 1.41"></path>
+  <path d="m17.66 17.66 1.41 1.41"></path>
+  <path d="M2 12h2"></path>
+  <path d="M20 12h2"></path>
+  <path d="m6.34 17.66-1.41 1.41"></path>
+  <path d="m19.07 4.93-1.41 1.41"></path>
+  <path d="M14 12a4 4 0 0 1-4 4"></path>
+  <path d="M16 8h5"></path>
+  <path d="M19 5v5"></path>
+</svg>
