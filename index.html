@@ -1,1 +1,39 @@
-<!doctype html><title>Redirecting to: /zh/</title><meta http-equiv="refresh" content="2;url=/zh/"><meta name="robots" content="noindex"><link rel="canonical" href="https://luoyuhao.nettix.top/zh/"><body>	<a href="/zh/">Redirecting from <code>/</code> to <code>/zh/</code></a></body>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex"><link rel="canonical" href="/en/"><meta http-equiv="refresh" content="1;url=/en/"><title>羽皓のBlog</title></head><body><!-- Fallback for when neither JS nor meta refresh work: nearly invisible link into the default locale. --><a href="/en/" style="position: fixed; right: 8px; bottom: 8px; font-size: 12px; color: rgba(128, 128, 128, 0.18); text-decoration: none;">Enter English site</a><script>(function(){const redirectTargets = [{"prefix":"en","path":"/en/"}];
+const zhPath = "/zh/";
+const zhHantPath = null;
+const fallbackPath = "/en/";
+
+      (function () {
+        const navLang = (
+          (navigator.languages && navigator.languages[0]) ||
+          navigator.language ||
+          "en"
+        ).toLowerCase();
+
+        // zh family first: resolve traditional variants before the generic "zh" prefix match.
+        if (
+          zhHantPath &&
+          (navLang.startsWith("zh-tw") ||
+            navLang.startsWith("zh-hk") ||
+            navLang.startsWith("zh-mo") ||
+            navLang.startsWith("zh-hant"))
+        ) {
+          location.replace(zhHantPath);
+          return;
+        }
+        if (zhPath && navLang.startsWith("zh")) {
+          location.replace(zhPath);
+          return;
+        }
+
+        // Generic prefix match against other active language families.
+        for (const target of redirectTargets) {
+          if (navLang.startsWith(target.prefix)) {
+            location.replace(target.path);
+            return;
+          }
+        }
+
+        location.replace(fallbackPath);
+      })();
+    })();</script></body></html>
