@@ -1,0 +1,6 @@
+# 全站开放收录,无需屏蔽任何路径。
+# 分页/语言协商页均为可抓取内容,不设 Disallow。
+User-agent: *
+Allow: /
+
+Sitemap: https://luoyuhao.nettix.top/sitemap.xml
