@@ -1,0 +1,132 @@
+<!DOCTYPE html><html lang="zh-Hant" dir="ltr"><head><!-- 主题初始化脚本:必须放在 <head>,在首帧前应用 data-theme,避免主题闪烁。
+     三种状态:light / dark / auto。auto 不是“无属性跟随系统”了:部分国产 WebView
+     不报告 prefers-color-scheme 媒体查询(CSS 的 @media 块不生效),故 auto 用 JS
+     matchMedia 显式检测系统深/浅并直接设 data-theme;matchMedia 不可用时才回退
+     到无属性 + CSS 媒体查询兑底。与 ThemeToggle.astro 的按钮配合,用事件委托处理点击。 --><script>
+  (function () {
+    const KEY = "nettix-theme";
+    const ORDER = ["light", "dark", "auto"];
+    const ICONS = { light: "☀️", dark: "🌙", auto: "🔄" };
+
+
+    function current() {
+      // 读 data-theme-state(用户真实选择)而非 data-theme:auto 状态下会显式设
+      // data-theme=dark(系统检测结果),若读 data-theme 会被误判为 dark,手动循环到不了 light。
+      const s = document.documentElement.getAttribute("data-theme-state");
+      return s === "light" || s === "dark" || s === "auto" ? s : "auto";
+    }
+    // 系统深色检测:部分国产 WebView 不报告 prefers-color-scheme 媒体查询
+    // (CSS 的 @media 块不生效),这里用 JS matchMedia 显式检测并设 data-theme 绕开。
+    function systemPrefersDark() {
+      try {
+        return !!(window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
+      } catch {
+        return false;
+      }
+    }
+    function setState(t) {
+      const root = document.documentElement;
+      if (t === "auto") {
+        // auto:JS 显式检测系统主题;matchMedia 不可用(极老 WebView)时移除属性,
+        // 交回 CSS @media prefers-color-scheme 兑底(都不支持则保持浅色)。
+        if (systemPrefersDark()) root.setAttribute("data-theme", "dark");
+        else root.removeAttribute("data-theme");
+      } else root.setAttribute("data-theme", t);
+      try {
+        localStorage.setItem(KEY, t);
+      } catch {
+        /* localStorage unavailable (private mode / blocked); theme still applies. */
+      }
+      root.setAttribute("data-theme-state", t);
+    }
+    // 系统主题变化实时同步(auto 状态下切换设备深/浅色)。
+    (function watchSystem() {
+      try {
+        const mq = window.matchMedia("(prefers-color-scheme: dark)");
+        const onChange = function () {
+          if (current() === "auto") setState("auto");
+        };
+        if (mq && typeof mq.addEventListener === "function") mq.addEventListener("change", onChange);
+        else if (mq && typeof mq.addListener === "function") mq.addListener(onChange);
+      } catch {
+        /* matchMedia unavailable */
+      }
+    })();
+    function updateButton() {
+      const btn = document.getElementById("theme-toggle");
+      if (!btn) return;
+      const t = current();
+      const icon = btn.querySelector("[data-theme-icon]");
+      const label = btn.querySelector("[data-theme-label]");
+      if (icon) icon.textContent = ICONS[t] || "🔄";
+      if (label) {
+        const key = "label" + t.charAt(0).toUpperCase() + t.slice(1);
+        label.textContent = btn.dataset[key] || t;
+      }
+      btn.setAttribute("data-theme-state", t);
+    }
+
+    let saved = "auto";
+    try {
+      saved = localStorage.getItem(KEY) || "auto";
+    } catch {
+      /* localStorage unavailable (private mode / blocked); fall back to auto. */
+    }
+    setState(saved);
+
+    document.addEventListener("DOMContentLoaded", updateButton);
+    // View Transitions 导航完成后重新同步:换页时 DOMContentLoaded 不会再次触发,
+    // 若 head 内脚本重跑时序不可控,这里兜底保证主题与按钮状态一致。
+    document.addEventListener("astro:page-load", function () {
+      let saved = "auto";
+      try {
+        saved = localStorage.getItem(KEY) || "auto";
+      } catch {
+        /* ignore */
+      }
+      setState(saved);
+      updateButton();
+    });
+    // View Transitions swap 会用新页面的 <html> 属性覆盖 documentElement,
+    // 而新页面是构建期生成的、不带 data-theme -> 主题瞬间丢失(系统深色时闪黑夜)。
+    // after-swap 在 DOM 替换后、动画渲染前同步触发,立即恢复 localStorage 主题。
+    document.addEventListener("astro:after-swap", function () {
+      let saved = "auto";
+      try {
+        saved = localStorage.getItem(KEY) || "auto";
+      } catch {
+        /* ignore */
+      }
+      setState(saved);
+      updateButton();
+    });
+    document.addEventListener("click", function (e) {
+      const el = e.target && e.target.closest ? e.target.closest("#theme-toggle") : null;
+      if (!el) return;
+      setState(ORDER[(ORDER.indexOf(current()) + 1) % ORDER.length]);
+      updateButton();
+    });
+  })();
+</script><script>
+  (function () {
+    const orig = document.startViewTransition;
+    if (typeof orig !== "function") return;
+    document.startViewTransition = function (updateCallback) {
+      const vt = orig.call(document, updateCallback);
+      Promise.resolve(vt.ready)
+        .then(() => vt.skipTransition())
+        .catch(() => {});
+      return vt;
+    };
+  })();
+</script><meta name="astro-view-transitions-enabled" content="true"><meta name="astro-view-transitions-fallback" content="animate"><script type="module" src="/_astro/ClientRouter.astro_astro_type_script_index_0_lang.CYDbzu1r.js"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="generator" content="Astro v7.3.2"><meta name="description" content="程式設計師。技術是主線，生活是副本。寫分享、評測、日誌，也寫愛好、遊戲和影音。"><link rel="icon" href="/favicon.svg"><link rel="canonical" href="https://luoyuhao.nettix.top/zh-hant/"><meta property="og:type" content="website"><meta property="og:site_name" content="luoyuhao.nettix.top"><meta property="og:title" content="羽皓のBlog"><meta property="og:description" content="程式設計師。技術是主線，生活是副本。寫分享、評測、日誌，也寫愛好、遊戲和影音。"><meta property="og:url" content="https://luoyuhao.nettix.top/zh-hant/"><meta name="twitter:card" content="summary"><meta name="twitter:title" content="羽皓のBlog"><meta name="twitter:description" content="程式設計師。技術是主線，生活是副本。寫分享、評測、日誌，也寫愛好、遊戲和影音。"><link rel="alternate" hreflang="x-default" href="https://luoyuhao.nettix.top/zh/"><link rel="alternate" hreflang="zh" href="https://luoyuhao.nettix.top/zh/"><link rel="alternate" hreflang="zh-Hant" href="https://luoyuhao.nettix.top/zh-hant/"><link rel="alternate" hreflang="en" href="https://luoyuhao.nettix.top/en/"><link rel="alternate" hreflang="es" href="https://luoyuhao.nettix.top/es/"><link rel="alternate" hreflang="ja" href="https://luoyuhao.nettix.top/ja/"><link rel="alternate" hreflang="ko" href="https://luoyuhao.nettix.top/ko/"><link rel="alternate" hreflang="ru" href="https://luoyuhao.nettix.top/ru/"><link rel="alternate" hreflang="ar" href="https://luoyuhao.nettix.top/ar/"><title>羽皓のBlog</title><link rel="stylesheet" href="/_astro/ThemeScript.DElIXAC1.css"><link rel="stylesheet" href="/_astro/cdn.6pokDUgd.css"></head><body class="flex min-h-dvh flex-col bg-surface text-text-primary antialiased"><header class="site-header-root sticky top-0 z-10 border-b border-border" data-astro-cid-nen7h5rs><div class="mx-auto flex h-14 w-full max-w-6xl items-center justify-between gap-2 px-2 sm:px-6" data-astro-cid-nen7h5rs><!-- logo(左) + 桌面导航(右,≥640px)。整个 header 以独立 view-transition group 瞬时替换
+         (见 base.css .site-header-root):不参与 root 淡入淡出,导航时不闪;
+         同语言页面间 header 内容相同,单帧替换无感知;语言切换走整页加载(SSR 重渲)。 --><div class="flex min-w-0 flex-1 items-center justify-between gap-2" data-astro-cid-nen7h5rs><a href="/zh-hant/" class="site-logo flex shrink-0 items-center gap-1.5 text-lg font-semibold tracking-wide xl:ml-10" data-astro-cid-nen7h5rs><span class="site-logo-text" data-astro-cid-nen7h5rs>羽皓のBlog</span></a><nav class="header-nav hidden min-w-0 items-center gap-1.5 overflow-x-auto text-sm sm:flex sm:gap-2 [scrollbar-width:none] [&amp;::-webkit-scrollbar]:hidden" aria-label="Main" data-astro-cid-nen7h5rs><a href="/zh-hant/" class="font-nav shrink-0 rounded-full px-2.5 py-1.5 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary sm:px-3" data-astro-cid-nen7h5rs>首頁</a><a href="/zh-hant/posts/" class="font-nav shrink-0 rounded-full px-2.5 py-1.5 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary sm:px-3" data-astro-cid-nen7h5rs>文章</a><a href="/zh-hant/category/" class="font-nav shrink-0 rounded-full px-2.5 py-1.5 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary sm:px-3" data-astro-cid-nen7h5rs>分類</a><a href="/zh-hant/series/" class="font-nav shrink-0 rounded-full px-2.5 py-1.5 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary sm:px-3" data-astro-cid-nen7h5rs>專欄</a><a href="/zh-hant/about/" class="font-nav shrink-0 rounded-full px-2.5 py-1.5 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary sm:px-3" data-astro-cid-nen7h5rs>關於</a></nav></div><!-- 分界线:导航(左)与功能按钮(右)分隔;手机端折叠收纳后不需要,隐藏 --><div class="header-divider h-4 w-px shrink-0 bg-border" aria-hidden="true" data-astro-cid-nen7h5rs></div><!-- 手机文章页目录按钮(≡):仅 <640px 且 body[data-has-toc](文章页)时由 CSS 显示 --><button id="toc-nav-btn" type="button" class="toc-nav-btn inline-flex shrink-0 cursor-pointer items-center rounded-full p-2 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary" aria-label="目錄" aria-expanded="false" aria-controls="mobile-toc-panel" data-astro-cid-nen7h5rs><svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13"></path><path d="M8 12h13"></path><path d="M8 18h13"></path><path d="M3 6h.01"></path><path d="M3 12h.01"></path><path d="M3 18h.01"></path></svg></button><!-- 手机 ⋮ 弹出列表(<640px):点击展开,分上下两区——
+         上区:工具按钮(PC 端分割线右侧按钮,如语言切换),从右到左排列、排满换行;
+         下区:导航链接,从上到下、文字右对齐;
+         列表宽度 = 最长导航按钮文本 + 边距。目录按钮(≡)独立不受影响。
+         位于 persist 容器外(语言 targets 随页面 SSR 更新) --><details class="nav-mobile-menu" data-astro-cid-nen7h5rs><summary class="flex cursor-pointer list-none select-none items-center rounded-full p-2 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary [&amp;::marker]:hidden [&amp;::-webkit-details-marker]:hidden" aria-label="工具菜单" data-astro-cid-nen7h5rs><svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg></summary><div class="nav-mobile-bar" data-astro-cid-nen7h5rs><!-- 上区:工具按钮(从右到左,排满换行) --><div class="nav-mobile-tools" data-astro-cid-nen7h5rs><nav aria-label="Language" class="lang-switcher relative"><details class="group"><summary class="flex cursor-pointer list-none select-none items-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary [&amp;::marker]:hidden [&amp;::-webkit-details-marker]:hidden"><svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 6 6"></path><path d="m4 14 6-6 2-3"></path><path d="M2 5h12"></path><path d="M7 2h1"></path><path d="m22 22-5-10-5 10"></path><path d="M14 18h6"></path></svg><span aria-hidden="true" class="text-xs text-text-secondary transition-transform duration-150 group-open:rotate-180">▾</span></summary><ul class="absolute end-0 z-20 mt-2 w-max min-w-36 overflow-hidden whitespace-nowrap rounded-lg border border-border bg-surface-raised shadow-md"><li data-astro-cid-msige7la><a href="/zh/" data-astro-reload lang="zh-CN" class="flex items-center px-4 py-2 text-sm text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary" data-astro-cid-msige7la><span class="lang-name" data-astro-cid-msige7la>简体中文</span><span class="lang-code" data-astro-cid-msige7la>(zh-Hans)</span></a></li><li data-astro-cid-msige7la><a href="/zh-hant/" data-astro-reload lang="zh-Hant" aria-current="page" class="flex items-center px-4 py-2 text-sm text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary" data-astro-cid-msige7la><span class="lang-name" data-astro-cid-msige7la>繁體中文</span><span class="lang-code" data-astro-cid-msige7la>(zh-Hant)</span></a></li><li data-astro-cid-msige7la><a href="/en/" data-astro-reload lang="en" class="flex items-center px-4 py-2 text-sm text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary" data-astro-cid-msige7la><span class="lang-name" data-astro-cid-msige7la>English</span><span class="lang-code" data-astro-cid-msige7la>(en)</span></a></li></ul></details></nav><script type="module">document.addEventListener(`click`,e=>{let t=e.target?.closest?.(`.lang-switcher`);document.querySelectorAll(`.lang-switcher details`).forEach(e=>{e.open&&!t?.contains(e)&&e.removeAttribute(`open`)})});</script></div><!-- 下区:导航链接(从上到下,文字右对齐) --><nav class="nav-mobile-links" aria-label="Main" data-astro-cid-nen7h5rs><a href="/zh-hant/" data-astro-cid-nen7h5rs>首頁</a><a href="/zh-hant/posts/" data-astro-cid-nen7h5rs>文章</a><a href="/zh-hant/category/" data-astro-cid-nen7h5rs>分類</a><a href="/zh-hant/series/" data-astro-cid-nen7h5rs>專欄</a><a href="/zh-hant/about/" data-astro-cid-nen7h5rs>關於</a></nav></div></details><!-- 语言切换(≥640px):文A 图标直达下拉;手机隐藏(入口在 ⋮ 横条,同一组件) --><span class="header-lang shrink-0" data-astro-cid-nen7h5rs><nav aria-label="Language" class="lang-switcher relative"><details class="group"><summary class="flex cursor-pointer list-none select-none items-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary [&amp;::marker]:hidden [&amp;::-webkit-details-marker]:hidden"><svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 6 6"></path><path d="m4 14 6-6 2-3"></path><path d="M2 5h12"></path><path d="M7 2h1"></path><path d="m22 22-5-10-5 10"></path><path d="M14 18h6"></path></svg><span aria-hidden="true" class="text-xs text-text-secondary transition-transform duration-150 group-open:rotate-180">▾</span></summary><ul class="absolute end-0 z-20 mt-2 w-max min-w-36 overflow-hidden whitespace-nowrap rounded-lg border border-border bg-surface-raised shadow-md"><li data-astro-cid-msige7la><a href="/zh/" data-astro-reload lang="zh-CN" class="flex items-center px-4 py-2 text-sm text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary" data-astro-cid-msige7la><span class="lang-name" data-astro-cid-msige7la>简体中文</span><span class="lang-code" data-astro-cid-msige7la>(zh-Hans)</span></a></li><li data-astro-cid-msige7la><a href="/zh-hant/" data-astro-reload lang="zh-Hant" aria-current="page" class="flex items-center px-4 py-2 text-sm text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary" data-astro-cid-msige7la><span class="lang-name" data-astro-cid-msige7la>繁體中文</span><span class="lang-code" data-astro-cid-msige7la>(zh-Hant)</span></a></li><li data-astro-cid-msige7la><a href="/en/" data-astro-reload lang="en" class="flex items-center px-4 py-2 text-sm text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary" data-astro-cid-msige7la><span class="lang-name" data-astro-cid-msige7la>English</span><span class="lang-code" data-astro-cid-msige7la>(en)</span></a></li></ul></details></nav></span></div></header><script type="module">document.addEventListener(`click`,e=>{let t=e.target?.closest?.(`.nav-mobile-menu`);document.querySelectorAll(`.nav-mobile-menu[open]`).forEach(e=>{t?.contains(e)||e.removeAttribute(`open`)})});var e=document.querySelector(`.site-logo`),t=document.querySelector(`.post-meta-divider`);if(e&&t&&e.querySelector(`.site-logo-title`)){let n=window.matchMedia(`(max-width: 639px)`),r=()=>{if(!n.matches){e.removeAttribute(`data-title-swap`);return}let r=document.querySelector(`.site-header-root`)?.getBoundingClientRect().bottom??57;e.toggleAttribute(`data-title-swap`,t.getBoundingClientRect().top<r)};window.addEventListener(`scroll`,r,{passive:!0}),n.addEventListener(`change`,r),window.addEventListener(`toc-realign`,r),r()}</script><main class="flex flex-1 flex-col"><div class="page-container home w-full"><div class="paper-list"><!-- Hero:头像 + 自我介绍(与列表同纸片,统一) --><div class="paper-list-hero"><img src="/avatar.png" alt="羽皓的頭像" width="112" height="112" draggable="false" class="h-28 w-28 rounded-full border border-border object-cover shadow-md" style="background-color: var(--article-bg-soft)"><h1 class="mt-4 text-xl font-bold tracking-tight text-text-secondary sm:text-2xl">你好，我是羽皓。</h1><p class="hero-slogan mt-2.5 text-2xl font-semibold text-brand sm:text-3xl">寫程式，也寫程式之外的世界！</p><p class="mt-3 max-w-md leading-relaxed text-text-secondary">程式設計師。技術是主線，生活是副本。寫分享、評測、日誌，也寫愛好、遊戲和影音。</p><p class="hero-note mt-2.5 text-sm italic text-text-secondary">長期更新，少講正確的廢話。</p><div class="mt-4 flex flex-wrap items-center justify-center gap-2"><a href="/zh-hant/about/" class="inline-flex items-center gap-2 rounded-full border border-border bg-(--article-bg-soft) px-4 py-1.5 text-sm text-text-secondary transition-colors hover:border-brand hover:text-brand"><svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>關於我</a><a href="https://github.com/luoyuhao0x58" rel="me noopener noreferrer" target="_blank" class="inline-flex items-center gap-2 rounded-full border border-border bg-(--article-bg-soft) px-4 py-1.5 text-sm text-text-secondary transition-colors hover:border-brand hover:text-brand"><svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"></path></svg>GitHub</a><a id="hero-email-link" href="#" class="inline-flex items-center gap-2 rounded-full border border-border bg-(--article-bg-soft) px-4 py-1.5 text-sm text-text-secondary transition-colors hover:border-brand hover:text-brand" data-email-b64="bHVveXVoYW9Ab3BjLm5ldHRpeC50b3A=" aria-label="Email LUO YUHAO"><svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="16" x="2" y="4" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg>Email</a></div></div><!-- 内容分区(可扩展):此处可继续追加相册/播客/漫画等分区 --><div class="paper-list-head"><h2>最新文章</h2></div><div class="paper-list-body"><ul class="paper-list-rows"><li class="py-2.5"><a href="/zh-hant/posts/why-independent-blogging-in-2026/" class="group flex items-start gap-4"><!-- 左:标题 + 描述(衬线,浅色小字) --><div class="min-w-0 flex-1"><h3 class="text-xl font-semibold text-brand transition-colors hover:underline hover:decoration-brand hover:underline-offset-4" style="letter-spacing: -0.01em">為什麼 2026 年還值得寫獨立博客？</h3><p class="mt-1.5 text-[15px] font-light leading-normal text-text-secondary" style="font-family: var(--font-serif)">2026 年，還值得自己搭博客、寫長文嗎？本文聊聊獨立博客的價值與平台寫作的問題，也是「從零搭建我的博客」專欄的開篇。</p></div><!-- 右:正方形日历块。宽 = 上方"月|年"行(月 2 位 + 竖线 + 年 4 位)决定,高 = 宽。
+         月/年/日各自固定宽度格子(text-xs 下 2ch/4ch,日期 2xl 下 2ch)内水平垂直居中。
+         月/年背景两档深浅不同(月 --code-bg / 年 --code-gutter-bg);日期区 = 45° 方形斜纹(线色同边框)。
+         data-tz-cal = 发布时间 UTC ISO(与正文 time-localize 同机制:SSR 兑底东八区,
+         客户端按浏览器时区重算月/年/日/星期并同步背景色与文字色)。 --><div class="aspect-square w-max shrink-0 overflow-hidden rounded-lg border border-border flex flex-col" data-tz-cal="2026-10-06T08:13:05.000Z"><div class="flex items-stretch border-b border-border text-xs tabular-nums text-text-muted"><span data-cal-month class="w-[calc(2ch+0.5rem)] py-0.5 ps-1 text-center" style="background-color: var(--cal-month-10)">10</span><span class="w-px bg-border" aria-hidden="true"></span><span data-cal-year class="w-[calc(4ch+0.5rem)] py-0.5 pe-1 text-center" style="background-color: var(--cal-year-2)">2026</span></div><div class="flex flex-1 items-center justify-center" style="background-color: var(--cal-day-bg); background-image: repeating-linear-gradient(45deg, var(--border) 0 1px, transparent 1px 6px)"><span data-cal-day class="w-[calc(2ch+0.5rem)] py-0.5 text-center text-2xl font-semibold tabular-nums leading-tight" style="color: var(--cal-tue)">6</span></div></div></a></li></ul></div></div></div></main><footer class="select-none border-t border-border" data-astro-transition-persist="site-footer" data-astro-cid-jo6i4kqk><div class="mx-auto flex w-full max-w-6xl items-center justify-center px-4 py-6 text-sm text-text-muted" style="font-family: var(--font-nav)" data-astro-cid-jo6i4kqk><span class="relative min-w-0 text-center" data-astro-cid-jo6i4kqk><span class="absolute right-full top-1/2 -translate-y-1/2 me-2" data-astro-cid-jo6i4kqk><button id="theme-toggle" type="button" data-theme-state="auto" data-label-light="白天" data-label-dark="黑夜" data-label-auto="自動" class="group relative inline-flex cursor-pointer items-center rounded-full p-1.5 text-text-muted transition-colors hover:bg-surface-alt hover:text-text-primary" aria-label="切換主題"><svg class="icon-light h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path></svg><svg class="icon-dark h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg><svg class="icon-auto h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8a2.83 2.83 0 0 0 4 4 4 4 0 1 1-4-4"></path><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path><path d="M14 12a4 4 0 0 1-4 4"></path><path d="M16 8h5"></path><path d="M19 5v5"></path></svg><span data-theme-label role="tooltip" class="pointer-events-none absolute bottom-[calc(100%+6px)] left-1/2 -translate-x-1/2 rounded-md border border-border bg-surface-raised px-2 py-1 text-xs whitespace-nowrap text-text-secondary opacity-0 invisible shadow-md transition-opacity duration-150 group-hover:visible group-hover:opacity-100">自動</span></button></span><span class="whitespace-nowrap" data-astro-cid-jo6i4kqk>© 2026 LUO YUHAO.</span> <wbr data-astro-cid-jo6i4kqk> <span class="footer-copy-part2 whitespace-nowrap" data-astro-cid-jo6i4kqk>All rights reserved.</span></span></div></footer><div id="scroll-indicator" data-astro-transition-persist="scroll-indicator" aria-hidden="true" data-astro-cid-dsc4ywic><div class="scroll-thumb" data-astro-cid-dsc4ywic></div></div><script type="module">(function(){if(window.__scrollIndicatorBound__)return;window.__scrollIndicatorBound__=!0;let e=()=>document.getElementById(`scroll-indicator`),t=()=>e()?e().querySelector(`.scroll-thumb`):null,n=null;function r(){let r=e(),i=t();if(!r||!i)return;let a=document.documentElement,o=a.scrollHeight-a.clientHeight;if(o<=0){r.classList.remove(`is-scrolling`);return}let s=a.scrollTop/o,c=Math.max(a.clientHeight/a.scrollHeight*100,6);i.style.height=`${c}%`,i.style.top=`${s*(100-c)}%`,r.classList.add(`is-scrolling`),n&&clearTimeout(n),n=setTimeout(()=>{let t=e();t&&t.classList.remove(`is-scrolling`)},700)}window.addEventListener(`scroll`,r,{passive:!0}),document.addEventListener(`astro:page-load`,r),r();let i=!1,a=0,o=0;document.addEventListener(`pointerdown`,r=>{if(r.button!==0)return;let s=t();if(!s||!r.target||r.target!==s&&!s.contains(r.target))return;let c=document.documentElement;if(c.scrollHeight-c.clientHeight<=0)return;i=!0,a=r.clientY,o=c.scrollTop,c.style.scrollBehavior=`auto`;let l=e();l&&(l.classList.add(`is-scrolling`),n&&clearTimeout(n)),s.setPointerCapture(r.pointerId),r.preventDefault()}),document.addEventListener(`pointermove`,e=>{if(!i)return;let n=document.documentElement,r=n.scrollHeight-n.clientHeight;if(r<=0){i=!1;return}let s=t();if(!s)return;let c=n.clientHeight-s.getBoundingClientRect().height,l=e.clientY-a;n.scrollTop=o+l/c*r});let s=()=>{i&&(i=!1,document.documentElement.style.scrollBehavior=``)};document.addEventListener(`pointerup`,s),document.addEventListener(`pointercancel`,s)})();</script><script type="module" src="/_astro/BaseLayout.astro_astro_type_script_index_0_lang.BNGj8V5h.js"></script><script type="module" async src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon="{&quot;token&quot;: &quot;7d01869ba16c4b3b9d38bc15798c528b&quot;}"></script></body></html><script type="module" src="/_astro/index.astro_astro_type_script_index_0_lang.CH0un9BM.js"></script>

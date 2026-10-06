@@ -10,19 +10,49 @@
     <loc>https://luoyuhao.nettix.top/zh/category/</loc>
   </url>
   <url>
-    <loc>https://luoyuhao.nettix.top/zh/category/tech/</loc>
-  </url>
-  <url>
-    <loc>https://luoyuhao.nettix.top/zh/category/journal/</loc>
+    <loc>https://luoyuhao.nettix.top/zh/category/programmer/</loc>
   </url>
   <url>
     <loc>https://luoyuhao.nettix.top/zh/series/</loc>
   </url>
   <url>
+    <loc>https://luoyuhao.nettix.top/zh/series/building-my-blog-from-scratch/</loc>
+  </url>
+  <url>
     <loc>https://luoyuhao.nettix.top/zh/tags/</loc>
   </url>
   <url>
+    <loc>https://luoyuhao.nettix.top/zh/tags/blog/</loc>
+  </url>
+  <url>
     <loc>https://luoyuhao.nettix.top/zh/about/</loc>
+  </url>
+  <url>
+    <loc>https://luoyuhao.nettix.top/zh-hant/</loc>
+  </url>
+  <url>
+    <loc>https://luoyuhao.nettix.top/zh-hant/posts/</loc>
+  </url>
+  <url>
+    <loc>https://luoyuhao.nettix.top/zh-hant/category/</loc>
+  </url>
+  <url>
+    <loc>https://luoyuhao.nettix.top/zh-hant/category/programmer/</loc>
+  </url>
+  <url>
+    <loc>https://luoyuhao.nettix.top/zh-hant/series/</loc>
+  </url>
+  <url>
+    <loc>https://luoyuhao.nettix.top/zh-hant/series/building-my-blog-from-scratch/</loc>
+  </url>
+  <url>
+    <loc>https://luoyuhao.nettix.top/zh-hant/tags/</loc>
+  </url>
+  <url>
+    <loc>https://luoyuhao.nettix.top/zh-hant/tags/blog/</loc>
+  </url>
+  <url>
+    <loc>https://luoyuhao.nettix.top/zh-hant/about/</loc>
   </url>
   <url>
     <loc>https://luoyuhao.nettix.top/en/</loc>
@@ -34,18 +64,33 @@
     <loc>https://luoyuhao.nettix.top/en/category/</loc>
   </url>
   <url>
-    <loc>https://luoyuhao.nettix.top/en/category/tech/</loc>
-  </url>
-  <url>
-    <loc>https://luoyuhao.nettix.top/en/category/journal/</loc>
+    <loc>https://luoyuhao.nettix.top/en/category/programmer/</loc>
   </url>
   <url>
     <loc>https://luoyuhao.nettix.top/en/series/</loc>
   </url>
   <url>
+    <loc>https://luoyuhao.nettix.top/en/series/building-my-blog-from-scratch/</loc>
+  </url>
+  <url>
     <loc>https://luoyuhao.nettix.top/en/tags/</loc>
   </url>
   <url>
+    <loc>https://luoyuhao.nettix.top/en/tags/blog/</loc>
+  </url>
+  <url>
     <loc>https://luoyuhao.nettix.top/en/about/</loc>
+  </url>
+  <url>
+    <loc>https://luoyuhao.nettix.top/en/posts/why-independent-blogging-in-2026/</loc>
+    <lastmod>2026-10-06</lastmod>
+  </url>
+  <url>
+    <loc>https://luoyuhao.nettix.top/zh-hant/posts/why-independent-blogging-in-2026/</loc>
+    <lastmod>2026-10-06</lastmod>
+  </url>
+  <url>
+    <loc>https://luoyuhao.nettix.top/zh/posts/why-independent-blogging-in-2026/</loc>
+    <lastmod>2026-10-06</lastmod>
   </url>
 </urlset>
