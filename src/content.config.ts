@@ -18,11 +18,13 @@ const dateWithTz = z.preprocess(
 
 const posts = defineCollection({
   loader: glob({
-    pattern: ["**/[^_]*.md", "!bak/**"],
+    pattern: ["**/[^_]*.md"],
     base: "./src/content/posts",
   }),
   schema: z.object({
     title: z.string(),
+    /** 显式 slug:URL 用(可选);缺省时由 id 派生(post.id.split("/")[1]),子目录文章必须显式提供以免碰撞 */
+    slug: z.string().optional(),
     pubDate: dateWithTz,
     /** 最后修改时间(可选):展示规则待定,仅预留字段 */
     updated: dateWithTz.optional(),
@@ -44,8 +46,6 @@ const posts = defineCollection({
         }
       }),
     lang: langEnum,
-    /** 互译关联:另一语言文章的集合 id,如 "zh/hello-world" */
-    translationOf: z.string().optional(),
     image: z
       .object({
         url: z.string(),
@@ -123,22 +123,6 @@ const about = defineCollection({
         })
       )
       .default([]),
-    /** 社交账号 */
-    socials: z
-      .array(
-        z.object({
-          label: z.string(),
-          url: z.string(),
-        }),
-      )
-      .default([]),
-    /** 豆瓣书影音入口 */
-    douban: z
-      .object({
-        label: z.string(),
-        url: z.string(),
-      })
-      .optional(),
     /** 经历时间线(倒序:最新在前;职业+教育经历) */
     timeline: z
       .array(

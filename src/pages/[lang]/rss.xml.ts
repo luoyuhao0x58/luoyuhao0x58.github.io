@@ -3,6 +3,7 @@ import { getCollection } from "astro:content";
 import type { APIRoute } from "astro";
 import { codeFromPath, langPath, t } from "../../i18n";
 import { getActiveLangs } from "../../lib/active-langs";
+import { postSlug } from "../../lib/posts";
 
 /** 每语言一个 RSS feed:/[lang]/rss.xml(仅活跃语言 zh/zh-Hant/en,自动跟随 posts)。 */
 export async function getStaticPaths() {
@@ -25,7 +26,7 @@ export const GET: APIRoute = async (context) => {
     // 每篇文章一条 item:日期(@astrojs/rss 自动转 RFC 822)、描述、链接;
     // tags 输出为 RSS 标准 <category> 元素,便于阅读器分类
     items: posts.map((post) => {
-      const slug = post.id.split("/")[1];
+      const slug = postSlug(post);
       const tags = post.data.tags ?? [];
       return {
         title: post.data.title,

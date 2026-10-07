@@ -14,6 +14,22 @@ import { fileURLToPath } from "node:url";
 import path from "node:path";
 
 const projectRoot = fileURLToPath(new URL("../", import.meta.url));
+// 规范化去掉尾部路径分隔符,保证前缀比较(projectRoot + path.sep)在 Windows
+// 上不会出现双分隔符误判。
+const rootDir = path.resolve(projectRoot);
+
+// 静态服务只允许读取 projectRoot 内的文件(与 rehype-mermaid-ssr.mjs 相同的
+// 路径遍历防护):path.resolve 把 ../ 归一化后断言结果仍在 rootDir 内,
+// 越权路径(如 /../../../../etc/passwd)返回 null → 404。
+function resolveInsideRoot(pathname) {
+  // 前导 "." 把以 "/" 开头的 URL 路径转成相对路径,避免 path.resolve 当作
+  // 绝对路径重置到文件系统根(丢掉 projectRoot)。
+  const filePath = path.resolve(rootDir, "." + decodeURIComponent(pathname));
+  if (filePath !== rootDir && !filePath.startsWith(rootDir + path.sep)) {
+    return null;
+  }
+  return filePath;
+}
 
 const server = createServer((req, res) => {
   const u = new URL(req.url, "http://127.0.0.1");
@@ -23,8 +39,14 @@ const server = createServer((req, res) => {
     return;
   }
   try {
+    const filePath = resolveInsideRoot(u.pathname);
+    if (filePath === null) {
+      res.statusCode = 404;
+      res.end();
+      return;
+    }
     res.setHeader("Content-Type", "text/javascript");
-    res.end(readFileSync(path.join(projectRoot, decodeURIComponent(u.pathname))));
+    res.end(readFileSync(filePath));
   } catch {
     res.statusCode = 404;
     res.end();
@@ -131,15 +153,19 @@ server.listen(0, "127.0.0.1", async () => {
   const wheelKeys = Array.from({ length: 8 }, (_, i) => [`actor${i}Fill`, `actor${i}Stroke`]).flat();
   const keys = [...baseKeys, ...wheelKeys];
 
+  // 深色值单源:--mmd-dark-* 变量组定义一次,:root[data-theme="dark"] 与
+  // @media(prefers-color-scheme: dark) 两分支共同引用,不再逐字复制。
   let css = `/* 自动生成:scripts/extract-mermaid-palette.mjs 从 mermaid redux 主题渲染结果
  * 提取实际渲染色(用户所见),勿手改。svg 以 base 主题渲染,mermaid.css 用变量覆盖。
  * actor 色轮:redux 官方时序 actor 多彩分配,插件按 name 编 data-mmd-actor 序号。 */
 :root {\n`;
   for (const k of keys) css += `  --mmd-${k}: ${palette["redux-color"][k]};\n`;
+  css += `\n  /* 深色值单源(--mmd-dark-* 变量组):auto/manual 两分支共同引用 */\n`;
+  for (const k of keys) css += `  --mmd-dark-${k}: ${palette["redux-dark-color"][k]};\n`;
   css += `}\n\n:root[data-theme="dark"] {\n`;
-  for (const k of keys) css += `  --mmd-${k}: ${palette["redux-dark-color"][k]};\n`;
-  css += `}\n\n@media (prefers-color-scheme: dark) {\n  :root:not([data-theme="light"]) {\n`;
-  for (const k of keys) css += `    --mmd-${k}: ${palette["redux-dark-color"][k]};\n`;
+  for (const k of keys) css += `  --mmd-${k}: var(--mmd-dark-${k});\n`;
+  css += `}\n\n@media (prefers-color-scheme: dark) {\n  :root:not([data-theme="light"]):not([data-theme="dark"]) {\n`;
+  for (const k of keys) css += `    --mmd-${k}: var(--mmd-dark-${k});\n`;
   css += `  }\n}\n`;
 
   writeFileSync(path.join(projectRoot, "src/styles/mermaid-palette.css"), css);

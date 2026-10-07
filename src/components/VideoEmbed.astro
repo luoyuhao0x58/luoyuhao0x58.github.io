@@ -7,17 +7,24 @@ interface Props {
   youtube?: string;
 }
 const { lang, bilibili, youtube } = Astro.props;
-const hasBoth = Boolean(bilibili && youtube);
+
+// 视频 id 白名单:只允许 URL 安全字符(字母/数字/`-`/`_`),不匹配则拒绝渲染。
+// 服务端在拼 URL 前显式校验,客户端另有 URL 形态白名单兜底(见下方脚本)。
+const VIDEO_ID_RE = /^[A-Za-z0-9_-]+$/;
+const safeBilibili = bilibili && VIDEO_ID_RE.test(bilibili) ? bilibili : "";
+const safeYoutube = youtube && VIDEO_ID_RE.test(youtube) ? youtube : "";
+
+const hasBoth = Boolean(safeBilibili && safeYoutube);
 
 // 单平台:服务端直接渲染静态 iframe(无 JS 也可观看)
-const bilibiliEmbed = bilibili
-  ? `https://player.bilibili.com/player.html?bvid=${encodeURIComponent(bilibili)}&page=1`
+const bilibiliEmbed = safeBilibili
+  ? `https://player.bilibili.com/player.html?bvid=${encodeURIComponent(safeBilibili)}&page=1`
   : "";
-const youtubeEmbed = youtube
-  ? `https://www.youtube.com/embed/${encodeURIComponent(youtube)}`
+const youtubeEmbed = safeYoutube
+  ? `https://www.youtube.com/embed/${encodeURIComponent(safeYoutube)}`
   : "";
-const bilibiliLink = bilibili ? `https://www.bilibili.com/video/${bilibili}` : "";
-const youtubeLink = youtube ? `https://www.youtube.com/watch?v=${youtube}` : "";
+const bilibiliLink = safeBilibili ? `https://www.bilibili.com/video/${safeBilibili}` : "";
+const youtubeLink = safeYoutube ? `https://www.youtube.com/watch?v=${safeYoutube}` : "";
 
 const iframeAttrs = {
   class: "h-full w-full",
@@ -25,15 +32,15 @@ const iframeAttrs = {
   allow: "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share",
   allowfullscreen: true,
   referrerpolicy: "strict-origin-when-cross-origin",
-  title: youtube ? "YouTube video player" : "bilibili video player",
-};
+  title: safeYoutube ? "YouTube video player" : "bilibili video player",
+} as const;
 ---
 
 <div class="video-embed my-6">
   {!hasBoth && (
     <div class="aspect-video w-full overflow-hidden border border-border bg-surface-raised">
-      {bilibili && <iframe src={bilibiliEmbed} {...iframeAttrs}></iframe>}
-      {youtube && <iframe src={youtubeEmbed} {...iframeAttrs}></iframe>}
+      {safeBilibili && <iframe src={bilibiliEmbed} {...iframeAttrs}></iframe>}
+      {safeYoutube && <iframe src={youtubeEmbed} {...iframeAttrs}></iframe>}
     </div>
   )}
 
@@ -58,7 +65,7 @@ const iframeAttrs = {
       class="mt-3 flex items-center justify-center gap-2"
       aria-label={t(lang, "videoSwitchAria")}
     >
-      {bilibili && (
+      {safeBilibili && (
         <button
           type="button"
           data-platform="bilibili"
@@ -68,7 +75,7 @@ const iframeAttrs = {
           B站
         </button>
       )}
-      {youtube && (
+      {safeYoutube && (
         <button
           type="button"
           data-platform="youtube"
@@ -83,7 +90,7 @@ const iframeAttrs = {
 
   {/* 无 JS 回退:两个平台的文字链接,始终渲染 */}
   <div class="mt-3 flex flex-wrap items-center justify-center gap-3 text-sm">
-    {bilibili && (
+    {safeBilibili && (
       <a
         href={bilibiliLink}
         target="_blank"
@@ -93,7 +100,7 @@ const iframeAttrs = {
         {t(lang, "videoLabelBilibili")}
       </a>
     )}
-    {youtube && (
+    {safeYoutube && (
       <a
         href={youtubeLink}
         target="_blank"
@@ -107,8 +114,13 @@ const iframeAttrs = {
 </div>
 
 <script>
+  // window 单次注册标记:View Transitions 导航后模块脚本可能重新执行,
+  // 重复 addEventListener 会累积监听器;仅首次导航时绑定一次。
   // 双平台分流:按访问者环境默认选平台,手动选择用 localStorage 记忆并优先。
   (function () {
+    if (window.__videoEmbedBound__) return;
+    window.__videoEmbedBound__ = true;
+
     const KEY = "nettix-video-platform";
 
     function defaultPlatform(): "bilibili" | "youtube" {
@@ -128,8 +140,26 @@ const iframeAttrs = {
       return lang.startsWith("zh") || tz.startsWith("Asia/") ? "bilibili" : "youtube";
     }
 
-    function frameHtml(url: string): string {
-      return `<iframe src="${url}" class="h-full w-full" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" title="video player"></iframe>`;
+    // 客户端只接受服务端校验通过后拼好的固定 URL 形态(白名单正则,内含
+    // id 字符集约束),任何不匹配的 URL 直接拒绝渲染,不进入 DOM。
+    const PLATFORM_URL_RE: Record<string, RegExp> = {
+      bilibili: /^https:\/\/player\.bilibili\.com\/player\.html\?bvid=[A-Za-z0-9_-]+&page=1$/,
+      youtube: /^https:\/\/www\.youtube\.com\/embed\/[A-Za-z0-9_-]+$/,
+    };
+
+    // 用 createElement + 属性赋值构建 iframe(不走 innerHTML 字符串拼接,
+    // src 只作为属性写入,天然免疫 HTML 注入)。
+    function frameFromUrl(url: string): HTMLIFrameElement {
+      const frame = document.createElement("iframe");
+      frame.src = url;
+      frame.className = "h-full w-full";
+      frame.loading = "lazy";
+      frame.allow =
+        "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+      frame.allowFullscreen = true;
+      frame.referrerPolicy = "strict-origin-when-cross-origin";
+      frame.title = "video player";
+      return frame;
     }
 
     function syncSwitcher(root: HTMLElement, platform: string) {
@@ -147,7 +177,9 @@ const iframeAttrs = {
     function renderPlatform(root: HTMLElement, platform: string) {
       const player = root.querySelector<HTMLElement>("[data-video-player]");
       const url = root.dataset[platform];
-      if (player && url) player.innerHTML = frameHtml(url);
+      const allow = PLATFORM_URL_RE[platform];
+      if (!player || !url || !allow || !allow.test(url)) return; // 拒绝非法 id/URL
+      player.replaceChildren(frameFromUrl(url));
       syncSwitcher(root, platform);
     }
 

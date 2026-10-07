@@ -1,4 +1,5 @@
-# 博客自动部署:构建一次 → 先推 gh-pages,再经 API/CLI 推送各平台
+# 博客部署(仅手动触发 workflow_dispatch,无 push/定时/路径过滤触发):
+# 构建一次 → 先推 gh-pages,再经 API/CLI 推送各平台
 #
 # 模型 A(构建一次、多端同字节):GitHub Actions 构建 → 上传 dist 产物 →
 #   1. 推 gh-pages 分支(供 GitHub Pages)
@@ -7,10 +8,13 @@
 #
 # 所需 Secrets(仓库 Settings → Secrets and variables → Actions):
 #   Cloudflare: CLOUDFLARE_API_TOKEN(wrangler Pages:Edit)、CLOUDFLARE_ACCOUNT_ID
-#   EdgeOne:    EDGEONE_API_TOKEN(EdgeOne Makers 控制台生成)
+#               Pages 项目名固定为 luoyuhao0x58(pages deploy --project-name luoyuhao0x58)
+#   EdgeOne:    EDGEONE_API_TOKEN(EdgeOne Makers 控制台生成);Makers 项目名 luoyuhao0x58
 #   Vercel:     VERCEL_TOKEN、VERCEL_ORG_ID、VERCEL_PROJECT_ID
 #   Netlify:    NETLIFY_AUTH_TOKEN、NETLIFY_SITE_ID
-#   GitHub Pages 用内置 GITHUB_TOKEN,无需配置。
+#   GitHub Pages:实际使用自定义 GH_TOKEN secret(peaceiris/actions-gh-pages 推 gh-pages
+#               分支用,**不是**内置 GITHUB_TOKEN)。GH_TOKEN 需在仓库 Secrets 配置,
+#               建议用 fine-grained PAT(仓库 Contents:write 权限)。
 # 未配置 secret 的平台会自动跳过。
 
 name: Deploy
@@ -18,7 +22,7 @@ name: Deploy
 on:
   workflow_dispatch:
 
-# 串行发布:新 push 会排队,避免部署互相覆盖
+# 串行发布:手动触发的新任务会排队,避免部署互相覆盖
 concurrency:
   group: deploy
   cancel-in-progress: false

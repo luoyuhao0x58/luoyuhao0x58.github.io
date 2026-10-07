@@ -19,7 +19,7 @@
       '.astro-code[data-language]:not([data-language="plaintext"]):not([data-language="mermaid"])';
 
     function enhance() {
-      document.querySelectorAll(selector).forEach((pre) => {
+      document.querySelectorAll<HTMLElement>(selector).forEach((pre) => {
         if (pre.dataset.codeBlockDone || pre.closest(".code-block")) return;
         pre.dataset.codeBlockDone = "1";
 
@@ -29,7 +29,7 @@
         // 移除 span.line 之间的换行文本节点:行块级化后 white-space:pre 会生成空行
         if (code) {
           [...code.childNodes].forEach((n) => {
-            if (n.nodeType === Node.TEXT_NODE && !n.textContent.trim()) {
+            if (n.nodeType === Node.TEXT_NODE && !n.textContent?.trim()) {
               n.remove();
             }
           });
@@ -63,11 +63,11 @@
         const gutter = document.createElement("div");
         gutter.className = "code-block-gutter";
         gutter.setAttribute("aria-hidden", "true");
-        const gutterLines = [];
+        const gutterLines: Element[] = [];
         for (let i = 1; i <= lines.length; i++) {
           const ln = document.createElement("span");
           ln.className = "code-block-gutter-line";
-          ln.textContent = i;
+          ln.textContent = String(i);
           gutter.appendChild(ln);
           gutterLines.push(ln);
         }
@@ -108,7 +108,7 @@
         label.addEventListener("click", copy);
 
         // 组装:block > (head + scroll(gutter + pre))
-        pre.parentNode.insertBefore(block, pre);
+        pre.parentElement?.insertBefore(block, pre);
         block.appendChild(head);
         block.appendChild(scroll);
         scroll.appendChild(gutter);
@@ -117,12 +117,13 @@
         // hover 联动:代码行 ↔ 行号行同步高亮。
         // 单一高亮模式:mouseover 先清空再加当前行,鼠标移出所有行区域时清空,
         // 避免行间移动时残留旧高亮。
-        const lineIndex = (el) => {
-          const l = el && el.closest && el.closest(".line");
+        const lineIndex = (el: EventTarget | null) => {
+          const l = el instanceof Element && el.closest(".line");
           return l ? lines.indexOf(l) : -1;
         };
-        const gutterIndex = (el) => {
-          const g = el && el.closest && el.closest(".code-block-gutter-line");
+        const gutterIndex = (el: EventTarget | null) => {
+          const g =
+            el instanceof Element && el.closest(".code-block-gutter-line");
           return g ? gutterLines.indexOf(g) : -1;
         };
         const clearAll = () => {
@@ -142,8 +143,7 @@
         scroll.addEventListener("mouseout", (e) => {
           const rel = e.relatedTarget;
           const inRow =
-            rel &&
-            rel.closest &&
+            rel instanceof Element &&
             (rel.closest(".line") || rel.closest(".code-block-gutter-line"));
           if (!inRow) clearAll();
         });

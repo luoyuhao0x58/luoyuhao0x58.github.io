@@ -1,0 +1,34 @@
+---
+// 关于页"联系我"区块(放文章末尾;GitHub/Email,交互与首页 hero 区一致;Email 在前)。
+// 结构/文案与拆分前完全一致。
+import { t } from "../../i18n";
+import EmailLink from "../EmailLink.astro";
+import GitHub from "../icons/GitHub.astro";
+import { chipClass } from "../../lib/chip-class";
+import { SITE } from "../../lib/site";
+
+interface Props {
+  lang: string;
+}
+const { lang } = Astro.props;
+---
+
+<section class="about-section mt-10">
+  <h2>{t(lang, "socialsTitle")}</h2>
+  <ul class="mt-4 flex flex-wrap gap-2">
+    <li>
+      <EmailLink id="about-email-link" />
+    </li>
+    <li>
+      <a
+        href={SITE.githubUrl}
+        rel="me noopener noreferrer"
+        target="_blank"
+        class={chipClass}
+      >
+        <GitHub class="h-4 w-4" />
+        GitHub
+      </a>
+    </li>
+  </ul>
+</section>

@@ -3,6 +3,7 @@ import { getCollection, render } from "astro:content";
 import MarkdownPostLayout from "../../../layouts/MarkdownPostLayout.astro";
 import { langPath } from "../../../i18n";
 import type { Locale } from "../../../i18n";
+import { postSlug } from "../../../lib/posts";
 
 export async function getStaticPaths() {
   const posts = await getCollection("posts");
@@ -10,21 +11,25 @@ export async function getStaticPaths() {
   // so the language switcher can link to exact translated articles when they exist.
   const availableBySlug = new Map<string, Set<Locale>>();
   for (const post of posts) {
-    const slug = post.id.split("/")[1];
+    const slug = postSlug(post);
     const langsWithSlug = availableBySlug.get(slug) ?? new Set<Locale>();
     langsWithSlug.add(post.data.lang as Locale);
     availableBySlug.set(slug, langsWithSlug);
   }
-  return posts.map((post) => ({
-    params: { lang: langPath(post.data.lang), slug: post.id.split("/")[1] },
-    props: {
-      post,
-      availableIn: availableBySlug.get(post.id.split("/")[1]) ?? new Set<Locale>(),
-    },
-  }));
+  return posts.map((post) => {
+    const slug = postSlug(post);
+    return {
+      params: { lang: langPath(post.data.lang), slug },
+      props: {
+        post,
+        slug,
+        availableIn: availableBySlug.get(slug) ?? new Set<Locale>(),
+      },
+    };
+  });
 }
 
-const { post, availableIn } = Astro.props;
+const { post, slug, availableIn } = Astro.props;
 const { Content, headings } = await render(post);
 ---
 
@@ -40,7 +45,7 @@ const { Content, headings } = await render(post);
   image={post.data.image}
   lang={post.data.lang}
   headings={headings}
-  slug={post.id.split("/")[1]}
+  slug={slug}
   availableIn={availableIn}
   video={post.data.video}
 >

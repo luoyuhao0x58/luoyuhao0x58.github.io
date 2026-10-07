@@ -3,7 +3,6 @@ title: "為什麼 2026 年還值得寫獨立博客？"
 pubDate: "2026-10-06T16:13:05+08:00"
 description: "2026 年，還值得自己搭博客、寫長文嗎？本文聊聊獨立博客的價值與平台寫作的問題，也是「從零搭建我的博客」專欄的開篇。"
 lang: zh-Hant
-translationOf: zh/why-independent-blogging-in-2026
 series: building-my-blog-from-scratch
 tags: ["blog"]
 # 需要打標籤時：先在 src/taxonomy.ts 的 tagLabels 補 key 及各語言文案，再寫 tags，否則構建會報錯

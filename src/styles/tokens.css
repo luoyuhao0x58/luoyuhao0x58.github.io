@@ -137,7 +137,6 @@
   --logo-shadow-lo: rgb(0 0 0 / 0.16);
   --text-secondary: rgb(0 0 0 / 0.65);
   --text-muted: rgb(0 0 0 / 0.45);
-  --text-inverse: #f2f2f2;
 
   /* 发丝线:半透明自适应(浅=黑线, 深=白线, α 全站统一) */
   --border: rgb(0 0 0 / 0.14);
@@ -152,15 +151,12 @@
   /* 品牌:深邃蓝 */
   --brand: #065279;
   --brand-contrast: #ffffff;
-  --brand-subtle: #4994c4;
 
   /* 强调:朱印 */
   --accent: #b3452f;
 
   /* 行动:苔绿 */
   --action: #2f6b4f;
-  --action-hover: #255744;
-  --action-contrast: #f2f2f2;
 
   /* 代码:浅纸底(比纸面深一档,协调区分;靠发丝线+底色双重标识) */
   --code-bg: #e6e6e6;
@@ -216,101 +212,166 @@
   }
 }
 
+/* ================= 深色主题值单源(--dark-* 变量组) =================
+ * 深色语义值只在下方 --dark-* 组定义一次;自动模式
+ * (@media prefers-color-scheme)与手动模式(:root[data-theme="dark"])
+ * 两个分支共同引用,杜绝逐字复制。--dark-* 仅在深色分支中被消费。 */
+:root {
+  /* 中性灰底 + 黑板灰纸张(整站色相统一中性) */
+  --dark-surface: #333333;
+  --dark-surface-alt: #222222;
+  --dark-toc-hover: #3a3a3a; /* 目录悬浮背景:比纸片(242424)亮一档,深色下可辨 */
+  --dark-surface-raised: #242424;
+
+  /* 区域纹理:深色用白点(人眼对深底亮粒敏感,alpha 略低) */
+  --dark-texture-grain: rgb(255 255 255 / 0.02);
+  --dark-texture-nav-start: color-mix(in srgb, var(--dark-surface) 96%, #000);
+  --dark-texture-line: rgb(255 255 255 / 0.04);
+  --dark-nav-shadow: rgb(0 0 0 / 0.28); /* 深底上黑影要更浓才可辨(0.42 过重,减弱) */
+  --dark-stone-line: rgb(255 255 255 / 0.02); /* 页脚细纹线色 */
+  --dark-nav-grid-line: rgb(255 255 255 / 0.015); /* 导航格子纹线色 */
+  --dark-paper-line: rgb(191 156 70 / 0.04); /* 纸片标题区格线(品牌色 --brand #bf9c46 的浅版) */
+  --dark-weave-line: rgb(191 156 70 / 0.07); /* hero 编织底纹线色(品牌色浅版,用户确认 0.07 浓度(比 0.1 浅,减弱对文字的干扰)) */
+
+  /* 中性近白(无色相,降亮度防刺眼);次要/弱化走 alpha 分级 */
+  --dark-text-primary: #fffbf0;
+  --dark-title-shadow-hi: rgb(255 255 255 / 0.12);
+  --dark-title-shadow-lo: rgb(0 0 0 / 0.4);
+  --dark-logo-shadow-hi: rgb(255 255 255 / 0.12);
+  --dark-logo-shadow-lo: rgb(0 0 0 / 0.45);
+  --dark-text-secondary: rgb(255 255 255 / 0.65);
+  --dark-text-muted: rgb(255 255 255 / 0.45);
+
+  /* 发丝线:半透明自适应(浅=黑线, 深=白线, α 全站统一) */
+  --dark-border: rgb(255 255 255 / 0.14);
+  --dark-border-strong: rgb(255 255 255 / 0.24);
+  /* 引用竖线:灰紫 hsl(265° 12% 65%)——冷调灰紫,与白天暖紫棕冷/暖对立 */
+  --dark-quote-bar: hsl(265 12% 65%);
+  --dark-quote-bg: color-mix(in srgb, var(--dark-quote-bar) 12%, #222222); /* blockquote 背景:同色系深色淡彩(呼应白天) */
+
+  /* 品牌:暗金橄榄(深色下唯一的暖点) */
+  --dark-brand: #bf9c46;
+  --dark-brand-contrast: #181818;
+
+  /* 强调:夜灯琥珀 */
+  --dark-accent: #e0a050;
+
+  /* 行动:夜竹青 */
+  --dark-action: #2fa07c;
+
+  /* 代码:墨黑面板 */
+  --dark-code-bg: #1a1a1a;
+  --dark-code-text: #e6e6e6;
+  --dark-code-border: rgb(255 255 255 / 0.18);
+
+  /* 代码块增强:行号列底色(与代码底 #1a1a1a 相近略亮一档,中性灰),行 hover 强调条
+     (代码块背景统一用 --code-bg,不分语言块/plaintext) */
+  --dark-code-gutter-bg: #161616;
+  --dark-code-line-hover: rgb(255 255 255 / 0.06);
+
+  /* 文章摘要文字色(深蓝白):表格表头背景用 */
+  --dark-summary-fg: #d6ecf0;
+  /* 日历星期色(周一~周日):心情梯度,深色提亮一档 */
+  --dark-cal-mon: #9aa0aa;
+  --dark-cal-tue: #9aa8b8;
+  --dark-cal-wed: #aeb6c0;
+  --dark-cal-thu: #e8b05f;
+  --dark-cal-fri: #f0a85f;
+  --dark-cal-sat: #6fc98a;
+  --dark-cal-sun: #e88ab8;
+  --dark-cal-day-bg: #2d2d2d; /* 暗色提亮,与深色月/年 header 形成对比 */
+  /* 月份格子背景(1-12月):四季色淡化,深色 25% 混纸底 */
+  --dark-cal-month-1: #3e434b;
+  --dark-cal-month-2: #42464c;
+  --dark-cal-month-3: #474d3b;
+  --dark-cal-month-4: #3e483a;
+  --dark-cal-month-5: #3a473a;
+  --dark-cal-month-6: #334742;
+  --dark-cal-month-7: #334747;
+  --dark-cal-month-8: #37474b;
+  --dark-cal-month-9: #534b33;
+  --dark-cal-month-10: #554733;
+  --dark-cal-month-11: #534237;
+  --dark-cal-month-12: #3a424b;
+  /* 年份格子背景:4 色按 year%4 选(余0紫罗兰/余1蓝紫/余2粉紫/余3暖灰),淡化不抢眼 */
+  --dark-cal-year-0: #3e364b;
+  --dark-cal-year-1: #363a4b;
+  --dark-cal-year-2: #473e4b;
+  --dark-cal-year-3: #423e3a;
+
+  /* 阴影:中性灰调 */
+  --dark-ntx-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.5);
+  --dark-ntx-shadow-md: 0 4px 12px rgb(0 0 0 / 0.5);
+  --dark-ntx-shadow-lg: 0 12px 32px rgb(0 0 0 / 0.6);
+}
+
 @media (prefers-color-scheme: dark) {
   /* 自动模式(无 data-theme 或 data-theme="auto")跟随系统;
      手动主题覆盖见下方 :root[data-theme="dark"]。 */
   :root:not([data-theme="light"]):not([data-theme="dark"]) {
     color-scheme: dark;
 
-    /* 中性灰底 + 黑板灰纸张(整站色相统一中性) */
-    --surface: #333333;
-    --surface-alt: #222222;
-    --toc-hover: #3a3a3a; /* 目录悬浮背景:比纸片(242424)亮一档,深色下可辨 */
-    --surface-raised: #242424;
-
-    /* 区域纹理:深色用白点(人眼对深底亮粒敏感,alpha 略低) */
-    --texture-grain: rgb(255 255 255 / 0.02);
-    --texture-nav-start: color-mix(in srgb, var(--surface) 96%, #000);
-    --texture-line: rgb(255 255 255 / 0.04);
-    --nav-shadow: rgb(0 0 0 / 0.28); /* 深底上黑影要更浓才可辨(0.42 过重,减弱) */
-    --stone-line: rgb(255 255 255 / 0.02); /* 页脚细纹线色 */
-    --nav-grid-line: rgb(255 255 255 / 0.015); /* 导航格子纹线色 */
-    --paper-line: rgb(191 156 70 / 0.04); /* 纸片标题区格线(品牌色 --brand #bf9c46 的浅版) */
-    --weave-line: rgb(191 156 70 / 0.07); /* hero 编织底纹线色(品牌色浅版,用户确认 0.07 浓度(比 0.1 浅,减弱对文字的干扰)) */
-
-    /* 中性近白(无色相,降亮度防刺眼);次要/弱化走 alpha 分级 */
-    --text-primary: #fffbf0;
-    --title-shadow-hi: rgb(255 255 255 / 0.12);
-    --title-shadow-lo: rgb(0 0 0 / 0.4);
-    --logo-shadow-hi: rgb(255 255 255 / 0.12);
-    --logo-shadow-lo: rgb(0 0 0 / 0.45);
-    --text-secondary: rgb(255 255 255 / 0.65);
-    --text-muted: rgb(255 255 255 / 0.45);
-    --text-inverse: #181818;
-
-    /* 发丝线:半透明自适应(浅=黑线, 深=白线, α 全站统一) */
-    --border: rgb(255 255 255 / 0.14);
-    --border-strong: rgb(255 255 255 / 0.24);
-    /* 引用竖线:灰紫 hsl(265° 12% 65%)——冷调灰紫,与白天暖紫棕冷/暖对立 */
-    --quote-bar: hsl(265 12% 65%);
-    --quote-bg: color-mix(in srgb, var(--quote-bar) 12%, #222222); /* blockquote 背景:同色系深色淡彩(呼应白天) */
-
-    /* 品牌:暗金橄榄(深色下唯一的暖点) */
-    --brand: #bf9c46;
-    --brand-contrast: #181818;
-    --brand-subtle: #f0c239;
-
-    /* 强调:夜灯琥珀 */
-    --accent: #e0a050;
-
-    /* 行动:夜竹青 */
-    --action: #2fa07c;
-    --action-hover: #3cbb93;
-    --action-contrast: #131313;
-
-    /* 代码:墨黑面板 */
-    --code-bg: #1a1a1a;
-    --code-text: #e6e6e6;
-    --code-border: rgb(255 255 255 / 0.18);
-
-    /* 代码块增强:行号列底色(与代码底 #1a1a1a 相近略亮一档,中性灰),行 hover 强调条
-       (代码块背景统一用 --code-bg,不分语言块/plaintext) */
-    --code-gutter-bg: #161616;
-    --code-line-hover: rgb(255 255 255 / 0.06);
-
-    /* 文章摘要文字色(深蓝白):表格表头背景用 */
-    --summary-fg: #d6ecf0;
-    /* 日历星期色(周一~周日):心情梯度,深色提亮一档 */
-    --cal-mon: #9aa0aa;
-    --cal-tue: #9aa8b8;
-    --cal-wed: #aeb6c0;
-    --cal-thu: #e8b05f;
-    --cal-fri: #f0a85f;
-    --cal-sat: #6fc98a;
-    --cal-sun: #e88ab8;
-      --cal-day-bg: #2d2d2d; /* 暗色提亮,与深色月/年 header 形成对比 */
-    /* 月份格子背景(1-12月):四季色淡化,深色 25% 混纸底 */
-    --cal-month-1: #3e434b;
-    --cal-month-2: #42464c;
-    --cal-month-3: #474d3b;
-    --cal-month-4: #3e483a;
-    --cal-month-5: #3a473a;
-    --cal-month-6: #334742;
-    --cal-month-7: #334747;
-    --cal-month-8: #37474b;
-    --cal-month-9: #534b33;
-    --cal-month-10: #554733;
-    --cal-month-11: #534237;
-    --cal-month-12: #3a424b;
-      /* 年份格子背景:4 色按 year%4 选(余0紫罗兰/余1蓝紫/余2粉紫/余3暖灰),淡化不抢眼 */
-      --cal-year-0: #3e364b;
-      --cal-year-1: #363a4b;
-      --cal-year-2: #473e4b;
-      --cal-year-3: #423e3a;
-
-    --ntx-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.5);
-    --ntx-shadow-md: 0 4px 12px rgb(0 0 0 / 0.5);
-    --ntx-shadow-lg: 0 12px 32px rgb(0 0 0 / 0.6);
+    /* 深色值统一引用上方 --dark-* 单源变量组 */
+    --surface: var(--dark-surface);
+    --surface-alt: var(--dark-surface-alt);
+    --toc-hover: var(--dark-toc-hover);
+    --surface-raised: var(--dark-surface-raised);
+    --texture-grain: var(--dark-texture-grain);
+    --texture-nav-start: var(--dark-texture-nav-start);
+    --texture-line: var(--dark-texture-line);
+    --nav-shadow: var(--dark-nav-shadow);
+    --stone-line: var(--dark-stone-line);
+    --nav-grid-line: var(--dark-nav-grid-line);
+    --paper-line: var(--dark-paper-line);
+    --weave-line: var(--dark-weave-line);
+    --text-primary: var(--dark-text-primary);
+    --title-shadow-hi: var(--dark-title-shadow-hi);
+    --title-shadow-lo: var(--dark-title-shadow-lo);
+    --logo-shadow-hi: var(--dark-logo-shadow-hi);
+    --logo-shadow-lo: var(--dark-logo-shadow-lo);
+    --text-secondary: var(--dark-text-secondary);
+    --text-muted: var(--dark-text-muted);
+    --border: var(--dark-border);
+    --border-strong: var(--dark-border-strong);
+    --quote-bar: var(--dark-quote-bar);
+    --quote-bg: var(--dark-quote-bg);
+    --brand: var(--dark-brand);
+    --brand-contrast: var(--dark-brand-contrast);
+    --accent: var(--dark-accent);
+    --action: var(--dark-action);
+    --code-bg: var(--dark-code-bg);
+    --code-text: var(--dark-code-text);
+    --code-border: var(--dark-code-border);
+    --code-gutter-bg: var(--dark-code-gutter-bg);
+    --code-line-hover: var(--dark-code-line-hover);
+    --summary-fg: var(--dark-summary-fg);
+    --cal-mon: var(--dark-cal-mon);
+    --cal-tue: var(--dark-cal-tue);
+    --cal-wed: var(--dark-cal-wed);
+    --cal-thu: var(--dark-cal-thu);
+    --cal-fri: var(--dark-cal-fri);
+    --cal-sat: var(--dark-cal-sat);
+    --cal-sun: var(--dark-cal-sun);
+    --cal-day-bg: var(--dark-cal-day-bg);
+    --cal-month-1: var(--dark-cal-month-1);
+    --cal-month-2: var(--dark-cal-month-2);
+    --cal-month-3: var(--dark-cal-month-3);
+    --cal-month-4: var(--dark-cal-month-4);
+    --cal-month-5: var(--dark-cal-month-5);
+    --cal-month-6: var(--dark-cal-month-6);
+    --cal-month-7: var(--dark-cal-month-7);
+    --cal-month-8: var(--dark-cal-month-8);
+    --cal-month-9: var(--dark-cal-month-9);
+    --cal-month-10: var(--dark-cal-month-10);
+    --cal-month-11: var(--dark-cal-month-11);
+    --cal-month-12: var(--dark-cal-month-12);
+    --cal-year-0: var(--dark-cal-year-0);
+    --cal-year-1: var(--dark-cal-year-1);
+    --cal-year-2: var(--dark-cal-year-2);
+    --cal-year-3: var(--dark-cal-year-3);
+    --ntx-shadow-sm: var(--dark-ntx-shadow-sm);
+    --ntx-shadow-md: var(--dark-ntx-shadow-md);
+    --ntx-shadow-lg: var(--dark-ntx-shadow-lg);
   }
 }
 
@@ -318,94 +379,67 @@
 :root[data-theme="dark"] {
   color-scheme: dark;
 
-  /* 中性灰底 + 黑板灰纸张(整站色相统一中性) */
-  --surface: #333333;
-  --surface-alt: #222222;
-  --toc-hover: #3a3a3a; /* 目录悬浮背景:比纸片(242424)亮一档,深色下可辨 */
-  --surface-raised: #242424;
-
-  /* 区域纹理:深色用白点(人眼对深底亮粒敏感,alpha 略低) */
-  --texture-grain: rgb(255 255 255 / 0.02);
-  --texture-nav-start: color-mix(in srgb, var(--surface) 96%, #000);
-  --texture-line: rgb(255 255 255 / 0.04);
-  --nav-shadow: rgb(0 0 0 / 0.28); /* 深底上黑影要更浓才可辨(0.42 过重,减弱) */
-  --stone-line: rgb(255 255 255 / 0.02); /* 页脚细纹线色 */
-  --nav-grid-line: rgb(255 255 255 / 0.015); /* 导航格子纹线色 */
-  --paper-line: rgb(191 156 70 / 0.04); /* 纸片标题区格线(品牌色 --brand #bf9c46 的浅版) */
-  --weave-line: rgb(191 156 70 / 0.07); /* hero 编织底纹线色(品牌色浅版,用户确认 0.07 浓度(比 0.1 浅,减弱对文字的干扰)) */
-
-  /* 中性近白(无色相,降亮度防刺眼);次要/弱化走 alpha 分级 */
-  --text-primary: #fffbf0;
-  --title-shadow-hi: rgb(255 255 255 / 0.12);
-  --title-shadow-lo: rgb(0 0 0 / 0.4);
-  --logo-shadow-hi: rgb(255 255 255 / 0.12);
-  --logo-shadow-lo: rgb(0 0 0 / 0.45);
-  --text-secondary: rgb(255 255 255 / 0.65);
-  --text-muted: rgb(255 255 255 / 0.45);
-  --text-inverse: #181818;
-
-  /* 发丝线:半透明自适应(浅=黑线, 深=白线, α 全站统一) */
-  --border: rgb(255 255 255 / 0.14);
-  --border-strong: rgb(255 255 255 / 0.24);
-  /* 引用竖线:灰紫 hsl(265° 12% 65%) */
-  --quote-bar: hsl(265 12% 65%);
-  --quote-bg: color-mix(in srgb, var(--quote-bar) 12%, #222222);
-  /* 品牌:暗金橄榄(深色下唯一的暖点) */
-  --brand: #bf9c46;
-  --brand-contrast: #181818;
-  --brand-subtle: #f0c239;
-
-  /* 强调:夜灯琥珀 */
-  --accent: #e0a050;
-
-  /* 行动:夜竹青 */
-  --action: #2fa07c;
-  --action-hover: #3cbb93;
-  --action-contrast: #131313;
-
-  /* 代码:墨黑面板 */
-  --code-bg: #1a1a1a;
-  --code-text: #e6e6e6;
-  --code-border: rgb(255 255 255 / 0.18);
-
-  /* 代码块增强:行号列底色(与代码底 #1a1a1a 相近略亮一档,中性灰),行 hover 强调条
-     (代码块背景统一用 --code-bg,不分语言块/plaintext) */
-  --code-gutter-bg: #161616;
-  --code-line-hover: rgb(255 255 255 / 0.06);
-
-  /* 文章摘要文字色(深蓝白):表格表头背景用 */
-  --summary-fg: #d6ecf0;
-  /* 日历星期色(周一~周日):心情梯度,深色提亮一档 */
-  --cal-mon: #9aa0aa;
-  --cal-tue: #9aa8b8;
-  --cal-wed: #aeb6c0;
-  --cal-thu: #e8b05f;
-  --cal-fri: #f0a85f;
-  --cal-sat: #6fc98a;
-  --cal-sun: #e88ab8;
-    --cal-day-bg: #2d2d2d; /* 暗色提亮,与深色月/年 header 形成对比 */
-    /* 月份格子背景(1-12月):四季色淡化,深色 25% 混纸底 */
-    --cal-month-1: #3e434b;
-    --cal-month-2: #42464c;
-    --cal-month-3: #474d3b;
-    --cal-month-4: #3e483a;
-    --cal-month-5: #3a473a;
-    --cal-month-6: #334742;
-    --cal-month-7: #334747;
-    --cal-month-8: #37474b;
-    --cal-month-9: #534b33;
-    --cal-month-10: #554733;
-    --cal-month-11: #534237;
-    --cal-month-12: #3a424b;
-      /* 年份格子背景:4 色按 year%4 选(余0紫罗兰/余1蓝紫/余2粉紫/余3暖灰),淡化不抢眼 */
-      --cal-year-0: #3e364b;
-      --cal-year-1: #363a4b;
-      --cal-year-2: #473e4b;
-      --cal-year-3: #423e3a;
-
-  --ntx-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.5);
-  --ntx-shadow-md: 0 4px 12px rgb(0 0 0 / 0.5);
-  --ntx-shadow-lg: 0 12px 32px rgb(0 0 0 / 0.6);
+  /* 深色值统一引用上方 --dark-* 单源变量组 */
+  --surface: var(--dark-surface);
+  --surface-alt: var(--dark-surface-alt);
+  --toc-hover: var(--dark-toc-hover);
+  --surface-raised: var(--dark-surface-raised);
+  --texture-grain: var(--dark-texture-grain);
+  --texture-nav-start: var(--dark-texture-nav-start);
+  --texture-line: var(--dark-texture-line);
+  --nav-shadow: var(--dark-nav-shadow);
+  --stone-line: var(--dark-stone-line);
+  --nav-grid-line: var(--dark-nav-grid-line);
+  --paper-line: var(--dark-paper-line);
+  --weave-line: var(--dark-weave-line);
+  --text-primary: var(--dark-text-primary);
+  --title-shadow-hi: var(--dark-title-shadow-hi);
+  --title-shadow-lo: var(--dark-title-shadow-lo);
+  --logo-shadow-hi: var(--dark-logo-shadow-hi);
+  --logo-shadow-lo: var(--dark-logo-shadow-lo);
+  --text-secondary: var(--dark-text-secondary);
+  --text-muted: var(--dark-text-muted);
+  --border: var(--dark-border);
+  --border-strong: var(--dark-border-strong);
+  --quote-bar: var(--dark-quote-bar);
+  --quote-bg: var(--dark-quote-bg);
+  --brand: var(--dark-brand);
+  --brand-contrast: var(--dark-brand-contrast);
+  --accent: var(--dark-accent);
+  --action: var(--dark-action);
+  --code-bg: var(--dark-code-bg);
+  --code-text: var(--dark-code-text);
+  --code-border: var(--dark-code-border);
+  --code-gutter-bg: var(--dark-code-gutter-bg);
+  --code-line-hover: var(--dark-code-line-hover);
+  --summary-fg: var(--dark-summary-fg);
+  --cal-mon: var(--dark-cal-mon);
+  --cal-tue: var(--dark-cal-tue);
+  --cal-wed: var(--dark-cal-wed);
+  --cal-thu: var(--dark-cal-thu);
+  --cal-fri: var(--dark-cal-fri);
+  --cal-sat: var(--dark-cal-sat);
+  --cal-sun: var(--dark-cal-sun);
+  --cal-day-bg: var(--dark-cal-day-bg);
+  --cal-month-1: var(--dark-cal-month-1);
+  --cal-month-2: var(--dark-cal-month-2);
+  --cal-month-3: var(--dark-cal-month-3);
+  --cal-month-4: var(--dark-cal-month-4);
+  --cal-month-5: var(--dark-cal-month-5);
+  --cal-month-6: var(--dark-cal-month-6);
+  --cal-month-7: var(--dark-cal-month-7);
+  --cal-month-8: var(--dark-cal-month-8);
+  --cal-month-9: var(--dark-cal-month-9);
+  --cal-month-10: var(--dark-cal-month-10);
+  --cal-month-11: var(--dark-cal-month-11);
+  --cal-month-12: var(--dark-cal-month-12);
+  --cal-year-0: var(--dark-cal-year-0);
+  --cal-year-1: var(--dark-cal-year-1);
+  --cal-year-2: var(--dark-cal-year-2);
+  --cal-year-3: var(--dark-cal-year-3);
+  --ntx-shadow-sm: var(--dark-ntx-shadow-sm);
+  --ntx-shadow-md: var(--dark-ntx-shadow-md);
+  --ntx-shadow-lg: var(--dark-ntx-shadow-lg);
 }
 
 /* ================= 语义工具类映射(随主题翻转) ================= */
@@ -418,20 +452,16 @@
   --color-text-primary: var(--text-primary);
   --color-text-secondary: var(--text-secondary);
   --color-text-muted: var(--text-muted);
-  --color-text-inverse: var(--text-inverse);
 
   --color-border: var(--border);
   --color-border-strong: var(--border-strong);
 
   --color-brand: var(--brand);
   --color-brand-contrast: var(--brand-contrast);
-  --color-brand-subtle: var(--brand-subtle);
 
   --color-accent: var(--accent);
 
   --color-action: var(--action);
-  --color-action-hover: var(--action-hover);
-  --color-action-contrast: var(--action-contrast);
 
   --color-code-bg: var(--code-bg);
   --color-code-text: var(--code-text);

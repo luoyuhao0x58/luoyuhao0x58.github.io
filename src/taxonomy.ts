@@ -12,8 +12,9 @@ import type { Locale } from "./i18n";
  *
  * 新增概念:先在此补 key + 7 语言文案,再在文章中引用。
  *
- * 当前状态(测试期清理):标签与专栏映射暂空,分类仅保留 programmer(程序员);
- * 恢复文章前需按文章 frontmatter 实际引用的 key 补回映射,否则构建失败。
+ * 当前状态(测试期清理):标签映射目前仅 blog,分类仅保留 programmer(程序员),
+ * 专栏映射目前仅 building-my-blog-from-scratch;
+ * 新增文章引用新 key 前,需先在此补映射,否则构建失败。
  */
 
 /** 标签映射表:key = 英文概念,value = 各语言显示名。 */

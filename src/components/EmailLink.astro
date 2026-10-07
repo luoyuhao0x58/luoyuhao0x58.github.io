@@ -1,0 +1,42 @@
+---
+// Shared email anti-scraping link (used by home hero and about contact section).
+// The email address is base64-encoded at build time into a data-* attribute,
+// so the static HTML never contains the plaintext address; the bundled script
+// decodes it with atob and assembles the mailto: href on the client.
+import Mail from "./icons/Mail.astro";
+import { SITE } from "../lib/site";
+import { chipClass } from "../lib/chip-class";
+
+interface Props {
+  /** Element id, kept identical to the id the page used before, so rendered output is unchanged. */
+  id: string;
+}
+
+const { id } = Astro.props;
+
+// Build-time encoding: the data attribute holds base64 only, no plaintext email.
+const emailB64 = btoa(`${SITE.emailUser}@${SITE.emailDomain}`);
+---
+
+<a
+  id={id}
+  href="#"
+  class={chipClass}
+  data-email-b64={emailB64}
+  aria-label={`Email ${SITE.ownerName}`}
+>
+  <Mail class="h-4 w-4" />
+  Email
+</a>
+
+<script>
+  // Anti-scraping: the data-email-b64 attribute holds base64, atob decodes it
+  // into the mailto: href (no plaintext email in the static HTML).
+  import { SITE } from "../lib/site";
+  for (const emailLink of document.querySelectorAll<HTMLElement>("[data-email-b64]")) {
+    if (emailLink?.dataset.emailB64) {
+      const email = atob(emailLink.dataset.emailB64);
+      emailLink.setAttribute("href", `mailto:${SITE.ownerName} <${email}>`);
+    }
+  }
+</script>

@@ -1,8 +1,9 @@
 import { getCollection } from "astro:content";
 import type { APIRoute } from "astro";
-import { languages, langPath } from "../i18n";
+import { langPath } from "../i18n";
 import { getActiveLangs } from "../lib/active-langs";
 import { PAGE_SIZE } from "../lib/pagination";
+import { getTagCounts, postSlug } from "../lib/posts";
 import { categoryLabels } from "../taxonomy";
 
 interface SitemapEntry {
@@ -31,21 +32,19 @@ export const GET: APIRoute = async ({ site }) => {
   const siteUrl = site ?? new URL("https://luoyuhao.nettix.top");
   const posts = await getCollection("posts");
   const byLang = new Map<string, typeof posts>();
-  const tagsByLang = new Map<string, Set<string>>();
   for (const post of posts) {
     const list = byLang.get(post.data.lang) ?? [];
     list.push(post);
     byLang.set(post.data.lang, list);
-    const tagSet = tagsByLang.get(post.data.lang) ?? new Set<string>();
-    for (const tag of post.data.tags) tagSet.add(tag);
-    tagsByLang.set(post.data.lang, tagSet);
   }
+  // 标签统计与标签分页页同源(lib/posts.getTagCounts),保证 sitemap 与页面一致。
+  const tagCounts = await getTagCounts();
 
   const entries: SitemapEntry[] = [];
   for (const lang of await getActiveLangs()) {
     const prefix = `/${langPath(lang.code)}`;
     const langPosts = byLang.get(lang.code) ?? [];
-    const langTags = [...(tagsByLang.get(lang.code) ?? new Set<string>())];
+    const langTags = [...(tagCounts.get(lang.code)?.keys() ?? [])];
 
     // Language home (hero + featured posts, no pagination).
     entries.push({ path: `${prefix}/` });
@@ -77,7 +76,7 @@ export const GET: APIRoute = async ({ site }) => {
     // Tag index + tag article pages (with pagination).
     entries.push({ path: `${prefix}/tags/` });
     for (const tag of langTags) {
-      const count = langPosts.filter((post) => post.data.tags.includes(tag)).length;
+      const count = tagCounts.get(lang.code)?.get(tag) ?? 0;
       const tagPath = encodeURIComponent(tag);
       entries.push({ path: `${prefix}/tags/${tagPath}/` });
       for (let p = 2; p <= pageCount(count); p++) {
@@ -91,7 +90,7 @@ export const GET: APIRoute = async ({ site }) => {
 
   // Article pages, URL driven by the post's frontmatter lang.
   for (const post of posts) {
-    const [, slug] = post.id.split("/");
+    const slug = postSlug(post);
     if (!slug) continue;
     entries.push({
       path: `/${langPath(post.data.lang)}/posts/${slug}/`,

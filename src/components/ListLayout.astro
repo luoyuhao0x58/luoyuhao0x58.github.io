@@ -1,0 +1,54 @@
+---
+// 共享列表页骨架:paper-list-head(标题 + 可选图标) + empty-state +
+// PostCard 行 + Pagination。供 posts / tags / category 的首页与分页页复用,
+// 各页差异(head 图标、标题、数据源)通过 props 与 slot 注入。
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Pagination from "./Pagination.astro";
+import PostCard from "./PostCard.astro";
+import { t } from "../i18n";
+import type { Page } from "astro";
+import type { CollectionEntry } from "astro:content";
+
+interface Props {
+  lang: string;
+  title: string;
+  description?: string;
+  /** Paginated post data; an empty page renders the empty state (page 1 only). */
+  page: Page<CollectionEntry<"posts">>;
+  /** URL of this list's index page (page 1), used for pagination links. */
+  firstPageUrl: string;
+}
+
+const { lang, title, description = title, page, firstPageUrl } = Astro.props;
+---
+
+<BaseLayout lang={lang} title={title} description={description}>
+  <div class="page-container w-full">
+    <div class="paper-list">
+      <div class="paper-list-head">
+        <h1>
+          <span class="inline-flex items-center gap-2">
+            <slot name="head-icon" />
+            {title}
+          </span>
+        </h1>
+      </div>
+      <div class="paper-list-body">
+        {page.data.length === 0 ? (
+          <div class="empty-state flex items-center justify-center rounded-lg border border-dashed border-border px-6 text-center">
+            <p class="text-text-muted">{t(lang, "listEmpty")}</p>
+          </div>
+        ) : (
+          <>
+            <ul class="paper-list-rows">
+              {page.data.map((post) => (
+                <PostCard post={post} lang={lang} />
+              ))}
+            </ul>
+            <Pagination lang={lang} page={page} firstPageUrl={firstPageUrl} />
+          </>
+        )}
+      </div>
+    </div>
+  </div>
+</BaseLayout>

@@ -2,6 +2,16 @@
  * 文章正文排版(作用于 slot 内容,故为全局)
  * ========================================================================== */
 
+/* ================= 深色覆盖值单源(--dark-* 变量组) =================
+ * 文章区深色覆盖值只定义一次;下方 auto(prefers-color-scheme)与
+ * 手动(:root[data-theme="dark"])两分支共同引用。 */
+:root {
+  --dark-table-row-hover-bg: color-mix(in srgb, var(--text-primary) 8%, var(--code-bg));
+  --dark-table-th-bg: #732424;
+  --dark-image-shadow: 0 1px 3px rgb(0 0 0 / 0.5), 0 1px 2px rgb(0 0 0 / 0.4);
+  --dark-shiki-fg: var(--shiki-dark, var(--text-primary));
+}
+
 .article-content {
   display: grid;
   grid-template-columns: var(--indent) minmax(0, 1fr) var(--indent);
@@ -417,12 +427,12 @@
 }
 :root[data-theme="dark"] .article-content table tbody tr:hover td,
 :root[data-theme="dark"] .article-content table tbody td.table-col-hover {
-  background: color-mix(in srgb, var(--text-primary) 8%, var(--code-bg));
+  background: var(--dark-table-row-hover-bg);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]):not([data-theme="dark"]) .article-content table tbody tr:hover td,
   :root:not([data-theme="light"]):not([data-theme="dark"]) .article-content table tbody td.table-col-hover {
-    background: color-mix(in srgb, var(--text-primary) 8%, var(--code-bg));
+    background: var(--dark-table-row-hover-bg);
   }
 }
 
@@ -437,12 +447,12 @@
 }
 /* dark 主题:红褐 #732424 + 金色标题字(保持用户认可的组合) */
 :root[data-theme="dark"] .article-content th {
-  background-color: #732424;
+  background-color: var(--dark-table-th-bg);
   color: var(--brand);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]):not([data-theme="dark"]) .article-content th {
-    background-color: #732424;
+    background-color: var(--dark-table-th-bg);
     color: var(--brand);
   }
 }
@@ -514,7 +524,7 @@
 :root[data-theme="dark"] .article-content img.image-left,
 :root[data-theme="dark"] .article-content img.image-right,
 :root[data-theme="dark"] .article-content .image-pair img.image-pair {
-  box-shadow: 0 1px 3px rgb(0 0 0 / 0.5), 0 1px 2px rgb(0 0 0 / 0.4);
+  box-shadow: var(--dark-image-shadow);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]):not([data-theme="dark"]) .article-content img.image-inline,
@@ -522,7 +532,7 @@
   :root:not([data-theme="light"]):not([data-theme="dark"]) .article-content img.image-left,
   :root:not([data-theme="light"]):not([data-theme="dark"]) .article-content img.image-right,
   :root:not([data-theme="light"]):not([data-theme="dark"]) .article-content .image-pair img.image-pair {
-    box-shadow: 0 1px 3px rgb(0 0 0 / 0.5), 0 1px 2px rgb(0 0 0 / 0.4);
+    box-shadow: var(--dark-image-shadow);
   }
 }
 /* 浮动图文(#left/#right):图靠左/右,文字环绕(应写在文字段内) */
@@ -602,13 +612,13 @@
 /* 手动黑夜:仅 token 颜色切主题变量,背景不变 */
 :root[data-theme="dark"] .astro-code,
 :root[data-theme="dark"] .astro-code span {
-  color: var(--shiki-dark, var(--text-primary)) !important;
+  color: var(--dark-shiki-fg) !important;
 }
 /* 自动黑夜(无 data-theme,跟随系统) */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]):not([data-theme="dark"]) .astro-code,
   :root:not([data-theme="light"]):not([data-theme="dark"]) .astro-code span {
-    color: var(--shiki-dark, var(--text-primary)) !important;
+    color: var(--dark-shiki-fg) !important;
   }
 }
 

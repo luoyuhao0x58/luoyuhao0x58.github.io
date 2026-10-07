@@ -1,4 +1,7 @@
 // 标题锚点插件:统一接管正文 h1-h6 的锚点 id,保证多语言锚点一致。
+// 锚点字符集与 TOC 有效性正则的唯一来源是 src/lib/anchor.ts(单一来源,防漂移)。
+import { ANCHOR_CHARSET } from "../lib/anchor.ts";
+
 // 不依赖 unist-util-visit,手写递归遍历。
 //
 // 规则:
@@ -11,7 +14,7 @@
 //     不生成锚点、不设正规模 id → 目录按 6 位字符集正则排除
 //   - 文章主标题(layout 的 h1#post-title)不在 markdown 内容中,不经过本插件
 
-const CHARSET = "abcdefghjkmnpqrstuvwxyz"; // 23 个纯小写字母,去掉易混淆的 i/l/o
+const CHARSET = ANCHOR_CHARSET;
 const L = CHARSET.length; // 23(质数)
 const M = L ** 6; // 148,035,889:双射空间(序号 < M 即零碰撞)
 const MB = BigInt(M);

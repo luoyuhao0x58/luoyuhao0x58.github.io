@@ -1,5 +1,6 @@
 ---
 import { t } from "../i18n";
+import { isValidAnchorSlug } from "../lib/anchor";
 
 interface Heading {
   depth: number;
@@ -16,7 +17,8 @@ interface Props {
 const { headings, lang, showHeading = true } = Astro.props;
 
 // 只保留插件分配的锚点 id(6 位纯小写字母,去 i/l/o):排除 sr-only(脚注自动标题等)与无锚点标题。
-const valid = headings.filter((h) => /^[abcdefghjkmnpqrstuvwxyz]{6}$/.test(h.slug));
+// 正则与插件字符集单一来源见 src/lib/anchor.ts。
+const valid = headings.filter((h) => isValidAnchorSlug(h.slug));
 
 // 目录起始级别:有 h1 从 h1 开始;无 h1 有 h2 从 h2;都没有则不展示目录。
 const startDepth = valid.some((h) => h.depth === 1)

@@ -1,0 +1,29 @@
+---
+// 关于页"经历时间线"区块(倒序:最新在前)。结构/文案与拆分前完全一致。
+import { t } from "../../i18n";
+import type { CollectionEntry } from "astro:content";
+
+interface Props {
+  lang: string;
+  data?: CollectionEntry<"about">["data"];
+}
+const { lang, data } = Astro.props;
+---
+
+{data?.timeline.length ? (
+  <section class="about-section mt-10">
+    <h3>{t(lang, "timelineTitle")}</h3>
+    <ol class="about-timeline">
+      {data.timeline.map((item) => (
+        <li class="about-timeline-item">
+          <span class="about-timeline-period">{item.period}</span>
+          <div class="about-timeline-content">
+            <p class="about-timeline-title">{item.title}</p>
+            {item.org && <p class="about-timeline-org">{item.org}</p>}
+            {item.desc && <p class="about-timeline-desc">{item.desc}</p>}
+          </div>
+        </li>
+      ))}
+    </ol>
+  </section>
+) : null}

@@ -1,5 +1,8 @@
 ---
 import "../styles/global.css";
+import PostHero from "../components/PostHero.astro";
+import PostMeta from "../components/PostMeta.astro";
+import PostSeoHead from "../components/PostSeoHead.astro";
 import Toc from "../components/Toc.astro";
 import ScrollbarOverlay from "../components/ScrollbarOverlay.astro";
 import CloudflareAnalytics from "../components/CloudflareAnalytics.astro";
@@ -10,19 +13,13 @@ import Footer from "../components/Footer.astro";
 import ThemeScript from "../components/ThemeScript.astro";
 import ViewTransitionDisable from "../components/ViewTransitionDisable.astro";
 import VideoEmbed from "../components/VideoEmbed.astro";
-import CalendarArrowUp from "../components/icons/CalendarArrowUp.astro";
-import CalendarSync from "../components/icons/CalendarSync.astro";
-import Folder from "../components/icons/Folder.astro";
-import BookOpenText from "../components/icons/BookOpenText.astro";
-import TagChip from "../components/TagChip.astro";
 import { ClientRouter } from "astro:transitions";
-import { codeFromPath, intlLocale, langPath, languages, t } from "../i18n";
+import { codeFromPath, langPath, languages, t } from "../i18n";
 import type { Locale } from "../i18n";
-import { tagLabels, categoryLabels, seriesLabels, taxonomyLabel } from "../taxonomy";
+import { categoryLabels, taxonomyLabel } from "../taxonomy";
 import { postUpdatedAt } from "../lib/post-meta";
-import { SITE } from "../lib/site";
-import { DEFAULT_TIME_ZONE, formatYmd } from "../lib/time";
-import { expandCdnBase } from "../lib/cdn.mjs";
+import { isValidAnchorSlug } from "../lib/anchor";
+import { getActiveLangs } from "../lib/active-langs";
 
 interface Heading {
   depth: number;
@@ -71,95 +68,32 @@ const {
 } = Astro.props;
 const code = codeFromPath(lang);
 const htmlLang = languages.find((l) => l.code === code)?.htmlLang ?? "zh-CN";
-// 图标右侧日期:统一短格式 YYYY/MM/DD(SSR 按默认时区兜底;
-// 浏览器端 time-localize.js 按系统时区重算)
-const dateLabel = pubDate ? formatYmd(pubDate) : "";
 // 最后修改时间:显式 updated 用之,否则回退首次发布(用户定的 fallback 规则)
 const updatedAt = pubDate ? postUpdatedAt({ data: { updated, pubDate } }) : null;
-const updatedLabel = updatedAt ? formatYmd(updatedAt) : "";
-// tooltip 时间兜底:当地语言格式精确到分钟(站点 locale + 默认时区);
-// 浏览器端 time-localize.js 按浏览器 locale+系统时区重算
-const tooltipFmt = new Intl.DateTimeFormat(intlLocale(lang), {
-  dateStyle: "medium",
-  timeStyle: "short",
-  timeZone: DEFAULT_TIME_ZONE,
-});
-const pubTip = pubDate ? tooltipFmt.format(pubDate) : "";
-const updatedTip = updatedAt ? tooltipFmt.format(updatedAt) : "";
 const categoryLabel = category ? taxonomyLabel(categoryLabels, category, lang) : "";
-const seriesLabel = series ? taxonomyLabel(seriesLabels, series, lang) : "";
 const tocTitle = t(lang, "tocTitle");
 
 // 目录有效性:仅插件分配的 6 位纯小写字母锚点 id 计入(排除 sr-only/脚注自动标题等);
 // 有 h1/h2 才算有目录(起始级别逻辑见 Toc.astro),否则整页不展示目录。
-const tocHeadings = headings.filter((h) => /^[abcdefghjkmnpqrstuvwxyz]{6}$/.test(h.slug));
+// 正则与插件字符集单一来源见 src/lib/anchor.ts。
+const tocHeadings = headings.filter((h) => isValidAnchorSlug(h.slug));
 const hasToc = tocHeadings.length > 0 && tocHeadings.some((h) => h.depth === 1 || h.depth === 2);
 
 const pathname = Astro.url.pathname;
 const site = new URL(Astro.site ?? "https://luoyuhao.nettix.top");
 const canonical = new URL(pathname, site).href;
 
-// SEO 结构化数据(JSON-LD):category/tags 通过 Article schema 的
-// articleSection/keywords 字段进 head,分类层级进 BreadcrumbList。
-// 系列(series)无标准 schema 字段,靠站内互链表达,不入 head。
-const articleImage = image
-  ? new URL(expandCdnBase(image.url), site).href
-  : undefined;
-const articleLd = {
-  "@context": "https://schema.org",
-  "@type": "BlogPosting",
-  "@id": canonical,
-  headline: title,
-  ...(description ? { description } : {}),
-  inLanguage: htmlLang,
-  ...(pubDate ? { datePublished: pubDate.toISOString() } : {}),
-  ...(updatedAt ? { dateModified: updatedAt.toISOString() } : {}),
-  author: {
-    "@type": "Person",
-    name: SITE.ownerName,
-    // 作者主页:指到当前语言对应的 about 页(消除 Rich Results 的 author.url
-    // 建议项,利于作者身份识别;不同语言各指各的) */
-    url: new URL(`/${langPath(lang)}/about/`, site).href,
-  },
-  ...(tags && tags.length > 0
-    ? { keywords: tags.map((tag) => taxonomyLabel(tagLabels, tag, lang)) }
-    : {}),
-  ...(category && categoryLabel ? { articleSection: categoryLabel } : {}),
-  ...(articleImage ? { image: articleImage } : {}),
-  mainEntityOfPage: { "@type": "WebPage", "@id": canonical },
-};
-// 面包屑:首页 > 分类(如有) > 文章
-const crumbList = [
-  { "@type": "ListItem", position: 1, name: t(lang, "siteName"), item: new URL(`/${langPath(lang)}/`, site).href },
-  ...(category && categoryLabel
-    ? [
-        {
-          "@type": "ListItem",
-          position: 2,
-          name: categoryLabel,
-          item: new URL(`/${langPath(lang)}/category/${category}/`, site).href,
-        },
-      ]
-    : []),
-];
-const breadcrumbLd = {
-  "@context": "https://schema.org",
-  "@type": "BreadcrumbList",
-  itemListElement: [
-    ...crumbList,
-    { "@type": "ListItem", position: crumbList.length + 1, name: title, item: canonical },
-  ],
-};
-// JSON 字符串里转义 < 防 HTML 解析器误读(<script> 内容未经转义输出)
-const ldJson = (obj: object) => JSON.stringify(obj).replace(/</g, "\\u003c");
+// 活跃语言(本构建实际构建的语言):hreflang 与语言切换 targets 只覆盖它们,
+// 不再为 es/ja/ko/ru/ar 生成指向 404 的链接。
+const activeLangs = await getActiveLangs();
 
 // Per-language target URLs, matched by parallel slug: when the target language has an
 // article with the same slug it links to that exact article, otherwise it falls back to
-// the language home (never a 404). translationOf is no longer consulted for matching.
-const targets = {} as Record<Locale, string>;
-for (const langEntry of languages) {
+// the language home (never a 404). Only active languages are generated.
+const targets = {} as Record<string, string>;
+for (const langEntry of activeLangs) {
   targets[langEntry.code] =
-    slug && availableIn.has(langEntry.code)
+    slug && availableIn.has(langEntry.code as Locale)
       ? `/${langPath(langEntry.code)}/posts/${slug}/`
       : `/${langPath(langEntry.code)}/`;
 }
@@ -170,48 +104,20 @@ for (const langEntry of languages) {
     <ThemeScript />
     <ViewTransitionDisable />
     <ClientRouter />
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="generator" content={Astro.generator} />
-    <meta name="description" content={description} />
-    <link rel="icon" href="/favicon.svg" />
-    <link rel="canonical" href={canonical} />
-    {/* Open Graph / Twitter Card:IM 贴链接分享时抓标题、描述、缩略图 */}
-    <meta property="og:type" content="article" />
-    <meta property="og:site_name" content={site.hostname} />
-    <meta property="og:title" content={title} />
-    {description && <meta property="og:description" content={description} />}
-    <meta property="og:url" content={canonical} />
-    {image && <meta property="og:image" content={new URL(expandCdnBase(image.url), site).href} />}
-    {image && <meta property="og:image:alt" content={image.alt} />}
-    {/* 有题图用大图卡,无题图用 summary */}
-    <meta name="twitter:card" content={image ? "summary_large_image" : "summary"} />
-    <meta name="twitter:title" content={title} />
-    {description && <meta name="twitter:description" content={description} />}
-    {image && <meta name="twitter:image" content={new URL(expandCdnBase(image.url), site).href} />}
-    {pubDate && <meta property="article:published_time" content={pubDate.toISOString()} />}
-    {updatedAt && <meta property="article:modified_time" content={updatedAt.toISOString()} />}
-    <link rel="alternate" hreflang="x-default" href={new URL("/zh/", site).href} />
-    {/* RSS:指向当前语言的 feed(每语言独立),供阅读器发现订阅 */}
-    <link
-      rel="alternate"
-      type="application/rss+xml"
-      title={`${t(lang, "siteName")} · RSS`}
-      href={`/${langPath(code)}/rss.xml`}
+    <PostSeoHead
+      title={title}
+      description={description}
+      lang={lang}
+      canonical={canonical}
+      pubDate={pubDate}
+      updatedAt={updatedAt}
+      tags={tags}
+      category={category}
+      categoryLabel={categoryLabel}
+      image={image}
+      langs={activeLangs}
+      targets={targets}
     />
-    {
-      languages.map((langEntry) => (
-        <link
-          rel="alternate"
-          hreflang={langEntry.code}
-          href={new URL(targets[langEntry.code], site).href}
-        />
-      ))
-    }
-    <title>{title}</title>
-    {/* SEO 结构化数据:Article(BlogPosting)承载 tags/category,面包屑承载分类层级 */}
-    <script type="application/ld+json" set:html={ldJson(articleLd)} />
-    <script type="application/ld+json" set:html={ldJson(breadcrumbLd)} />
   </head>
   <body
     class="post-page flex min-h-dvh flex-col bg-surface text-text-primary antialiased"
@@ -232,21 +138,7 @@ for (const langEntry of languages) {
 
         <!-- 中栏:文章 -->
         <article class="post-article">
-          {image && (
-            <div class="post-hero overflow-hidden">
-              {/* 容器固定 16:9 比例占位(见 layout.css):页面加载期间高度稳定,
-                  标题位置从初始就正确、不跳位;图片加载成功后淡入填充。
-                  失败时 onerror 静默:整体隐藏 + 移除 grid 的 has-hero(回退无题图布局)。 */}
-              <img
-                src={expandCdnBase(image.url)}
-                alt={image.alt}
-                draggable="false"
-                class="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-500 [mask-image:linear-gradient(to_bottom,black_85%,transparent_100%)]"
-                onload={`this.classList.remove("opacity-0");`}
-                onerror={`this.closest(".post-hero")?.classList.add("hidden");this.closest(".post-grid")?.classList.remove("has-hero");this.setAttribute("alt","");window.dispatchEvent(new Event("toc-realign"));`}
-              />
-            </div>
-          )}
+          {image && <PostHero image={image} />}
 
           <div class="post-header">
             <h1
@@ -255,79 +147,15 @@ for (const langEntry of languages) {
           >
             {title}
           </h1>
-          <div class="post-meta-inset mt-[25px] flex flex-wrap items-center gap-x-[0.667rem] gap-y-[3px] font-mono text-[14px] text-text-muted">
-            {categoryLabel && (
-              <a
-                href={`/${langPath(lang)}/category/${category}/`}
-                class="inline-flex items-center gap-1 font-medium text-text-secondary transition-colors hover:text-brand"
-              >
-                <Folder class="h-4 w-4 post-meta-icon-category" />
-                {categoryLabel}
-              </a>
-            )}
-            {series && seriesLabel && (
-              <a
-                href={`/${langPath(lang)}/series/${encodeURIComponent(series)}/`}
-                class="post-meta-series-link inline-flex items-center gap-1 font-medium text-text-secondary transition-colors hover:text-brand"
-                title={seriesLabel}
-              >
-                <BookOpenText class="h-4 w-4 post-meta-icon-series" />
-                {seriesLabel}
-              </a>
-            )}
-            {/* 窄屏换行点1(有专栏时):分类+专栏 一行,日期起换行 */}
-            {series && seriesLabel && (
-              <span aria-hidden="true" class="meta-break basis-full h-0 sm:hidden"></span>
-            )}
-            {dateLabel && (
-              <time
-                datetime={pubDate?.toISOString()}
-                class="group relative inline-flex items-center gap-1 text-text-secondary"
-                aria-label={t(lang, "byPrefix")}
-              >
-                <CalendarArrowUp class="h-4 w-4 post-meta-icon-publish" />
-                <span data-tz-date-text>{dateLabel}</span>
-                <span
-                  role="tooltip"
-                  class="pointer-events-none absolute bottom-[calc(100%+6px)] left-1/2 -translate-x-1/2 rounded-md border border-border bg-surface-raised px-2 py-1 text-xs whitespace-nowrap text-text-secondary opacity-0 invisible shadow-md transition-opacity duration-150 group-hover:visible group-hover:opacity-100"
-                >
-                  {t(lang, "byPrefix")} <span data-tz-tip>{pubTip}</span>
-                </span>
-              </time>
-            )}
-            {pubDate && updatedAt && (
-              <time
-                datetime={updatedAt.toISOString()}
-                class="group relative inline-flex items-center gap-1 text-text-secondary"
-                aria-label={t(lang, "updatedPrefix")}
-              >
-                <CalendarSync class="h-4 w-4 post-meta-icon-updated" />
-                <span data-tz-date-text>{updatedLabel}</span>
-                <span
-                  role="tooltip"
-                  class="pointer-events-none absolute bottom-[calc(100%+6px)] left-1/2 -translate-x-1/2 rounded-md border border-border bg-surface-raised px-2 py-1 text-xs whitespace-nowrap text-text-secondary opacity-0 invisible shadow-md transition-opacity duration-150 group-hover:visible group-hover:opacity-100"
-                >
-                  {t(lang, "updatedPrefix")} <span data-tz-tip>{updatedTip}</span>
-                </span>
-              </time>
-            )}
-            {/* 标签:追加到分类/日期同一行,一行放不下自动折行。
-               间距逻辑见 layout.css(额外 8px 加在前一个 time 上,
-               避免折行时标签首项缩进) */}
-            {/* 窄屏换行点2:标签独立一行 */}
-            <span aria-hidden="true" class="meta-break basis-full h-0 sm:hidden"></span>
-            {tags && tags.length > 0 && (
-              <span class="inline-flex flex-wrap items-center gap-1.5">
-                {tags.map((tag) => (
-                  <TagChip
-                    name={tag}
-                    label={taxonomyLabel(tagLabels, tag, lang)}
-                    href={`/${langPath(lang)}/tags/${encodeURIComponent(tag)}/`}
-                  />
-                ))}
-              </span>
-            )}
-          </div>
+          <PostMeta
+            lang={lang}
+            category={category}
+            categoryLabel={categoryLabel}
+            series={series}
+            pubDate={pubDate}
+            updatedAt={updatedAt}
+            tags={tags}
+          />
             {/* 分割线:标题区与正文分隔(上距与标签组收紧) */}
             <hr class="post-meta-divider mt-3" />
           </div>

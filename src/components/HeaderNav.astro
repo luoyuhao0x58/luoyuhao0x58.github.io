@@ -1,0 +1,26 @@
+---
+// 桌面/平板导航链接(≥640px 显示)。手机端 ⋮ 菜单内导航由 HeaderMobileMenu.astro
+// 用同一份 navItems 渲染。从 Header.astro 拆分,标记与类名不变。
+export interface NavItem {
+  href: string;
+  label: string;
+}
+
+interface Props {
+  items: NavItem[];
+  /** 每个链接共享的按钮样式(见 Header.astro 的 navLinkClass)。 */
+  linkClass: string;
+}
+const { items, linkClass } = Astro.props;
+---
+
+<nav
+  class="header-nav hidden min-w-0 items-center gap-1.5 overflow-x-auto text-sm sm:flex sm:gap-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+  aria-label="Main"
+>
+  {items.map((item) => (
+    <a href={item.href} class={linkClass}>
+      {item.label}
+    </a>
+  ))}
+</nav>

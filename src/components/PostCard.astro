@@ -1,5 +1,6 @@
 ---
 import { langPath } from "../i18n";
+import { postSlug } from "../lib/posts";
 import { DEFAULT_TIME_ZONE } from "../lib/time";
 import type { CollectionEntry } from "astro:content";
 
@@ -8,7 +9,7 @@ interface Props {
   lang: string;
 }
 const { post, lang } = Astro.props;
-const slug = post.id.split("/")[1];
+const slug = postSlug(post);
 const href = `/${langPath(lang)}/posts/${slug}/`;
 const excerpt = post.data.excerpt ?? post.data.description;
 // 年月日拆开供日历块使用;月份/日期不补 0(日历习惯),时区按站点配置。

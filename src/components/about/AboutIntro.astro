@@ -1,0 +1,28 @@
+---
+// 关于页"简介 + 基本信息"区块。结构/文案与拆分前完全一致。
+import { t } from "../../i18n";
+import type { CollectionEntry } from "astro:content";
+
+interface Props {
+  lang: string;
+  data?: CollectionEntry<"about">["data"];
+}
+const { lang, data } = Astro.props;
+---
+
+<section class="about-intro">
+  <h2>{t(lang, "aboutMe")}</h2>
+  {data?.intro && (
+    <p class="mt-4 max-w-2xl leading-relaxed text-text-secondary">{data.intro}</p>
+  )}
+  {data?.facts.length ? (
+    <dl class="about-facts mt-3">
+      {data.facts.map((f) => (
+        <div class="about-fact">
+          <dt>{f.label}</dt>
+          <dd>{f.value}</dd>
+        </div>
+      ))}
+    </dl>
+  ) : null}
+</section>

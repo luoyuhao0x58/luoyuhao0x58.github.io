@@ -1,2 +1,26 @@
+# Force the patched KaTeX release everywhere: rehype-katex / remark-math /
+# mermaid declare ^0.16 ranges that would otherwise keep katex 0.16.47 (GHSA-238p-pmpm-9mq7).
+# katex 0.17/0.18 keep the renderToString API these packages use, so this is safe.
+#
+# Blind spot: mermaid 12.1.0's dist ESM bundles katex@0.16.47 internally, so this
+# override only converges the install tree and does not touch that bundled copy.
+# The site ships zero mermaid/katex runtime on the client (mermaid is rendered at
+# build time), so there is no current exposure. Re-evaluate if client-side
+# rendering is ever adopted.
+overrides:
+  katex: "^0.18.7"
+
+# pnpm defaults minimumReleaseAge to 1440 minutes (1 day) since v11; made explicit
+# here instead of relying on the implicit default. minimumReleaseAgeExclude exempts
+# freshly published packages that landed in the lockfile before the 1-day maturity
+# window elapsed — without it pnpm refuses to resolve them
+# (ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION). The entries below can be dropped once
+# each package is older than 1 day.
+minimumReleaseAge: 1440
+minimumReleaseAgeExclude:
+  - '@astrojs/internal-helpers@0.12.0'
+  - '@astrojs/markdown-satteri@0.4.3'
+  - astro@7.3.6
+
 allowBuilds:
   esbuild: true

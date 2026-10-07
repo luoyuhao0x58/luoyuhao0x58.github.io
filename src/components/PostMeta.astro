@@ -1,0 +1,115 @@
+---
+// 文章标题区元信息行(分类/专栏/日期/更新/标签),渲染于 .post-header 内、分割线上方。
+// 从 MarkdownPostLayout 拆分,结构与类名保持不变(样式依赖见 layout.css 的
+// .post-meta-inset / .post-meta-break 等规则)。
+import { langPath, t, intlLocale } from "../i18n";
+import { seriesLabels, tagLabels, taxonomyLabel } from "../taxonomy";
+import { DEFAULT_TIME_ZONE, formatYmd } from "../lib/time";
+import CalendarArrowUp from "./icons/CalendarArrowUp.astro";
+import CalendarSync from "./icons/CalendarSync.astro";
+import Folder from "./icons/Folder.astro";
+import BookOpenText from "./icons/BookOpenText.astro";
+import TagChip from "./TagChip.astro";
+
+interface Props {
+  lang: string;
+  category?: string;
+  /** 本地化分类文案(空串 = 不渲染分类链接)。 */
+  categoryLabel?: string;
+  series?: string;
+  pubDate?: Date;
+  /** 最后修改时间(显式 updated 回退 pubDate);无 pubDate 时为 null。 */
+  updatedAt?: Date | null;
+  tags?: string[];
+}
+const { lang, category, categoryLabel = "", series, pubDate, updatedAt = null, tags } =
+  Astro.props;
+const seriesLabel = series ? taxonomyLabel(seriesLabels, series, lang) : "";
+// 图标右侧日期:统一短格式 YYYY/MM/DD(SSR 按默认时区兜底;
+// 浏览器端 time-localize.js 按系统时区重算)
+const dateLabel = pubDate ? formatYmd(pubDate) : "";
+const updatedLabel = updatedAt ? formatYmd(updatedAt) : "";
+// tooltip 时间兜底:当地语言格式精确到分钟(站点 locale + 默认时区);
+// 浏览器端 time-localize.js 按浏览器 locale+系统时区重算
+const tooltipFmt = new Intl.DateTimeFormat(intlLocale(lang), {
+  dateStyle: "medium",
+  timeStyle: "short",
+  timeZone: DEFAULT_TIME_ZONE,
+});
+const pubTip = pubDate ? tooltipFmt.format(pubDate) : "";
+const updatedTip = updatedAt ? tooltipFmt.format(updatedAt) : "";
+---
+
+<div class="post-meta-inset mt-[25px] flex flex-wrap items-center gap-x-[0.667rem] gap-y-[3px] font-mono text-[14px] text-text-muted">
+  {category && categoryLabel && (
+    <a
+      href={`/${langPath(lang)}/category/${category}/`}
+      class="inline-flex items-center gap-1 font-medium text-text-secondary transition-colors hover:text-brand"
+    >
+      <Folder class="h-4 w-4 post-meta-icon-category" />
+      {categoryLabel}
+    </a>
+  )}
+  {series && seriesLabel && (
+    <a
+      href={`/${langPath(lang)}/series/${encodeURIComponent(series)}/`}
+      class="post-meta-series-link inline-flex items-center gap-1 font-medium text-text-secondary transition-colors hover:text-brand"
+      title={seriesLabel}
+    >
+      <BookOpenText class="h-4 w-4 post-meta-icon-series" />
+      {seriesLabel}
+    </a>
+  )}
+  {/* 窄屏换行点1(有专栏时):分类+专栏 一行,日期起换行 */}
+  {series && seriesLabel && (
+    <span aria-hidden="true" class="meta-break basis-full h-0 sm:hidden"></span>
+  )}
+  {dateLabel && (
+    <time
+      datetime={pubDate?.toISOString()}
+      class="group relative inline-flex items-center gap-1 text-text-secondary"
+      aria-label={t(lang, "byPrefix")}
+    >
+      <CalendarArrowUp class="h-4 w-4 post-meta-icon-publish" />
+      <span data-tz-date-text>{dateLabel}</span>
+      <span
+        role="tooltip"
+        class="pointer-events-none absolute bottom-[calc(100%+6px)] left-1/2 -translate-x-1/2 rounded-md border border-border bg-surface-raised px-2 py-1 text-xs whitespace-nowrap text-text-secondary opacity-0 invisible shadow-md transition-opacity duration-150 group-hover:visible group-hover:opacity-100"
+      >
+        {t(lang, "byPrefix")} <span data-tz-tip>{pubTip}</span>
+      </span>
+    </time>
+  )}
+  {pubDate && updatedAt && (
+    <time
+      datetime={updatedAt.toISOString()}
+      class="group relative inline-flex items-center gap-1 text-text-secondary"
+      aria-label={t(lang, "updatedPrefix")}
+    >
+      <CalendarSync class="h-4 w-4 post-meta-icon-updated" />
+      <span data-tz-date-text>{updatedLabel}</span>
+      <span
+        role="tooltip"
+        class="pointer-events-none absolute bottom-[calc(100%+6px)] left-1/2 -translate-x-1/2 rounded-md border border-border bg-surface-raised px-2 py-1 text-xs whitespace-nowrap text-text-secondary opacity-0 invisible shadow-md transition-opacity duration-150 group-hover:visible group-hover:opacity-100"
+      >
+        {t(lang, "updatedPrefix")} <span data-tz-tip>{updatedTip}</span>
+      </span>
+    </time>
+  )}
+  {/* 标签:追加到分类/日期同一行,一行放不下自动折行。
+     间距逻辑见 layout.css(额外 8px 加在前一个 time 上,
+     避免折行时标签首项缩进) */}
+  {/* 窄屏换行点2:标签独立一行 */}
+  <span aria-hidden="true" class="meta-break basis-full h-0 sm:hidden"></span>
+  {tags && tags.length > 0 && (
+    <span class="inline-flex flex-wrap items-center gap-1.5">
+      {tags.map((tag) => (
+        <TagChip
+          name={tag}
+          label={taxonomyLabel(tagLabels, tag, lang)}
+          href={`/${langPath(lang)}/tags/${encodeURIComponent(tag)}/`}
+        />
+      ))}
+    </span>
+  )}
+</div>

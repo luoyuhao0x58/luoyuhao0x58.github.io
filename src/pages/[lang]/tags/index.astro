@@ -1,8 +1,8 @@
 ---
-import { getCollection } from "astro:content";
 import BaseLayout from "../../../layouts/BaseLayout.astro";
 import { getActiveLangs } from "../../../lib/active-langs";
-import { codeFromPath, langPath, languages, t } from "../../../i18n";
+import { getTagCounts } from "../../../lib/posts";
+import { codeFromPath, langPath, t } from "../../../i18n";
 import { tagLabels, taxonomyLabel } from "../../../taxonomy";
 import Tag from "../../../components/icons/Tag.astro";
 
@@ -12,16 +12,9 @@ export async function getStaticPaths() {
 }
 
 const lang = codeFromPath(Astro.params.lang ?? "zh");
-const posts = (await getCollection("posts")).filter(
-  (post) => post.data.lang === lang,
-);
-// 统计当前语言下每个标签的文章数,按计数降序(同数按标签名)
-const tagCounts = new Map<string, number>();
-for (const post of posts) {
-  for (const tag of post.data.tags) {
-    tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1);
-  }
-}
+// 统计当前语言下每个标签的文章数,按计数降序(同数按标签名)。
+// 计数与标签分页页/sitemap 同源(lib/posts.getTagCounts)。
+const tagCounts = (await getTagCounts()).get(lang) ?? new Map<string, number>();
 const tags = [...tagCounts.entries()].sort(
   (a, b) => b[1] - a[1] || a[0].localeCompare(b[0], lang),
 );

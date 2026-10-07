@@ -1,13 +1,13 @@
 ---
 // 语言链接列表(被 LangSwitcher 的桌面/手机两种形态复用)。
 // data-astro-reload:语言切换强制整页加载,SSR 按新语言完整重渲(persist 的 header/footer 不残留旧语言)。
-import { langFromPath, languages, langPath, stripLangPrefix } from "../i18n";
-import type { Locale } from "../i18n";
+import { langFromPath, langPath, stripLangPrefix } from "../i18n";
+import type { Language, Locale } from "../i18n";
 
 interface Props {
   currentPath: string;
   /** 活跃语言(有文章才渲染),由 Header 计算后传入;无文章的语言不列在切换器里。 */
-  langs: typeof languages;
+  langs: Language[];
   /** Explicit per-language target URLs (e.g. translated post pages); falls back to parallel path replacement. */
   targets?: Partial<Record<Locale, string>>;
 }
@@ -18,7 +18,7 @@ const rest = stripLangPrefix(currentPath);
 
 {
   langs.map((lang) => {
-    const href = targets[lang.code] ?? `/${langPath(lang.code)}${rest}`;
+    const href = targets[lang.code as Locale] ?? `/${langPath(lang.code)}${rest}`;
     return (
       <li>
         <a

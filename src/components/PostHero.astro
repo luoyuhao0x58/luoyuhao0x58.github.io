@@ -1,0 +1,25 @@
+---
+// 文章题图(hero):容器固定 16:9 比例占位,图片加载后淡入;加载失败时静默回退
+// 到无题图布局(隐藏容器 + 移除 grid 的 has-hero)。从 MarkdownPostLayout 拆分,
+// 标记与行为不变(onload/onerror 内联脚本、CSS 类名原样保留)。
+import { expandCdnBase } from "../lib/cdn.mjs";
+
+interface Props {
+  image: { url: string; alt: string };
+}
+const { image } = Astro.props;
+---
+
+<div class="post-hero overflow-hidden">
+  {/* 容器固定 16:9 比例占位(见 layout.css):页面加载期间高度稳定,
+      标题位置从初始就正确、不跳位;图片加载成功后淡入填充。
+      失败时 onerror 静默:整体隐藏 + 移除 grid 的 has-hero(回退无题图布局)。 */}
+  <img
+    src={expandCdnBase(image.url)}
+    alt={image.alt}
+    draggable="false"
+    class="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-500 [mask-image:linear-gradient(to_bottom,black_85%,transparent_100%)]"
+    onload={`this.classList.remove("opacity-0");`}
+    onerror={`this.closest(".post-hero")?.classList.add("hidden");this.closest(".post-grid")?.classList.remove("has-hero");this.setAttribute("alt","");window.dispatchEvent(new Event("toc-realign"));`}
+  />
+</div>

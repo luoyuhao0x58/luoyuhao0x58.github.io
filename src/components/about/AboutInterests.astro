@@ -1,0 +1,46 @@
+---
+// 关于页"喜好"区块:名称 + 电池能量格(按喜好程度点亮格子,与技能横条区分)。
+// 结构/文案与拆分前完全一致。
+import { t } from "../../i18n";
+import type { CollectionEntry } from "astro:content";
+
+interface Props {
+  lang: string;
+  data?: CollectionEntry<"about">["data"];
+}
+const { lang, data } = Astro.props;
+---
+
+{data?.interests.length ? (
+  <section class="about-section mt-10">
+    <h3>{t(lang, "interestsTitle")}</h3>
+    <ul class="about-interests">
+      {[...data.interests]
+        .sort((a, b) => b.level - a.level)
+        .map((interest) => (
+          <li class="about-interest">
+            <span class="about-interest-name">{interest.name}</span>
+            <span
+              class="about-interest-battery"
+              role="img"
+              aria-label={`${interest.name} ${interest.level}/10`}
+            >
+              {[0, 1, 2, 3, 4].map((i) => {
+                const full = Math.floor(interest.level / 2); // 整格数
+                const isFull = i < full;
+                const isPartial = i === full && interest.level % 2 === 1; // 最右半格
+                return (
+                  <span
+                    class="about-battery-cell"
+                    data-on={isFull}
+                    data-partial={isPartial}
+                    style={isPartial ? "--frac: 0.5" : undefined}
+                  ></span>
+                );
+              })}
+            </span>
+          </li>
+        ))}
+    </ul>
+  </section>
+) : null}

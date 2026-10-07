@@ -8,6 +8,7 @@ import ThemeScript from "../components/ThemeScript.astro";
 import ViewTransitionDisable from "../components/ViewTransitionDisable.astro";
 import { ClientRouter } from "astro:transitions";
 import { codeFromPath, languages, langPath, stripLangPrefix, t } from "../i18n";
+import { getActiveLangs } from "../lib/active-langs";
 import { expandCdnBase } from "../lib/cdn.mjs";
 
 interface Props {
@@ -27,6 +28,9 @@ const pathname = Astro.url.pathname;
 const site = new URL(Astro.site ?? "https://luoyuhao.nettix.top");
 const canonical = new URL(pathname, site).href;
 const rest = stripLangPrefix(pathname);
+// 活跃语言(本构建实际构建的语言):hreflang 只覆盖它们,不再为 es/ja/ko/ru/ar
+// 生成指向 404 的 alternate 链接。
+const activeLangs = await getActiveLangs();
 ---
 
 <html lang={htmlLang} dir={htmlLang === "ar" ? "rtl" : "ltr"}>
@@ -61,7 +65,7 @@ const rest = stripLangPrefix(pathname);
       href={`/${langPath(code)}/rss.xml`}
     />
     {
-      languages.map((langEntry) => (
+      activeLangs.map((langEntry) => (
         <link
           rel="alternate"
           hreflang={langEntry.code}

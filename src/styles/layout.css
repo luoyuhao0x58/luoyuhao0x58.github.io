@@ -2,6 +2,17 @@
  * 文章页布局:标题锚点 + 纸片/三栏/目录/题图 + 响应式
  * ========================================================================== */
 
+/* ================= 深色覆盖值单源(--dark-* 变量组) =================
+ * 布局区深色覆盖值只定义一次;下方 auto(prefers-color-scheme)与
+ * 手动(:root[data-theme="dark"])两分支共同引用。 */
+:root {
+  --dark-meta-icon-category: #4994c4; /* 品牌浅蓝(dark 主题金,分类避免同色系) */
+  --dark-meta-icon-publish: #87c4a8;
+  --dark-meta-icon-updated: #cb909a;
+  --dark-meta-icon-series: #b39ddb;
+  --dark-about-skill-track: var(--toc-hover);
+}
+
 /* ================= 内容列容器(列表页/首页) ================= */
 
 /* 内容列:宽度与文章纸片一致(--content-width),列表页/分类/标签/系列与正文
@@ -251,7 +262,7 @@
 .post-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  grid-template-areas: "toc" "article" "ad" "comments";
+  grid-template-areas: "toc" "article" "ad";
   width: 100%;
 }
 .post-toc {
@@ -351,35 +362,16 @@
      tooltip 显示区域仍在 meta 行内,不受影响。 */
   overflow-x: clip;
 }
-/* 摘要卡片:虚线边框 + 正文文字同色(浅红褐 #9d2933 / 深蓝白 #d6ecf0);角标纸片色挖空不变 */
+/* 摘要卡片:虚线边框 + 正文文字同色(浅红褐 #664757 / 深蓝白 #d6ecf0);
+   颜色走 --summary-fg 令牌(深浅主题自动翻转),无需 dark 分支 */
 .post-summary-card {
-  border: 1px dashed #664757; /* 小横线虚线 */
+  border: 1px dashed var(--summary-fg); /* 小横线虚线 */
 }
 .post-summary-card p {
-  color: #664757;
+  color: var(--summary-fg);
 }
 .post-summary-card > span {
-  color: #664757; /* 角标"摘要"与边框/正文同色 */
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]):not([data-theme="dark"]) .post-summary-card {
-    border-color: #d6ecf0;
-  }
-  :root:not([data-theme="light"]):not([data-theme="dark"]) .post-summary-card p {
-    color: #d6ecf0;
-  }
-  :root:not([data-theme="light"]):not([data-theme="dark"]) .post-summary-card > span {
-    color: #d6ecf0;
-  }
-}
-:root[data-theme="dark"] .post-summary-card {
-  border-color: #d6ecf0;
-}
-:root[data-theme="dark"] .post-summary-card p {
-  color: #d6ecf0;
-}
-:root[data-theme="dark"] .post-summary-card > span {
-  color: #d6ecf0;
+  color: var(--summary-fg); /* 角标"摘要"与边框/正文同色 */
 }
 /* 元信息行图标:分类/发布/更新三色区分。浊色系(饱和≈40%,大地色)与蓝色主题
    低对比协调;dark 下主题色为金,分类用品牌蓝避免撞色,其余同风格提亮 */
@@ -394,23 +386,23 @@
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]):not([data-theme="dark"]) .post-meta-icon-category {
-    color: #4994c4; /* 品牌浅蓝(dark 主题金,分类避免同色系) */
+    color: var(--dark-meta-icon-category);
   }
   :root:not([data-theme="light"]):not([data-theme="dark"]) .post-meta-icon-publish {
-    color: #87c4a8;
+    color: var(--dark-meta-icon-publish);
   }
   :root:not([data-theme="light"]):not([data-theme="dark"]) .post-meta-icon-updated {
-    color: #cb909a;
+    color: var(--dark-meta-icon-updated);
   }
 }
 :root[data-theme="dark"] .post-meta-icon-category {
-  color: #4994c4;
+  color: var(--dark-meta-icon-category);
 }
 :root[data-theme="dark"] .post-meta-icon-publish {
-  color: #87c4a8;
+  color: var(--dark-meta-icon-publish);
 }
 :root[data-theme="dark"] .post-meta-icon-updated {
-  color: #cb909a;
+  color: var(--dark-meta-icon-updated);
 }
 /* 专栏入口:浊紫系,与分类(浊金)/发布(灰绿)/更新(藕粉)三色区分;
    dark 下提亮同风格。 */
@@ -419,11 +411,11 @@
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]):not([data-theme="dark"]) .post-meta-icon-series {
-    color: #b39ddb;
+    color: var(--dark-meta-icon-series);
   }
 }
 :root[data-theme="dark"] .post-meta-icon-series {
-  color: #b39ddb;
+  color: var(--dark-meta-icon-series);
 }
 /* 专栏链接长标题:窄屏截断省略(nowrap 防中文拆字 + max-width + ellipsis),
    系列全名在系列页展示,meta 行保持一行 */
@@ -461,11 +453,6 @@
   z-index: 5;
   margin-inline: var(--indent);
   transition: background-color 0.2s ease, box-shadow 0.2s ease;
-}
-/* 定住时:实心表面 + 阴影(毛玻璃已弃用,方案 A) */
-.post-toc-mobile.is-stuck {
-  background: var(--surface);
-  box-shadow: var(--ntx-shadow-sm);
 }
 /* 手机(<640px):导航条目录按钮显示(仅文章页 body[data-has-toc]),
    正文折叠目录隐藏(改用导航条按钮 + 浮动面板);平板/桌面按钮隐藏。 */
@@ -604,6 +591,7 @@
 .post-toc-mobile .toc-body::-webkit-scrollbar-track {
   background: transparent;
 }
+/* 定住时:实心表面 + 阴影(毛玻璃已弃用,方案 A;阴影取后生效的 --ntx-shadow-md,已与文件早期重复定义合并) */
 .post-toc-mobile.is-stuck {
   background: var(--surface);
   box-shadow: var(--ntx-shadow-md);
@@ -620,13 +608,6 @@
 }
 .post-ad {
   grid-area: ad;
-}
-.post-comments {
-  grid-area: comments;
-  width: 100%;
-  max-width: var(--content-width);
-  margin-inline: auto;
-  padding-inline: 1rem;
 }
 
 /* 两侧出现空隙(视口 > 664):恢复纸片——边框/阴影/加大留白/顶部空隙(无圆角),
@@ -893,11 +874,11 @@ footer::before {
    改用亮一档的 toc-hover(#3a3a3a),用户反馈后调整。
    auto 分支需限定系统暗色,否则亮色系统下轨道也被换成 toc-hover。 */
 :root[data-theme="dark"] .about-skill-bar {
-  background: var(--toc-hover);
+  background: var(--dark-about-skill-track);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]):not([data-theme="dark"]) .about-skill-bar {
-    background: var(--toc-hover);
+    background: var(--dark-about-skill-track);
   }
 }
 @media (max-width: 639px) {

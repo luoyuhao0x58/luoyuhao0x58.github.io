@@ -1,0 +1,37 @@
+---
+// 关于页"技术能力"区块:名称 + 水平进度条(按熟练度降序,不显示数字)。
+// 结构/文案与拆分前完全一致。
+import { t } from "../../i18n";
+import type { CollectionEntry } from "astro:content";
+
+interface Props {
+  lang: string;
+  data?: CollectionEntry<"about">["data"];
+}
+const { lang, data } = Astro.props;
+---
+
+{data?.skills.length ? (
+  <section class="about-section mt-10">
+    <h3>{t(lang, "skillsTitle")}</h3>
+    <ul class="about-skills">
+      {[...data.skills]
+        .sort((a, b) => b.level - a.level)
+        .map((skill) => (
+          <li class="about-skill">
+            <span class="about-skill-name">{skill.name}</span>
+            <span
+              class="about-skill-bar"
+              role="img"
+              aria-label={`${skill.name} ${skill.level}/10`}
+            >
+              <span
+                class="about-skill-fill"
+                style={`width: ${skill.level * 10}%`}
+              ></span>
+            </span>
+          </li>
+        ))}
+    </ul>
+  </section>
+) : null}

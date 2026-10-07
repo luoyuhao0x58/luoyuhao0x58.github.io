@@ -1,12 +1,15 @@
 ---
+import { Image } from "astro:assets";
+import avatar from "../../assets/avatar.png";
 import { getCollection } from "astro:content";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import PostCard from "../../components/PostCard.astro";
+import EmailLink from "../../components/EmailLink.astro";
 import GitHub from "../../components/icons/GitHub.astro";
 import Link from "../../components/icons/Link.astro";
-import Mail from "../../components/icons/Mail.astro";
 import { getActiveLangs } from "../../lib/active-langs";
-import { codeFromPath, langPath, languages, t } from "../../i18n";
+import { chipClass } from "../../lib/chip-class";
+import { codeFromPath, langPath, t } from "../../i18n";
 import { SITE } from "../../lib/site";
 
 export async function getStaticPaths() {
@@ -22,12 +25,6 @@ const posts = (await getCollection("posts"))
   .filter((post) => post.data.lang === lang)
   .sort((a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime());
 const featured = posts.slice(0, 5);
-
-// 邮箱反爬:构建时把邮箱编码为 base64 存 data 属性,客户端 atob 解码赋值 mailto
-// (静态 HTML 只出现 base64,无明文邮箱,见文件底部 <script>)
-const emailB64 = btoa(`${SITE.emailUser}@${SITE.emailDomain}`);
-const chipClass =
-  "inline-flex items-center gap-2 rounded-full border border-border bg-(--article-bg-soft) px-4 py-1.5 text-sm text-text-secondary transition-colors hover:border-brand hover:text-brand";
 ---
 
 <BaseLayout lang={lang} title={t(lang, "siteName")} description={t(lang, "heroSubtitle")}>
@@ -35,11 +32,14 @@ const chipClass =
     <div class="paper-list">
       <!-- Hero:头像 + 自我介绍(与列表同纸片,统一) -->
       <div class="paper-list-hero">
-        <img
-          src="/avatar.png"
+        <Image
+          src={avatar}
           alt={t(lang, "avatarAlt")}
           width={112}
           height={112}
+          widths={[112, 224, 336]}
+          sizes="112px"
+          loading="eager"
           draggable="false"
           class="h-28 w-28 rounded-full border border-border object-cover shadow-md"
           style="background-color: var(--article-bg-soft)"
@@ -70,16 +70,7 @@ const chipClass =
             <GitHub class="h-4 w-4" />
             GitHub
           </a>
-          <a
-            id="hero-email-link"
-            href="#"
-            class={chipClass}
-            data-email-b64={emailB64}
-            aria-label={`Email ${SITE.ownerName}`}
-          >
-            <Mail class="h-4 w-4" />
-            Email
-          </a>
+          <EmailLink id="hero-email-link" />
         </div>
       </div>
 
@@ -103,13 +94,3 @@ const chipClass =
     </div>
   </div>
 </BaseLayout>
-
-<script>
-  // 邮箱反爬:data-email-b64 存 base64,atob 解码组装 mailto(静态 HTML 无明文邮箱)
-  import { SITE } from "../../lib/site";
-  const emailLink = document.getElementById("hero-email-link");
-  if (emailLink?.dataset.emailB64) {
-    const email = atob(emailLink.dataset.emailB64);
-    emailLink.setAttribute("href", `mailto:${SITE.ownerName} <${email}>`);
-  }
-</script>

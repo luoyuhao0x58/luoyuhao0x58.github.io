@@ -1,0 +1,22 @@
+---
+// 关于页题图(16:9 横幅):与文章题图同处理——淡入 + 底部渐隐,加载失败静默隐藏。
+// 标记与行为(样式类、onload/onerror 内联脚本)与拆分前完全一致。
+import { expandCdnBase } from "../../lib/cdn.mjs";
+
+interface Props {
+  url: string;
+  alt: string;
+}
+const { url, alt } = Astro.props;
+---
+
+<div class="about-hero overflow-hidden">
+  <img
+    src={expandCdnBase(url)}
+    alt={alt}
+    draggable="false"
+    class="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-500 [mask-image:linear-gradient(to_bottom,black_85%,transparent_100%)]"
+    onload={`this.classList.remove("opacity-0");`}
+    onerror={`this.closest(".about-hero")?.classList.add("hidden");this.setAttribute("alt","");`}
+  />
+</div>

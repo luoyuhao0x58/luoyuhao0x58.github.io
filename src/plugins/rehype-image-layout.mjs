@@ -61,6 +61,11 @@ function processImg(node, parent, grandparent, pairs) {
   const existing = props.className ? (Array.isArray(props.className) ? props.className : [props.className]) : [];
   props.className = existing.concat(cls);
 
+  // 正文图片懒加载:现代浏览器均支持,显式声明 loading/decoding 避免默认行为差异;
+  // 作者若在 markdown 里显式指定(如 loading="eager")则保留原值不覆盖。
+  if (props.loading === undefined) props.loading = "lazy";
+  if (props.decoding === undefined) props.decoding = "async";
+
   // pair:记录图所在段落,供合并
   if (keyword === "pair") {
     const p = parent && parent.type === "element" && parent.tagName === "p"

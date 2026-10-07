@@ -27,11 +27,33 @@ const { chromium } = require("playwright");
 
 // 项目根(src/plugins/ → 上两级),用于静态服务 node_modules/mermaid
 const projectRoot = fileURLToPath(new URL("../../", import.meta.url));
+// 规范化去掉尾部路径分隔符(fileURLToPath 的目录 URL 带尾部分隔符),
+// 保证下方前缀比较(projectRoot + path.sep)在 Windows 上不出现双分隔符误判。
+const rootDir = path.resolve(projectRoot);
 
-// 模块级单例:浏览器 + 本地静态服务(构建期无网,浏览器从本地加载 mermaid 模块)。
-// 懒启动——只有含 mermaid 的页面才起浏览器;构建进程退出时自动关闭。
+// 静态服务只允许读取 projectRoot 内的文件:
+// path.resolve 会把 ../ 归一化到真实路径,再断言解析结果必须位于 rootDir 内,
+// 否则视为路径遍历(如 /../../../../etc/passwd)直接返回 404。
+// 前缀比较带 path.sep:既防 /foo 伪装成 /foobar 的前缀攻击,也兼容 Windows 分隔符。
+function resolveInsideRoot(pathname) {
+  // 前导 "." 把以 "/" 开头的 URL 路径转成相对路径,避免 path.resolve
+  // 把它当作绝对路径重置到文件系统根(丢掉 projectRoot)。
+  const filePath = path.resolve(rootDir, "." + decodeURIComponent(pathname));
+  if (filePath !== rootDir && !filePath.startsWith(rootDir + path.sep)) {
+    return null;
+  }
+  return filePath;
+}
+
+// 模块级单例:浏览器 + 本地静态服务 + 共享页面会话(构建期无网,浏览器从本地
+// 加载 mermaid 模块)。懒启动——只有含 mermaid 的页面才起浏览器;构建进程退出
+// 时自动关闭。
 let browserPromise = null;
 let serverPromise = null;
+let pagePromise = null;
+// 渲染串行队列:共享页面不能并发跑 page.evaluate,Astro 并行处理多个 markdown
+// 文件时,renderAll 调用经此队列排队逐个执行。
+let renderQueue = Promise.resolve();
 
 function getServer() {
   if (!serverPromise) {
@@ -44,9 +66,13 @@ function getServer() {
           return;
         }
         try {
-          const body = readFileSync(
-            path.join(projectRoot, decodeURIComponent(u.pathname)),
-          );
+          const filePath = resolveInsideRoot(u.pathname);
+          if (filePath === null) {
+            res.statusCode = 404;
+            res.end();
+            return;
+          }
+          const body = readFileSync(filePath);
           res.setHeader("Content-Type", "text/javascript");
           res.end(body);
         } catch {
@@ -87,35 +113,68 @@ function getBrowser() {
 // 见 src/styles/mermaid-palette.css),深浅主题靠 CSS 变量切换,同一份 svg 即自适应。
 // 不用双 svg 方案:HTML 体积减半,主题切换纯 CSS 零 JS。
 
-/** 批量渲染:一次页面会话加载 mermaid 模块,逐图渲染(浏览器只启动一次) */
-async function renderAll(sources) {
-  const browser = await getBrowser();
-  const { port } = await getServer();
-  const page = await browser.newPage();
-  try {
-    await page.goto(`http://127.0.0.1:${port}/`, { waitUntil: "load" });
-    // 注入站内 --font-sans 字体栈定义(var(--font-sans) 在 svg style 块里由
-    // 用户浏览器解析;构建期裸页面无此变量,mermaid 用 Chromium fallback 字体
-    // 测量行高/宽度,与真实渲染不一致 → 节点尺寸(高度/宽度)算错、文本被裁。
-    // 注入后构建期测量与用户浏览器同字体栈,尺寸对齐。
-    await page.addStyleTag({
-      content:
-        ':root{--font-sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";}',
+// 共享页面会话:newPage + goto + import/initialize mermaid 只做一次,构建期内
+// 所有含 mermaid 的文件复用同一会话渲染(性能优化:避免每文件重建页、重载模块)。
+function getPage() {
+  if (!pagePromise) {
+    pagePromise = (async () => {
+      const browser = await getBrowser();
+      const { port } = await getServer();
+      const page = await browser.newPage();
+      try {
+        await page.goto(`http://127.0.0.1:${port}/`, { waitUntil: "load" });
+        // 注入站内 --font-sans 字体栈定义(var(--font-sans) 在 svg style 块里由
+        // 用户浏览器解析;构建期裸页面无此变量,mermaid 用 Chromium fallback 字体
+        // 测量行高/宽度,与真实渲染不一致 → 节点尺寸(高度/宽度)算错、文本被裁。
+        // 注入后构建期测量与用户浏览器同字体栈,尺寸对齐。
+        await page.addStyleTag({
+          content:
+            ':root{--font-sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";}',
+        });
+        // mermaid 模块只加载并 initialize 一次,之后渲染直接取 globalThis.__mmd
+        await page.evaluate(async () => {
+          const { default: mermaid } = await import(
+            "/node_modules/mermaid/dist/mermaid.esm.mjs"
+          );
+          mermaid.initialize({
+            startOnLoad: false,
+            theme: "base",
+            // 显式 securityLevel: "strict"(mermaid 默认值):渲染结果中可点击
+            // 的链接跳转与 HTML 注入(点击事件/外链)一律被剥离。防御性写出,
+            // 防止上游改变默认值或后续改配置时静默放开注入面。
+            securityLevel: "strict",
+            // 字体栈写进 svg 的 style 块(var() 由用户浏览器解析),与正文观感一致;
+            // 颜色不在此覆盖——由 mermaid.css 用 --mmd-* 色板变量统一处理
+            themeVariables: {
+              fontFamily: "var(--font-sans)",
+              fontSize: "14px",
+            },
+          });
+          globalThis.__mmd = mermaid;
+        });
+        return page;
+      } catch (err) {
+        await page.close().catch(() => {});
+        throw err;
+      }
+    })().catch((err) => {
+      pagePromise = null; // 初始化失败允许后续重试
+      throw err;
     });
-    return await page.evaluate(async (list) => {
-      const { default: mermaid } = await import(
-        "/node_modules/mermaid/dist/mermaid.esm.mjs"
-      );
-      mermaid.initialize({
-        startOnLoad: false,
-        theme: "base",
-        // 字体栈写进 svg 的 style 块(var() 由用户浏览器解析),与正文观感一致;
-        // 颜色不在此覆盖——由 mermaid.css 用 --mmd-* 色板变量统一处理
-        themeVariables: {
-          fontFamily: "var(--font-sans)",
-          fontSize: "14px",
-        },
-      });
+  }
+  return pagePromise;
+}
+
+/** 批量渲染:复用共享页面会话上的已初始化 mermaid,逐图渲染。
+ *  剩余限制:rehype 插件按文件逐个调用,无法跨文件合并渲染批次,每个含
+ *  mermaid 的文件仍会各发一次 page.evaluate 往返;但页面创建、goto 与
+ *  mermaid 模块加载/初始化已收敛为整个构建一次。 */
+async function renderAll(sources) {
+  const page = await getPage();
+  // 共享页面不能并发 evaluate,Astro 并行构建时经 renderQueue 排队逐个执行
+  const run = () =>
+    page.evaluate(async (list) => {
+      const mermaid = globalThis.__mmd;
       const out = [];
       for (const src of list) {
         try {
@@ -130,24 +189,28 @@ async function renderAll(sources) {
       }
       return out;
     }, sources);
-  } finally {
-    await page.close();
-  }
+  const result = renderQueue.then(run, run);
+  renderQueue = result.then(
+    () => undefined,
+    () => undefined,
+  );
+  return result;
 }
 
 export default function rehypeMermaidSsr() {
   return async (tree) => {
-    // 收集 <pre><code class="language-mermaid">…</code></pre>
-    // (本插件在 Astro Shiki 高亮之前运行,匹配 code 的语言 class)
+    // 收集 mermaid 代码块。实际行为:Astro 管线里 rehype 插件在 Shiki 高亮
+    // **之后**运行,Shiki 会给 <pre> 打上 data-language="mermaid" 属性。
+    // 双保险匹配:① Shiki 处理后的形态 pre[data-language="mermaid"];
+    // ② 未经过 Shiki 的源码形态 pre > code.language-mermaid。
+    // 两条路都认,消除对 Astro 插件管线顺序的脆弱依赖。
     const targets = [];
     const visit = (node) => {
       if (!node || typeof node !== "object") return;
       if (
         node.type === "element" &&
         node.tagName === "pre" &&
-        // Astro 管线中 rehype 插件在 Shiki 之后运行,此时 pre 已有 dataLanguage 属性
-        // (客户端旧方案也用 pre[data-language="mermaid"] 选择器,二者一致)
-        node.properties?.dataLanguage === "mermaid"
+        isMermaidBlock(node)
       ) {
         const code = node.children.find(
           (c) => c.type === "element" && c.tagName === "code",
@@ -189,6 +252,22 @@ export default function rehypeMermaidSsr() {
   };
 }
 
+/** 判断 pre 是否为 mermaid 代码块:匹配 Shiki 处理后的
+ *  pre[data-language="mermaid"],或源码形态的 code.language-mermaid
+ *  (className 可能是数组或空格分隔字符串)。 */
+function isMermaidBlock(pre) {
+  if (pre.properties?.dataLanguage === "mermaid") return true;
+  const code = pre.children?.find(
+    (c) => c.type === "element" && c.tagName === "code",
+  );
+  const className = code?.properties?.className;
+  if (Array.isArray(className)) return className.includes("language-mermaid");
+  return (
+    typeof className === "string" &&
+    className.split(/\s+/).includes("language-mermaid")
+  );
+}
+
 function textOf(node) {
   let out = "";
   const walk = (n) => {
@@ -225,7 +304,7 @@ function numberActors(svg) {
   let next = 0;
   return svg.replace(
     /<rect([^>]*class="actor actor-(?:top|bottom)"[^>]*)>/g,
-    (full, attrs) => {
+    (_full, attrs) => {
       const name = attrs.match(/name="([^"]*)"/)?.[1] ?? "";
       let idx = seen.get(name);
       if (idx === undefined) {

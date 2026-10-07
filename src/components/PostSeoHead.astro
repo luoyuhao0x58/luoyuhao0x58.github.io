@@ -1,0 +1,150 @@
+---
+// 文章页 SEO head 区块(渲染在 layout 的 <head> 内):Open Graph / Twitter Card meta、
+// article 时间 meta、hreflang alternate、RSS 发现链接与 JSON-LD 结构化数据
+// (Article(BlogPosting) + BreadcrumbList)。从 MarkdownPostLayout 拆分,渲染输出不变。
+import { codeFromPath, langPath, languages, t } from "../i18n";
+import type { Language, Locale } from "../i18n";
+import { tagLabels, taxonomyLabel } from "../taxonomy";
+import { SITE } from "../lib/site";
+import { expandCdnBase } from "../lib/cdn.mjs";
+
+interface Props {
+  title: string;
+  description?: string;
+  lang: string;
+  canonical: string;
+  pubDate?: Date;
+  /** 最后修改时间(显式 updated 回退 pubDate);无 pubDate 时为 null。 */
+  updatedAt?: Date | null;
+  tags?: string[];
+  /** 内容大类(映射表 key)。 */
+  category?: string;
+  /** 本地化分类文案(无分类/未命中时为空串)。 */
+  categoryLabel?: string;
+  image?: { url: string; alt: string };
+  /** 活跃语言(hreflang 只列本构建实际构建的语言)。 */
+  langs: Language[];
+  /** 活跃语言各自的同 slug 目标 URL(非 404)。 */
+  targets: Partial<Record<Locale, string>>;
+}
+const {
+  title,
+  description,
+  lang,
+  canonical,
+  pubDate,
+  updatedAt = null,
+  tags,
+  category,
+  categoryLabel = "",
+  image,
+  langs,
+  targets,
+} = Astro.props;
+const code = codeFromPath(lang);
+const htmlLang = languages.find((l) => l.code === code)?.htmlLang ?? "zh-CN";
+const site = new URL(Astro.site ?? "https://luoyuhao.nettix.top");
+
+// SEO 结构化数据(JSON-LD):category/tags 通过 Article schema 的
+// articleSection/keywords 字段进 head,分类层级进 BreadcrumbList。
+// 系列(series)无标准 schema 字段,靠站内互链表达,不入 head。
+const articleImage = image
+  ? new URL(expandCdnBase(image.url), site).href
+  : undefined;
+const articleLd = {
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "@id": canonical,
+  headline: title,
+  ...(description ? { description } : {}),
+  inLanguage: htmlLang,
+  ...(pubDate ? { datePublished: pubDate.toISOString() } : {}),
+  ...(updatedAt ? { dateModified: updatedAt.toISOString() } : {}),
+  author: {
+    "@type": "Person",
+    name: SITE.ownerName,
+    // 作者主页:指到当前语言对应的 about 页(消除 Rich Results 的 author.url
+    // 建议项,利于作者身份识别;不同语言各指各的) */
+    url: new URL(`/${langPath(lang)}/about/`, site).href,
+  },
+  ...(tags && tags.length > 0
+    ? { keywords: tags.map((tag) => taxonomyLabel(tagLabels, tag, lang)) }
+    : {}),
+  ...(category && categoryLabel ? { articleSection: categoryLabel } : {}),
+  ...(articleImage ? { image: articleImage } : {}),
+  mainEntityOfPage: { "@type": "WebPage", "@id": canonical },
+};
+// 面包屑:首页 > 分类(如有) > 文章
+const crumbList = [
+  {
+    "@type": "ListItem",
+    position: 1,
+    name: t(lang, "siteName"),
+    item: new URL(`/${langPath(lang)}/`, site).href,
+  },
+  ...(category && categoryLabel
+    ? [
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: categoryLabel,
+          item: new URL(`/${langPath(lang)}/category/${category}/`, site).href,
+        },
+      ]
+    : []),
+];
+const breadcrumbLd = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    ...crumbList,
+    { "@type": "ListItem", position: crumbList.length + 1, name: title, item: canonical },
+  ],
+};
+// JSON 字符串里转义 < 防 HTML 解析器误读(<script> 内容未经转义输出)
+const ldJson = (obj: object) => JSON.stringify(obj).replace(/</g, "\\u003c");
+---
+
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="generator" content={Astro.generator} />
+<meta name="description" content={description} />
+<link rel="icon" href="/favicon.svg" />
+<link rel="canonical" href={canonical} />
+{/* Open Graph / Twitter Card:IM 贴链接分享时抓标题、描述、缩略图 */}
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content={site.hostname} />
+<meta property="og:title" content={title} />
+{description && <meta property="og:description" content={description} />}
+<meta property="og:url" content={canonical} />
+{image && <meta property="og:image" content={new URL(expandCdnBase(image.url), site).href} />}
+{image && <meta property="og:image:alt" content={image.alt} />}
+{/* 有题图用大图卡,无题图用 summary */}
+<meta name="twitter:card" content={image ? "summary_large_image" : "summary"} />
+<meta name="twitter:title" content={title} />
+{description && <meta name="twitter:description" content={description} />}
+{image && <meta name="twitter:image" content={new URL(expandCdnBase(image.url), site).href} />}
+{pubDate && <meta property="article:published_time" content={pubDate.toISOString()} />}
+{updatedAt && <meta property="article:modified_time" content={updatedAt.toISOString()} />}
+<link rel="alternate" hreflang="x-default" href={new URL("/zh/", site).href} />
+{/* RSS:指向当前语言的 feed(每语言独立),供阅读器发现订阅 */}
+<link
+  rel="alternate"
+  type="application/rss+xml"
+  title={`${t(lang, "siteName")} · RSS`}
+  href={`/${langPath(code)}/rss.xml`}
+/>
+{/* 只列活跃语言:非活跃语言(es/ja/ko/ru/ar)整站 404,不再生成指向 404 的链接 */}
+{
+  langs.map((langEntry) => (
+    <link
+      rel="alternate"
+      hreflang={langEntry.code}
+      href={new URL(targets[langEntry.code as Locale] ?? `/${langPath(langEntry.code)}/`, site).href}
+    />
+  ))
+}
+<title>{title}</title>
+{/* SEO 结构化数据:Article(BlogPosting)承载 tags/category,面包屑承载分类层级 */}
+<script type="application/ld+json" set:html={ldJson(articleLd)} />
+<script type="application/ld+json" set:html={ldJson(breadcrumbLd)} />

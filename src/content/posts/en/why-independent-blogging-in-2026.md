@@ -3,7 +3,6 @@ title: "Why Independent Blogging Still Matters in 2026"
 pubDate: "2026-10-06T16:13:05+08:00"
 description: "In 2026, is it still worth running your own blog and writing long-form? This post covers the value of independent blogging, what's wrong with writing on platforms, and why now is a good time to start. It kicks off the 'Building My Blog From Scratch' series."
 lang: en
-translationOf: zh/why-independent-blogging-in-2026
 series: building-my-blog-from-scratch
 tags: ["blog"]
 # To use tags: first add the key and its per-language labels to tagLabels in src/taxonomy.ts, then write tags here — otherwise the build fails

@@ -63,8 +63,10 @@
     window.__scrollIndicatorBound__ = true;
 
     const bar = () => document.getElementById("scroll-indicator");
-    const thumb = () =>
-      bar() ? bar().querySelector(".scroll-thumb") : null;
+    const thumb = () => {
+      const b = bar();
+      return b ? b.querySelector<HTMLElement>(".scroll-thumb") : null;
+    };
 
     let hideTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -106,7 +108,7 @@
       if (e.button !== 0) return;
       const t = thumb();
       if (!t || !e.target) return;
-      if (e.target !== t && !t.contains(e.target)) return;
+      if (e.target !== t && !t.contains(e.target as Node | null)) return;
       const doc = document.documentElement;
       const max = doc.scrollHeight - doc.clientHeight;
       if (max <= 0) return;

@@ -15,25 +15,33 @@
   /* 纸片边框:独立于全局 --border,单独控制纸边可见度(深色降 alpha 至几乎不可见) */
   --paper-border: rgb(0 0 0 / 0.14);
 }
+
+/* 深色纸片值单源(--dark-* 变量组):下方 auto/manual 两分支共同引用。
+   引用主题令牌(var(--surface-raised)/var(--surface))时,在深色分支内解析为深色值。 */
+:root {
+  --dark-article-bg: var(--surface-raised);
+  --dark-article-bg-soft: rgb(36 36 36 / 0.9); /* hero 头像/按钮底:同纸底但轻微半透明,透出一点底纹 */
+  /* 单层柔和阴影:照搬 ninojay.top 暗色实测(0 5px 13px rgba(0,0,0,.35)) */
+  --dark-paper-shadow: 0 5px 13px rgb(0 0 0 / 0.35);
+  /* 纸片边框:深色取纸片(#242424)与页面底(#333333)的中间过渡色,无缝融入 */
+  --dark-paper-border: color-mix(in srgb, var(--article-bg) 50%, var(--surface));
+}
+
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]):not([data-theme="dark"]) {
     /* 纸面恢复抬升面色,不提亮底色 */
-    --article-bg: var(--surface-raised);
-    --article-bg-soft: rgb(36 36 36 / 0.9); /* hero 头像/按钮底:同纸底但轻微半透明,透出一点底纹 */
-    /* 单层柔和阴影:照搬 ninojay.top 暗色实测(0 5px 13px rgba(0,0,0,.35)) */
-    --paper-shadow: 0 5px 13px rgb(0 0 0 / 0.35);
-    /* 纸片边框:深色取纸片(#242424)与页面底(#333333)的中间过渡色,无缝融入 */
-    --paper-border: color-mix(in srgb, var(--article-bg) 50%, var(--surface));
+    --article-bg: var(--dark-article-bg);
+    --article-bg-soft: var(--dark-article-bg-soft);
+    --paper-shadow: var(--dark-paper-shadow);
+    --paper-border: var(--dark-paper-border);
   }
 }
 /* 手动深色时纸张底色与阴影跟随抬升面 */
 :root[data-theme="dark"] {
-  --article-bg: var(--surface-raised);
-  --article-bg-soft: rgb(36 36 36 / 0.9); /* hero 头像/按钮底:同纸底但轻微半透明,透出一点底纹 */
-  /* 单层柔和阴影:照搬 ninojay.top 暗色实测(0 5px 13px rgba(0,0,0,.35)) */
-  --paper-shadow: 0 5px 13px rgb(0 0 0 / 0.35);
-  /* 纸片边框:深色取纸片与页面底的中间过渡色,无缝融入 */
-  --paper-border: color-mix(in srgb, var(--article-bg) 50%, var(--surface));
+  --article-bg: var(--dark-article-bg);
+  --article-bg-soft: var(--dark-article-bg-soft);
+  --paper-shadow: var(--dark-paper-shadow);
+  --paper-border: var(--dark-paper-border);
 }
 
 html {
@@ -54,10 +62,6 @@ html {
 }
 html::-webkit-scrollbar {
   display: none;
-}
-
-body {
-  /* 视口防横向滚动已在 html 上处理(实测 body 上 overflow-x:clip 无效)。 */
 }
 
 [id] {

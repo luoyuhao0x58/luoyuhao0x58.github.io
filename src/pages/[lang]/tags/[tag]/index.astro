@@ -1,25 +1,21 @@
 ---
 import { getCollection } from "astro:content";
-import BaseLayout from "../../../../layouts/BaseLayout.astro";
-import Pagination from "../../../../components/Pagination.astro";
-import PostCard from "../../../../components/PostCard.astro";
+import ListLayout from "../../../../components/ListLayout.astro";
 import Tag from "../../../../components/icons/Tag.astro";
 import { getActiveLangs } from "../../../../lib/active-langs";
-import { codeFromPath, langPath, languages, t } from "../../../../i18n";
+import { codeFromPath, langPath } from "../../../../i18n";
 import { firstPage } from "../../../../lib/pagination";
 import { tagLabels, taxonomyLabel } from "../../../../taxonomy";
+import { getTagCounts } from "../../../../lib/posts";
 
 export async function getStaticPaths() {
-  const posts = await getCollection("posts");
+  const tagCounts = await getTagCounts();
   const activeLangs = await getActiveLangs();
   const paths = [];
   for (const lang of activeLangs) {
-    const tagSet = new Set<string>();
-    for (const post of posts) {
-      if (post.data.lang !== lang.code) continue;
-      for (const tag of post.data.tags) tagSet.add(tag);
-    }
-    for (const tag of tagSet) {
+    const tags = tagCounts.get(lang.code);
+    if (!tags) continue;
+    for (const tag of tags.keys()) {
       paths.push({ params: { lang: langPath(lang.code), tag } });
     }
   }
@@ -38,33 +34,6 @@ const posts = (await getCollection("posts"))
 const page = firstPage(posts, `${prefix}/`, prefix);
 ---
 
-<BaseLayout lang={lang} title={tagTitle} description={tagTitle}>
-  <div class="page-container w-full">
-    <div class="paper-list">
-      <div class="paper-list-head">
-        <h1>
-          <span class="inline-flex items-center gap-2">
-            <Tag class="h-6 w-6" />
-            {tagTitle}
-          </span>
-        </h1>
-      </div>
-      <div class="paper-list-body">
-        {page.data.length === 0 ? (
-          <div class="empty-state flex items-center justify-center rounded-lg border border-dashed border-border px-6 text-center">
-            <p class="text-text-muted">{t(lang, "listEmpty")}</p>
-          </div>
-        ) : (
-          <>
-            <ul class="paper-list-rows">
-              {page.data.map((post) => (
-                <PostCard post={post} lang={lang} />
-              ))}
-            </ul>
-            <Pagination lang={lang} page={page} firstPageUrl={`/${langPath(lang)}/tags/${encodeURIComponent(tag)}/`} />
-          </>
-        )}
-      </div>
-    </div>
-  </div>
-</BaseLayout>
+<ListLayout lang={lang} title={tagTitle} page={page} firstPageUrl={`/${langPath(lang)}/tags/${encodeURIComponent(tag)}/`}>
+  <Tag slot="head-icon" class="h-6 w-6" />
+</ListLayout>

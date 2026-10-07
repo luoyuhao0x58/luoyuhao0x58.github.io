@@ -1,0 +1,136 @@
+---
+// 手机端(<640px)⋮ 竖三点工具横条:上区语言切换工具,下区导航链接。
+// 位于 persist 容器外(语言 targets 随页面 SSR 更新);点击外部自动收起(渐进增强,
+// 无 JS 时 details 仍可原生开合)。从 Header.astro 拆分,标记、样式与脚本行为不变。
+import { t } from "../i18n";
+import type { Language, Locale } from "../i18n";
+import LangSwitcher from "./LangSwitcher.astro";
+import MoreVertical from "./icons/MoreVertical.astro";
+import type { NavItem } from "./HeaderNav.astro";
+
+interface Props {
+  lang: string;
+  currentPath: string;
+  /** 活跃语言(有文章才渲染),由 Header 计算后传入。 */
+  activeLangs: Language[];
+  /** Explicit per-language target URLs (e.g. translated post pages). */
+  targets?: Partial<Record<Locale, string>>;
+  /** 导航链接(桌面导航共享同一份列表,见 Header.astro)。 */
+  navItems: NavItem[];
+}
+const { lang, currentPath, activeLangs, targets, navItems } = Astro.props;
+---
+
+<details class="nav-mobile-menu">
+  <summary
+    class="flex cursor-pointer list-none select-none items-center rounded-full p-2 text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary [&::marker]:hidden [&::-webkit-details-marker]:hidden"
+    aria-label={t(lang, "toolsMenu")}
+  >
+    <MoreVertical class="h-5 w-5" />
+  </summary>
+  <div class="nav-mobile-bar">
+    <!-- 上区:工具按钮(从右到左,排满换行) -->
+    <div class="nav-mobile-tools">
+      <LangSwitcher currentPath={currentPath} langs={activeLangs} targets={targets} />
+    </div>
+    <!-- 下区:导航链接(从上到下,文字右对齐) -->
+    <nav class="nav-mobile-links" aria-label="Main">
+      {navItems.map((item) => (
+        <a href={item.href}>{item.label}</a>
+      ))}
+    </nav>
+  </div>
+</details>
+
+<style>
+  /* ⋮ 菜单仅手机显示;折叠态下分界线与 header 右侧语言入口在手机隐藏(那两条规则在 Header.astro) */
+  .nav-mobile-menu {
+    display: none;
+  }
+  @media (max-width: 639px) {
+    .nav-mobile-menu {
+      display: block;
+      /* ⋮ 贴右缘:抵消容器手机端 px-2(0.5rem),图标距视口右缘仅剩自身 p-2 */
+      margin-inline-end: -0.5rem;
+    }
+  }
+  /* 弹出列表:从 ⋮ 右下弹出,宽度自适应 = 最长导航文本 + 边距,
+     面板样式(全边框 + 圆角 + 阴影)。无外内边距:上区工具分隔线与
+     下区导航 hover 横条贴到列表左右边缘 */
+  .nav-mobile-bar {
+    position: absolute;
+    /* 顶边对齐导航条内容区底边:列表上边框正好覆盖导航条底边框,
+       两条 1px 线重叠成一条,视觉上边框"合并" */
+    top: 100%;
+    /* 右缘内移 0.5rem:⋮ 按钮有 -1rem 负外边距贴视口右缘,
+       列表若 right:0 会跟着贴边导致右边框几乎看不见 */
+    inset-inline-end: 0.5rem;
+    z-index: 30;
+    width: max-content;
+    min-width: calc(100vw * 4 / 9); /* 至少屏幕宽度 4/9 */
+    max-width: min(20rem, calc(100vw - 1rem));
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 0 0 0.625rem 0.625rem; /* 上面两角直角(与导航条边框合并),下面两角保留圆角 */
+    /* 实心面板:不透底、不模糊,任何主题/滚动位置下都保持可读 */
+    background: var(--surface);
+    box-shadow: var(--ntx-shadow-md);
+  }
+  /* 上区:工具按钮,从右到左排列、排满换行(语言按钮在右上);
+     按钮间空隙靠 gap(不靠按钮内边距),一行可放下 3 个 */
+  .nav-mobile-tools {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row-reverse;
+    gap: 0.5rem;
+    padding: 0.5625rem 1rem 0.75rem; /* 左右内边距与导航链接按钮一致(1rem);上下各增一半、左右减半过 */
+    border-bottom: 1px solid var(--border);
+  }
+  /* 工具按钮去掉自身内边距(仅此下拉列表内生效,不影响桌面/平板):
+     空隙由上方 gap 分割,增加按钮时一行能放下 3 个 */
+  .nav-mobile-tools :global(.lang-switcher summary) {
+    padding: 0;
+  }
+  /* 下区:导航链接,从上到下、整行按钮文本左对齐;
+     无水平内边距 → 链接撑满列表宽,hover 横条贴边 */
+  .nav-mobile-links {
+    display: flex;
+    flex-direction: column;
+    padding: 0.5rem 0;
+  }
+  .nav-mobile-links a {
+    display: block;
+    /* start:跟随页面方向(LTR 左对齐;RTL 如阿拉伯语自动右对齐) */
+    text-align: start;
+    padding: 0.375rem 1rem; /* 左右内边距加大(0.75rem → 1rem) */
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    transition: color 0.15s, background-color 0.15s;
+  }
+  /* hover 高亮横条:与语言菜单/代码块行 hover 一致(--code-line-hover 浅色横条) */
+  .nav-mobile-links a:hover {
+    background: var(--code-line-hover);
+    color: var(--text-primary);
+  }
+</style>
+
+<script>
+  // 事件委托 + window 单次注册标记:View Transitions 导航后模块脚本可能重新执行,
+  // 重复 addEventListener 会累积监听器;委托到 document 只注册一次。
+  // 渐进增强:点击 ⋮ 横条外部时自动收起(无 JS 时 details 仍可原生展开/收起)。
+  (function () {
+    if (window.__headerMobileMenuBound__) return;
+    window.__headerMobileMenuBound__ = true;
+
+    document.addEventListener("click", (e) => {
+      const inside = (e.target as Element | null)?.closest?.(".nav-mobile-menu");
+      document
+        .querySelectorAll<HTMLDetailsElement>(".nav-mobile-menu[open]")
+        .forEach((details) => {
+          if (!inside?.contains(details)) {
+            details.removeAttribute("open");
+          }
+        });
+    });
+  })();
+</script>
