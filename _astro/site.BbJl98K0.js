@@ -1,1 +1,0 @@
-var e={ownerName:`LUO YUHAO`,githubUrl:`https://github.com/luoyuhao0x58`,emailUser:`luoyuhao`,emailDomain:`opc.nettix.top`};export{e as t};

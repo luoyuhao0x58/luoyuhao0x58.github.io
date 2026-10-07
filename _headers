@@ -1,0 +1,14 @@
+# Security & CSP headers — applied by platforms that parse `_headers`:
+#   - Cloudflare Pages (public/ → dist output dir; see docs/configuration/headers)
+#   - Netlify (see docs Netlify headers syntax)
+# EdgeOne Makers does NOT read `_headers` — migrate these to `edgeone.json` (headers[]),
+# Vercel uses `vercel.json` (headers[]), GitHub Pages has NO custom header support.
+# All values below were verified against the built site (mermaid inline SVG, inline
+# scripts/styles, KaTeX fonts, CDN images) via a headless Chromium CSP-violation test.
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://static.nettix.top; font-src 'self' data:; connect-src 'self' https://cloudflareinsights.com https://static.cloudflareinsights.com; frame-src https://player.bilibili.com https://www.youtube.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: SAMEORIGIN
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+  Strict-Transport-Security: max-age=31536000

@@ -1,1 +1,0 @@
-import{t as e}from"./site.BbJl98K0.js";var t=document.getElementById(`about-email-link`);if(t?.dataset.emailB64){let n=atob(t.dataset.emailB64);t.setAttribute(`href`,`mailto:${e.ownerName} <${n}>`)}
