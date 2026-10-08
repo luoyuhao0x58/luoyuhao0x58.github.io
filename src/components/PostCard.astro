@@ -41,7 +41,7 @@ const dayColor = WEEKDAY_COLORS[pick("weekday")] ?? "var(--brand)";
 
 <li class="py-2.5">
   <a href={href} class="group flex items-start gap-4">
-    <!-- 左:标题 + 描述(衬线,浅色小字) -->
+    <!-- 左:标题 + 描述(正文角色字体,浅色小字) -->
     <div class="min-w-0 flex-1">
       <h3
         class="text-xl font-semibold text-brand transition-colors hover:underline hover:decoration-brand hover:underline-offset-4"
@@ -51,8 +51,8 @@ const dayColor = WEEKDAY_COLORS[pick("weekday")] ?? "var(--brand)";
       </h3>
       {excerpt && (
         <p
-          class="mt-1.5 text-[15px] font-light leading-normal text-text-secondary"
-          style="font-family: var(--font-serif)"
+          class="mt-1.5 text-[15px] font-normal leading-normal text-text-secondary"
+          style="font-family: var(--font-body)"
         >
           {excerpt}
         </p>

@@ -68,7 +68,7 @@ html::-webkit-scrollbar {
   scroll-margin-top: calc(3.5rem + 1rem);
 }
 
-/* 角色体系:UI 界面元素默认等宽(终端感);正文(文章阅读)衬线(经典排版);标题/logo 无衬线(现代)。
+/* 角色体系:UI 界面元素默认等宽(终端感);正文按语言差异化(zh/zh-Hant 黑体,en/es/ru/ja/ko 衬线);标题/logo 无衬线(现代)。
    全语言一致,各语言经 tokens.css html[lang] 块取本地字体族。 */
 body {
   font-family: var(--font-mono);

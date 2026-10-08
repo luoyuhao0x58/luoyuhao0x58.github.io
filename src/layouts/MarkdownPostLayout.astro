@@ -170,13 +170,13 @@ for (const langEntry of activeLangs) {
             </div>
           </details>
 
-          {/* 摘要:卡片式包裹,位于目录之后;角标骑在边框线上(纸片底色挖空);正文楷体,次强色保证可读 */}
+          {/* 摘要:卡片式包裹,位于目录之后;角标骑在边框线上(纸片底色挖空);正文角色字体(--font-body),随文章语言差异化;次强色保证可读 */}
           {excerpt && (
             <aside class="post-summary-card relative mx-[var(--indent)] mt-6 bg-surface-raised px-6 py-4">
               <span class="absolute -top-2.5 left-4 bg-[var(--article-bg)] px-1.5 font-mono text-xs">
                 {t(lang, "summaryBadge")}
               </span>
-              <p class="font-[family-name:var(--font-kai)] text-sm leading-relaxed">{excerpt}</p>
+              <p class="font-[family-name:var(--font-body)] text-sm leading-relaxed">{excerpt}</p>
             </aside>
           )}
 

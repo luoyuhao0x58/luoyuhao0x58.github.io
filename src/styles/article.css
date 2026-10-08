@@ -27,34 +27,12 @@
   min-width: 0;
 }
 
-/* CJK 字符段专属字体族(仅覆盖中/日/韩码段):配合正文 font-weight: 500 使用,
-   让中文/日文/韩文字符独立加粗——混排时 CJK 黑体/宋体笔画细显"虚",拉丁显"实",
-   按字符拉齐视觉重量。src 优先真实带 500 字重的 Noto Serif,系统宋体/明朝体
-   (SimSun/Songti/Yu Mincho 无 500)依赖 font-synthesis-weight 合成加粗兜底。 */
-@font-face {
-  font-family: "CJK-Strong";
-  src:
-    local("Noto Serif SC"), local("Noto Serif CJK SC"),
-    local("Songti SC"), local("SimSun"),
-    local("Hiragino Mincho ProN"), local("Yu Mincho"), local("Noto Serif JP"),
-    local("Nanum Myeongjo"), local("Noto Serif KR");
-  font-weight: 400 500;
-  unicode-range:
-    U+4E00-9FFF, U+3400-4DBF, U+F900-FAFF, /* CJK 统一表意文字/扩展A/兼容 */
-    U+3000-303F, U+FF00-FFEF, /* CJK 标点、全角形式 */
-    U+3040-30FF, U+31F0-31FF, /* 日文假名/片假名扩展 */
-    U+AC00-D7AF, U+1100-11FF; /* 韩文音节/字母 */
-}
-
-/* 正文衬线:文章阅读内容(段落/列表/引文/脚注)用衬线,与"标题无衬线、UI 等宽"区分。
-   代码块(mono)、摘要(楷体)、meta(mono)等有显式字体的元素不受影响。
-   :where 零特异性,不覆盖 h2-h5 的标题无衬线规则。
-   font-weight: 500 仅使 CJK 字符(命中 CJK-Strong)独立加粗,拉丁字符走 --font-serif;
-   font-synthesis-weight: auto 让缺 500 字重的宋体/明朝体合成加粗兜底。 */
+/* Body text font is differentiated by language via --font-body (tokens.css):
+   sans-serif heiti for zh/zh-Hant, serif for en/es/ru/ja/ko, Naskh for ar.
+   Uniform weight 400 (the CJK-Strong synthetic-500 hack is removed). */
 :where(.article-content) :is(p, li, dt, dd, blockquote, figcaption, caption, address) {
-  font-family: "CJK-Strong", var(--font-serif);
-  font-weight: 500;
-  font-synthesis-weight: auto;
+  font-family: var(--font-body);
+  font-weight: 400;
 }
 /* 表格数据用等宽(用户指定):表格内容多为数据/代码,与代码块同字体;其余正文保持衬线 */
 :where(.article-content) :is(td, th) {

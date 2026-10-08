@@ -791,7 +791,7 @@ footer::before {
   margin: 0;
   color: var(--text-secondary);
   max-width: 12rem;
-  font-family: var(--font-kai); /* 与文章摘要一致:中文楷体(书卷气),拉丁走衬线 fallback */
+  font-family: var(--font-kai); /* 中文楷体书卷气,独立于摘要(摘要已切 --font-body),拉丁走衬线 fallback */
   flex: 0 1 auto;
   min-width: 0;
   overflow-wrap: anywhere; /* 兜底:单词过长强制断开换行,绝不顶出纸片 */

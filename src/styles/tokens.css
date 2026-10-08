@@ -67,6 +67,14 @@
     Arial, "Noto Sans", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei",
     "Noto Sans SC", sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
     "Segoe UI Symbol", "Noto Color Emoji";
+  /* Body-text role, differentiated per language (see html[lang] overrides below):
+     default sans-serif heiti for zh; TC heiti for zh-Hant; serif for
+     en/es/ru/ja/ko; Naskh for ar. Local system stacks only — no webfont loading. */
+  --font-body:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, "Noto Sans", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei",
+    "Noto Sans SC", sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+    "Segoe UI Symbol", "Noto Color Emoji";
   --font-serif:
     Georgia, "Times New Roman", "Songti SC", "Noto Serif SC", "SimSun", serif;
   /* 楷体:中文手写书卷气(摘要/引文等短文本);拉丁/韩/阿 fallback 系统衬线 */
@@ -481,6 +489,12 @@ html[lang="zh-Hant"] {
     Arial, "Noto Sans", "PingFang TC", "Heiti TC", "Microsoft JhengHei",
     "Noto Sans TC", sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
     "Segoe UI Symbol", "Noto Color Emoji";
+  /* Body text: TC heiti (traditional-form glyphs) */
+  --font-body:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, "Noto Sans", "PingFang TC", "Heiti TC", "Microsoft JhengHei",
+    "Noto Sans TC", sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+    "Segoe UI Symbol", "Noto Color Emoji";
   --font-serif:
     Georgia, "Times New Roman", "Songti TC", "Noto Serif TC", "Songti SC",
     "Noto Serif SC", serif;
@@ -499,6 +513,21 @@ html[lang="zh-Hant"] {
     monospace;
 }
 
+/* ================= 语言字体切换(拉丁/西里尔正文衬线) =================
+ * en/es/ru: body text uses the newspaper-style serif stack (Georgia/Times);
+ * other roles (sans/nav/mono) keep the global default — no override needed. */
+html[lang="en"] {
+  --font-body: Georgia, "Times New Roman", "Liberation Serif", serif;
+}
+
+html[lang="es"] {
+  --font-body: Georgia, "Times New Roman", "Liberation Serif", serif;
+}
+
+html[lang="ru"] {
+  --font-body: Georgia, "Times New Roman", "PT Serif", "Liberation Serif", serif;
+}
+
 /* ================= 语言字体切换(日文/韩文/阿拉伯文) =================
  * 日文:假名与日文汉字走日文字体(Hiragino/Noto Sans JP/游ゴシック),避免日文汉字
  *   落到简体字体(PingFang SC)的简体字形;韩文:谚文/汉字走韩文字体(Apple SD Gothic
@@ -512,6 +541,8 @@ html[lang="ja"] {
     "Noto Sans JP", "Yu Gothic UI", "Yu Gothic", "Meiryo", "MS PGothic",
     sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
     "Noto Color Emoji";
+  /* Body text: reuse the ja serif stack above */
+  --font-body: var(--font-serif);
   --font-serif:
     Georgia, "Times New Roman", "Hiragino Mincho ProN", "Noto Serif JP",
     "Yu Mincho", "MS PMincho", serif;
@@ -534,13 +565,15 @@ html[lang="ko"] {
     Arial, "Noto Sans", "Apple SD Gothic Neo", "Malgun Gothic",
     "Noto Sans KR", "Nanum Gothic", sans-serif, "Apple Color Emoji",
     "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  /* Body text: reuse the ko serif stack above */
+  --font-body: var(--font-serif);
   --font-serif:
-    Georgia, "Times New Roman", "Apple SD Gothic Neo", "Nanum Myeongjo",
-    "Noto Serif KR", serif;
+    Georgia, "Times New Roman", "AppleMyungjo", "Batang", "Noto Serif KR",
+    "Nanum Myeongjo", serif;
   /* 楷体/等宽切韩文字体:代码/脚注/目录等区域不落简体字形 */
   --font-kai:
-    Georgia, "Times New Roman", "Apple SD Gothic Neo", "Nanum Myeongjo",
-    "Noto Serif KR", serif;
+    Georgia, "Times New Roman", "AppleMyungjo", "Batang", "Noto Serif KR",
+    "Nanum Myeongjo", serif;
   --font-mono:
     ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono",
     monospace, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR",
@@ -556,6 +589,8 @@ html[lang="ar"] {
     Arial, "Noto Sans", "Geeza Pro", "Segoe UI Arabic", "Noto Naskh Arabic",
     "Noto Sans Arabic", Tahoma, sans-serif, "Apple Color Emoji",
     "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  /* Body text: reuse the ar serif stack above (Geeza Pro/Noto Naskh Arabic) */
+  --font-body: var(--font-serif);
   --font-serif:
     Georgia, "Times New Roman", "Geeza Pro", "Noto Naskh Arabic",
     "Noto Serif Arabic", Tahoma, serif;
